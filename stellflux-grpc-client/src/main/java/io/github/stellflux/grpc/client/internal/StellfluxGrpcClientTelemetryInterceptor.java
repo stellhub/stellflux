@@ -2,6 +2,7 @@ package io.github.stellflux.grpc.client.internal;
 
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.metrics.StellfluxMetricNames;
+import io.github.stellflux.opentelemetry.log.StellfluxAccessLogEmitter;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -12,6 +13,7 @@ import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -24,11 +26,16 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** gRPC 客户端 telemetry 拦截器。 */
 public class StellfluxGrpcClientTelemetryInterceptor implements ClientInterceptor {
 
     private static final String INSTRUMENTATION_SCOPE_NAME = "io.github.stellflux.grpc.client";
+
+    private static final String ACCESS_LOG_SCOPE_NAME = "io.github.stellflux.grpc.client.access";
+
+    private static final String ACCESS_LOG_EVENT_NAME = "rpc.client.request";
 
     private static final StellfluxMeterFactory METER_FACTORY = new StellfluxMeterFactory();
 
@@ -40,6 +47,8 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
     private final LongCounter requestCounter;
 
     private final DoubleHistogram durationHistogram;
+
+    private final StellfluxAccessLogEmitter accessLogEmitter;
 
     private final OpenTelemetry openTelemetry;
 
@@ -53,6 +62,8 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
         this.host = host;
         this.port = port;
         this.tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE_NAME);
+        this.accessLogEmitter =
+                new StellfluxAccessLogEmitter(openTelemetry, ACCESS_LOG_SCOPE_NAME, ACCESS_LOG_EVENT_NAME);
         Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE_NAME);
         this.requestCounter =
                 METER_FACTORY.createCounter(
@@ -81,6 +92,7 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
             private Span span;
             private Context context;
             private long startNanos;
+            private final AtomicBoolean completed = new AtomicBoolean(false);
 
             @Override
             public void start(Listener<RespT> responseListener, Metadata headers) {
@@ -114,10 +126,8 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
                                 @Override
                                 public void onClose(Status status, Metadata trailers) {
                                     try (Scope innerIgnored = context.makeCurrent()) {
-                                        recordCompletion(method, span, startNanos, status, null);
+                                        finalizeCall(method, span, context, startNanos, status, null, completed);
                                         super.onClose(status, trailers);
-                                    } finally {
-                                        span.end();
                                     }
                                 }
 
@@ -130,8 +140,7 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
                             },
                             headers);
                 } catch (RuntimeException exception) {
-                    recordFailure(method, span, startNanos, exception);
-                    this.span.end();
+                    finalizeCall(method, span, context, startNanos, Status.UNKNOWN, exception, completed);
                     throw exception;
                 }
             }
@@ -147,10 +156,23 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
             public void cancel(String message, Throwable cause) {
                 if (this.span != null) {
                     if (cause != null) {
-                        recordFailure(method, this.span, this.startNanos, cause);
+                        finalizeCall(
+                                method,
+                                this.span,
+                                this.context,
+                                this.startNanos,
+                                Status.UNKNOWN,
+                                cause,
+                                this.completed);
                     } else {
-                        recordCompletion(method, this.span, this.startNanos, Status.CANCELLED, null);
-                        this.span.setStatus(StatusCode.ERROR);
+                        finalizeCall(
+                                method,
+                                this.span,
+                                this.context,
+                                this.startNanos,
+                                Status.CANCELLED,
+                                null,
+                                this.completed);
                     }
                 }
                 super.cancel(message, cause);
@@ -166,12 +188,17 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
         span.setAttribute("server.port", this.port);
     }
 
-    private void recordCompletion(
+    private void finalizeCall(
             MethodDescriptor<?, ?> method,
             Span span,
+            Context context,
             long startNanos,
             Status status,
-            Throwable throwable) {
+            Throwable throwable,
+            AtomicBoolean completed) {
+        if (!completed.compareAndSet(false, true)) {
+            return;
+        }
         if (throwable != null) {
             span.recordException(throwable);
             span.setStatus(StatusCode.ERROR);
@@ -185,11 +212,8 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
         Attributes metricAttributes = buildMetricAttributes(method, status, throwable);
         requestCounter.add(1, metricAttributes);
         durationHistogram.record((System.nanoTime() - startNanos) / 1_000_000.0d, metricAttributes);
-    }
-
-    private void recordFailure(
-            MethodDescriptor<?, ?> method, Span span, long startNanos, Throwable throwable) {
-        recordCompletion(method, span, startNanos, Status.UNKNOWN, throwable);
+        emitAccessLog(context, method, status, throwable);
+        span.end();
     }
 
     private Attributes buildMetricAttributes(
@@ -205,6 +229,26 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
             attributes.put("error.type", throwable.getClass().getName());
         }
         return attributes.build();
+    }
+
+    private void emitAccessLog(
+            Context context, MethodDescriptor<?, ?> method, Status status, Throwable throwable) {
+        accessLogEmitter.emit(
+                context,
+                "gRPC client request completed",
+                builder -> {
+                    builder.setAttribute(AttributeKey.stringKey("rpc.system"), "grpc");
+                    builder.setAttribute(AttributeKey.stringKey("rpc.service"), serviceName(method));
+                    builder.setAttribute(AttributeKey.stringKey("rpc.method"), methodName(method));
+                    builder.setAttribute(AttributeKey.stringKey("server.address"), this.host);
+                    builder.setAttribute(AttributeKey.longKey("server.port"), (long) this.port);
+                    builder.setAttribute(
+                            AttributeKey.stringKey("rpc.grpc.status_code"), status.getCode().name());
+                    if (throwable != null) {
+                        builder.setAttribute(
+                                AttributeKey.stringKey("error.type"), throwable.getClass().getName());
+                    }
+                });
     }
 
     private String serviceName(MethodDescriptor<?, ?> method) {

@@ -2,7 +2,9 @@ package io.github.stellflux.http.server.config;
 
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.metrics.StellfluxMetricNames;
+import io.github.stellflux.opentelemetry.log.StellfluxAccessLogEmitter;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -30,6 +32,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
 
     private static final String INSTRUMENTATION_SCOPE_NAME = "io.github.stellflux.http.server";
+
+    private static final String ACCESS_LOG_SCOPE_NAME = "io.github.stellflux.http.server.access";
+
+    private static final String ACCESS_LOG_EVENT_NAME = "http.server.request";
 
     private static final StellfluxMeterFactory METER_FACTORY = new StellfluxMeterFactory();
 
@@ -67,11 +73,15 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
 
     private final StellfluxHttpRouteTemplateResolver routeTemplateResolver;
 
+    private final StellfluxAccessLogEmitter accessLogEmitter;
+
     public StellfluxHttpServerTelemetryFilter(
             OpenTelemetry openTelemetry, StellfluxHttpRouteTemplateResolver routeTemplateResolver) {
         this.openTelemetry = openTelemetry;
         this.routeTemplateResolver = routeTemplateResolver;
         this.tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE_NAME);
+        this.accessLogEmitter =
+                new StellfluxAccessLogEmitter(openTelemetry, ACCESS_LOG_SCOPE_NAME, ACCESS_LOG_EVENT_NAME);
         Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE_NAME);
         this.requestCounter =
                 METER_FACTORY.createCounter(
@@ -124,7 +134,7 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
             span.setAttribute("error.type", exception.getClass().getName());
             throw exception;
         } finally {
-            finalizeRequest(request, span, startNanos, statusCode, throwable);
+            finalizeRequest(request, context, span, startNanos, statusCode, throwable);
         }
     }
 
@@ -137,7 +147,12 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
     }
 
     private void finalizeRequest(
-            HttpServletRequest request, Span span, long startNanos, int statusCode, Throwable throwable) {
+            HttpServletRequest request,
+            Context context,
+            Span span,
+            long startNanos,
+            int statusCode,
+            Throwable throwable) {
         String route = routeTemplateResolver.resolve(request, statusCode);
         span.updateName(request.getMethod() + " " + route);
         span.setAttribute("http.route", route);
@@ -148,6 +163,7 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
         Attributes metricAttributes = buildMetricAttributes(request, route, statusCode, throwable);
         requestCounter.add(1, metricAttributes);
         durationHistogram.record((System.nanoTime() - startNanos) / 1_000_000.0d, metricAttributes);
+        emitAccessLog(context, request, route, statusCode, throwable);
         span.end();
     }
 
@@ -163,5 +179,35 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
             attributes.put("error.type", throwable.getClass().getName());
         }
         return attributes.build();
+    }
+
+    private void emitAccessLog(
+            Context context,
+            HttpServletRequest request,
+            String route,
+            int statusCode,
+            Throwable throwable) {
+        accessLogEmitter.emit(
+                context,
+                "HTTP server request completed",
+                builder -> {
+                    builder.setAttribute(AttributeKey.stringKey("http.request.method"), request.getMethod());
+                    builder.setAttribute(AttributeKey.stringKey("url.path"), request.getRequestURI());
+                    builder.setAttribute(AttributeKey.stringKey("url.scheme"), request.getScheme());
+                    builder.setAttribute(AttributeKey.stringKey("http.route"), route);
+                    builder.setAttribute(AttributeKey.stringKey("server.address"), request.getServerName());
+                    builder.setAttribute(AttributeKey.longKey("server.port"), (long) request.getServerPort());
+                    builder.setAttribute(
+                            AttributeKey.stringKey("network.protocol.version"), request.getProtocol());
+                    builder.setAttribute(
+                            AttributeKey.longKey("http.response.status_code"), (long) statusCode);
+                    if (request.getRemoteAddr() != null && !request.getRemoteAddr().isBlank()) {
+                        builder.setAttribute(AttributeKey.stringKey("client.address"), request.getRemoteAddr());
+                    }
+                    if (throwable != null) {
+                        builder.setAttribute(
+                                AttributeKey.stringKey("error.type"), throwable.getClass().getName());
+                    }
+                });
     }
 }

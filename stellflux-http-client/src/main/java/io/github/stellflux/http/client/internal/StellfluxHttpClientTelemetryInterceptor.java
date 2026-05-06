@@ -2,7 +2,9 @@ package io.github.stellflux.http.client.internal;
 
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.metrics.StellfluxMetricNames;
+import io.github.stellflux.opentelemetry.log.StellfluxAccessLogEmitter;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -25,6 +27,10 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
 
     private static final String INSTRUMENTATION_SCOPE_NAME = "io.github.stellflux.http.client";
 
+    private static final String ACCESS_LOG_SCOPE_NAME = "io.github.stellflux.http.client.access";
+
+    private static final String ACCESS_LOG_EVENT_NAME = "http.client.request";
+
     private static final StellfluxMeterFactory METER_FACTORY = new StellfluxMeterFactory();
 
     private static final TextMapSetter<Request.Builder> REQUEST_SETTER =
@@ -38,9 +44,13 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
 
     private final DoubleHistogram durationHistogram;
 
+    private final StellfluxAccessLogEmitter accessLogEmitter;
+
     public StellfluxHttpClientTelemetryInterceptor(OpenTelemetry openTelemetry) {
         this.openTelemetry = openTelemetry;
         this.tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE_NAME);
+        this.accessLogEmitter =
+                new StellfluxAccessLogEmitter(openTelemetry, ACCESS_LOG_SCOPE_NAME, ACCESS_LOG_EVENT_NAME);
         Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE_NAME);
         this.requestCounter =
                 METER_FACTORY.createCounter(
@@ -82,12 +92,14 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
                 span.setStatus(StatusCode.ERROR);
             }
             recordMetrics(startNanos, instrumentedRequest, response.code(), null);
+            emitAccessLog(context, instrumentedRequest, response.code(), null);
             return response;
         } catch (IOException exception) {
             span.recordException(exception);
             span.setStatus(StatusCode.ERROR);
             span.setAttribute("error.type", exception.getClass().getName());
             recordMetrics(startNanos, instrumentedRequest, null, exception);
+            emitAccessLog(context, instrumentedRequest, null, exception);
             throw exception;
         } finally {
             span.end();
@@ -117,5 +129,28 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
         Attributes metricAttributes = attributes.build();
         requestCounter.add(1, metricAttributes);
         durationHistogram.record((System.nanoTime() - startNanos) / 1_000_000.0d, metricAttributes);
+    }
+
+    private void emitAccessLog(
+            Context context, Request request, Integer statusCode, IOException exception) {
+        accessLogEmitter.emit(
+                context,
+                "HTTP client request completed",
+                builder -> {
+                    builder.setAttribute(AttributeKey.stringKey("http.request.method"), request.method());
+                    builder.setAttribute(AttributeKey.stringKey("url.full"), request.url().toString());
+                    builder.setAttribute(AttributeKey.stringKey("url.path"), request.url().encodedPath());
+                    builder.setAttribute(AttributeKey.stringKey("url.scheme"), request.url().scheme());
+                    builder.setAttribute(AttributeKey.stringKey("server.address"), request.url().host());
+                    builder.setAttribute(AttributeKey.longKey("server.port"), (long) request.url().port());
+                    if (statusCode != null) {
+                        builder.setAttribute(
+                                AttributeKey.longKey("http.response.status_code"), statusCode.longValue());
+                    }
+                    if (exception != null) {
+                        builder.setAttribute(
+                                AttributeKey.stringKey("error.type"), exception.getClass().getName());
+                    }
+                });
     }
 }
