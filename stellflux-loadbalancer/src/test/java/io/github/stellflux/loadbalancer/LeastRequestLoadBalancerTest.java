@@ -18,9 +18,7 @@ class LeastRequestLoadBalancerTest {
                         TestLoadBalancerSupport.instance("node-c", 1, 8));
 
         StellfluxServiceInstance selected =
-                loadBalancer
-                        .choose(instances, TestLoadBalancerSupport.request("user-1"))
-                        .orElseThrow();
+                loadBalancer.choose(instances, TestLoadBalancerSupport.request("user-1")).orElseThrow();
 
         assertThat(selected.getInstanceId()).isEqualTo("node-b");
     }
@@ -36,9 +34,7 @@ class LeastRequestLoadBalancerTest {
                         TestLoadBalancerSupport.instance("node-c", 1, 7));
 
         StellfluxServiceInstance selected =
-                loadBalancer
-                        .choose(instances, TestLoadBalancerSupport.request("user-2"))
-                        .orElseThrow();
+                loadBalancer.choose(instances, TestLoadBalancerSupport.request("user-2")).orElseThrow();
 
         assertThat(selected.getInstanceId()).isEqualTo("node-a");
     }

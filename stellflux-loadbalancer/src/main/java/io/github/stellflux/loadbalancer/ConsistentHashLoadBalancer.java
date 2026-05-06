@@ -19,8 +19,7 @@ public class ConsistentHashLoadBalancer<T extends StellfluxServiceInstance>
         for (T instance : instances) {
             long hash = HashingSupport.hash64(hashKey + '\u0000' + instance.getInstanceId());
             double score =
-                    Math.max(1D, instance.getWeight())
-                            / -Math.log(HashingSupport.toUnitInterval(hash));
+                    Math.max(1D, instance.getWeight()) / -Math.log(HashingSupport.toUnitInterval(hash));
             if (selected == null
                     || score > bestScore
                     || (Double.compare(score, bestScore) == 0 && compareStable(instance, selected) < 0)) {

@@ -40,6 +40,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-loadbalancer-stellmap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-stellmap</artifactId>
                 <version>${project.version}</version>
             </dependency>

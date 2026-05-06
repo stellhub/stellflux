@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="1080" viewBox="0 0 1660 1080">
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .title { font: 700 30px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #17324d; }
+      .label { font: 700 18px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #17324d; }
+      .text { font: 15px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #23425f; }
+      .small { font: 14px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #355675; }
+      .boxA { fill: #f7fbff; stroke: #5b88b2; stroke-width: 2; rx: 18; ry: 18; }
+      .boxB { fill: #eef7ef; stroke: #4d8b63; stroke-width: 2; rx: 18; ry: 18; }
+      .boxC { fill: #fff8ea; stroke: #b28c45; stroke-width: 2; rx: 18; ry: 18; }
+      .boxD { fill: #f4f7fb; stroke: #7d8fa1; stroke-width: 1.8; rx: 18; ry: 18; }
+      .arrow { stroke: #426b91; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7a8da2; stroke-width: 2.2; fill: none; stroke-dasharray: 8 8; marker-end: url(#arrow2); }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#426b91"/>
+    </marker>
+    <marker id="arrow2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#7a8da2"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1660" height="1080" class="bg"/>
+
+  <text x="60" y="58" class="title">stellflux 基于 serviceId 的动态服务发现与负载均衡流程</text>
+
+  <rect x="60" y="108" width="330" height="118" class="boxA"/>
+  <text x="88" y="146" class="label">1. 业务声明客户端</text>
+  <text x="88" y="180" class="text">@OkHttpClient(serviceId="order-service")</text>
+  <text x="88" y="208" class="text">@RpcClient(serviceId="payment-service")</text>
+
+  <rect x="450" y="98" width="390" height="148" class="boxA"/>
+  <text x="478" y="136" class="label">2. 注解扫描注册 BeanDefinition</text>
+  <text x="478" y="170" class="text">StellfluxOkHttpClientBeanDefinitionRegistryPostProcessor</text>
+  <text x="478" y="198" class="text">StellfluxRpcClientBeanDefinitionRegistryPostProcessor</text>
+  <text x="478" y="228" class="small">`toOptions(annotation)` 提取 serviceId、namespace 和直连配置；发现模式最小只需 serviceId</text>
+
+  <rect x="910" y="88" width="360" height="168" class="boxB"/>
+  <text x="938" y="126" class="label">3. FactoryBean 组装发现链路</text>
+  <text x="938" y="160" class="text">StellfluxAnnotatedHttpClientFactoryBean</text>
+  <text x="938" y="188" class="text">#resolveOptions()</text>
+  <text x="938" y="220" class="text">StellfluxAnnotatedRpcClientFactoryBean#resolveOptions()</text>
+  <text x="938" y="248" class="small">从 Spring 容器取 `StellMapWatchingServiceInstanceSupplierFactory` 和 `StellfluxLoadBalancer`</text>
+
+  <rect x="1320" y="98" width="280" height="148" class="boxB"/>
+  <text x="1348" y="136" class="label">4. 创建 watch 型 Supplier</text>
+  <text x="1348" y="170" class="text">StellMapWatchingServiceInstanceSupplierFactory</text>
+  <text x="1348" y="198" class="text">httpSupplier(serviceId, namespace) / grpcSupplier(serviceId, namespace)</text>
+  <text x="1348" y="226" class="small">按 namespace + serviceId + 客户端类型缓存；HTTP 固定 http，gRPC 固定 grpc</text>
+
+  <rect x="1180" y="330" width="420" height="200" class="boxC"/>
+  <text x="1208" y="368" class="label">5. StellMap 建立目录订阅</text>
+  <text x="1208" y="404" class="text">StellMapClient.watchDirectory(RegistryWatchRequest)</text>
+  <text x="1208" y="436" class="text">ServiceDirectorySubscription.getServiceDirectory()</text>
+  <text x="1208" y="468" class="text">StellMapServiceInstanceSupplier.getInstances(...)</text>
+  <text x="1208" y="504" class="small">watch SSE 持续刷新本地 `ServiceDirectory`；默认按 HTTP/gRPC 固定协议选择 endpoint。</text>
+
+  <rect x="700" y="380" width="390" height="130" class="boxA"/>
+  <text x="728" y="418" class="label">6. 负载均衡选择实例</text>
+  <text x="728" y="452" class="text">StellfluxLoadBalancer.choose(instances, request)</text>
+  <text x="728" y="482" class="small">默认 LEAST_REQUEST / P2C，也可以切换到 WRR、Consistent Hash、Maglev 等策略。</text>
+
+  <rect x="180" y="360" width="430" height="148" class="boxA"/>
+  <text x="208" y="398" class="label">7A. HTTP 客户端命中实例</text>
+  <text x="208" y="432" class="text">StellfluxHttpClient.resolveBaseUrl(...)</text>
+  <text x="208" y="460" class="text">StellfluxHttpClient.buildUrl(...)</text>
+  <text x="208" y="490" class="small">把选中的实例转成 `http://host:port/...` 或 `https://host:port/...`</text>
+
+  <rect x="180" y="620" width="430" height="148" class="boxA"/>
+  <text x="208" y="658" class="label">7B. gRPC 客户端命中实例</text>
+  <text x="208" y="692" class="text">StellfluxGrpcChannelFactory.resolveTarget(...)</text>
+  <text x="208" y="720" class="text">ManagedChannelBuilder.forAddress(host, port)</text>
+  <text x="208" y="750" class="small">把选中的实例解析成目标 `host + port`，再构建 `ManagedChannel`</text>
+
+  <rect x="700" y="640" width="390" height="140" class="boxB"/>
+  <text x="728" y="678" class="label">8. 发起真实调用</text>
+  <text x="728" y="712" class="text">HTTP：OkHttp Request / Call</text>
+  <text x="728" y="740" class="text">gRPC：ManagedChannel + Stub / ClientCall</text>
+
+  <rect x="1120" y="860" width="460" height="112" class="boxD"/>
+  <text x="1148" y="900" class="small">watch 事件会持续刷新本地目录，因此后续每一次请求再次进入 `choose(...)` 时，</text>
+  <text x="1148" y="928" class="small">都能基于最新的实例列表完成动态服务发现与负载均衡。</text>
+
+  <path d="M390 167 L450 167" class="arrow"/>
+  <path d="M840 172 L910 172" class="arrow"/>
+  <path d="M1270 172 L1320 172" class="arrow"/>
+  <path d="M1460 246 L1460 330" class="arrow"/>
+  <path d="M1180 434 L1090 434" class="arrow"/>
+  <path d="M700 434 L610 434" class="arrow"/>
+  <path d="M700 454 L610 454" class="arrow"/>
+  <path d="M700 486 C600 520, 540 590, 610 694" class="arrow"/>
+  <path d="M610 694 L700 694" class="arrow"/>
+  <path d="M395 508 L395 620" class="arrow"/>
+  <path d="M1090 694 L1120 694" class="arrow"/>
+  <path d="M1460 530 C1560 620, 1590 770, 1390 860" class="dash"/>
+</svg>

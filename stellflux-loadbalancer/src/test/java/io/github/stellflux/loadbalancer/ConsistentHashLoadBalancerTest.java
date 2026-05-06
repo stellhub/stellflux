@@ -20,10 +20,14 @@ class ConsistentHashLoadBalancerTest {
                         TestLoadBalancerSupport.instance("node-c", 1, 0));
 
         String first =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("user-42")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("user-42"))
+                        .orElseThrow()
                         .getInstanceId();
         String second =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("user-42")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("user-42"))
+                        .orElseThrow()
                         .getInstanceId();
 
         assertThat(second).isEqualTo(first);

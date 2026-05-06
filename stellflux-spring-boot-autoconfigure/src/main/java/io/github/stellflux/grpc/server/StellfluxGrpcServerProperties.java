@@ -1,6 +1,5 @@
 package io.github.stellflux.grpc.server;
 
-import io.github.stellflux.grpc.server.StellfluxGrpcServerOptions;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;

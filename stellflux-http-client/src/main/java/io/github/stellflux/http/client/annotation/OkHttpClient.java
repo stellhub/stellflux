@@ -1,5 +1,6 @@
 package io.github.stellflux.http.client.annotation;
 
+import io.github.stellflux.loadbalancer.StellfluxLoadBalancerAlgorithm;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,11 +28,33 @@ public @interface OkHttpClient {
     String beanName() default "";
 
     /**
-     * Base URL.
+     * StellMap service identifier.
+     *
+     * @return service identifier
+     */
+    String serviceId() default "";
+
+    /**
+     * Namespace for StellMap watch.
+     *
+     * @return namespace
+     */
+    String namespace() default "";
+
+    /**
+     * Static base URL for direct mode.
      *
      * @return base URL
      */
     String baseUrl() default "";
+
+    /**
+     * Load balancer algorithm override.
+     *
+     * @return load balancer algorithm
+     */
+    StellfluxLoadBalancerAlgorithm loadBalancer() default
+            StellfluxLoadBalancerAlgorithm.LEAST_REQUEST;
 
     /**
      * Connect timeout in milliseconds.

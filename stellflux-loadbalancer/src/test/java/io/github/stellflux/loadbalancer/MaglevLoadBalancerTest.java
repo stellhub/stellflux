@@ -19,10 +19,14 @@ class MaglevLoadBalancerTest {
                         TestLoadBalancerSupport.instance("cache-c", 1, 0));
 
         String first =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("product-100")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("product-100"))
+                        .orElseThrow()
                         .getInstanceId();
         String second =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("product-100")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("product-100"))
+                        .orElseThrow()
                         .getInstanceId();
 
         assertThat(second).isEqualTo(first);
@@ -46,10 +50,14 @@ class MaglevLoadBalancerTest {
         for (int i = 0; i < total; i++) {
             String key = "cache-key-" + i;
             String before =
-                    loadBalancer.choose(original, TestLoadBalancerSupport.request(key)).orElseThrow()
+                    loadBalancer
+                            .choose(original, TestLoadBalancerSupport.request(key))
+                            .orElseThrow()
                             .getInstanceId();
             String after =
-                    loadBalancer.choose(changed, TestLoadBalancerSupport.request(key)).orElseThrow()
+                    loadBalancer
+                            .choose(changed, TestLoadBalancerSupport.request(key))
+                            .orElseThrow()
                             .getInstanceId();
             if (!before.equals(after)) {
                 moved++;

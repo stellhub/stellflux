@@ -26,16 +26,14 @@ public class StellfluxGrpcClientAutoConfiguration {
     }
 
     /**
-     * 注册默认 gRPC ManagedChannel。
+     * 注册 RpcClient 注解扫描器。
      *
-     * @param factory Channel 工厂
-     * @param properties gRPC 客户端配置
-     * @return 默认 ManagedChannel
+     * @return 注解扫描器
      */
-    @Bean(destroyMethod = "shutdownNow")
-    @ConditionalOnMissingBean
-    public ManagedChannel stellfluxManagedChannel(
-            StellfluxGrpcChannelFactory factory, StellfluxGrpcClientProperties properties) {
-        return factory.create(properties.toOptions());
+    @Bean
+    public static StellfluxRpcClientBeanDefinitionRegistryPostProcessor
+            stellfluxRpcClientBeanDefinitionRegistryPostProcessor() {
+        return new StellfluxRpcClientBeanDefinitionRegistryPostProcessor();
     }
+
 }

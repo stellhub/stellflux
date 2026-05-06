@@ -1,6 +1,6 @@
 package io.github.stellflux.stellmap;
 
-import io.github.stellflux.stellmap.StellfluxStellMapClientOptions;
+import io.github.stellflux.loadbalancer.StellfluxLoadBalancerAlgorithm;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,6 +49,9 @@ public class StellfluxStellMapProperties {
 
     /** 运行时资源配置。 */
     private final RuntimeProperties runtime = new RuntimeProperties();
+
+    /** 服务发现与负载均衡配置。 */
+    private final DiscoveryProperties discovery = new DiscoveryProperties();
 
     /**
      * 转换为框架内部的 StellMap 客户端配置。
@@ -102,5 +105,18 @@ public class StellfluxStellMapProperties {
 
         /** watch 线程工厂 bean 名称。 */
         private String threadFactoryBeanName;
+    }
+
+    /** StellMap 服务发现配置。 */
+    @Getter
+    @Setter
+    public static class DiscoveryProperties {
+
+        /** 默认命名空间。 */
+        private String namespace = "default";
+
+        /** 默认负载均衡算法。 */
+        private StellfluxLoadBalancerAlgorithm loadBalancer =
+                StellfluxLoadBalancerAlgorithm.LEAST_REQUEST;
     }
 }

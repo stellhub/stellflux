@@ -121,6 +121,8 @@ public class StellfluxOkHttpClientBeanDefinitionRegistryPostProcessor
 
     private StellfluxHttpClientOptions toOptions(OkHttpClient annotation) {
         StellfluxHttpClientOptions options = new StellfluxHttpClientOptions();
+        options.setServiceId(annotation.serviceId());
+        options.setNamespace(annotation.namespace());
         options.setBaseUrl(annotation.baseUrl());
         options.setConnectTimeoutMillis(annotation.connectTimeoutMillis());
         options.setReadTimeoutMillis(annotation.readTimeoutMillis());
@@ -130,6 +132,8 @@ public class StellfluxOkHttpClientBeanDefinitionRegistryPostProcessor
         options.setRetryOnConnectionFailure(annotation.retryOnConnectionFailure());
         options.setFollowRedirects(annotation.followRedirects());
         options.setFollowSslRedirects(annotation.followSslRedirects());
+        options.setLoadBalancer(
+                io.github.stellflux.loadbalancer.StellfluxLoadBalancers.of(annotation.loadBalancer()));
         return options;
     }
 }

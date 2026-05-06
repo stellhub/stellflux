@@ -1,5 +1,9 @@
 package io.github.stellflux.stellmap;
 
+import io.github.stellflux.loadbalancer.StellfluxLoadBalancer;
+import io.github.stellflux.loadbalancer.StellfluxLoadBalancers;
+import io.github.stellflux.loadbalancer.StellfluxServiceInstance;
+import io.github.stellflux.loadbalancer.stellmap.StellMapWatchingServiceInstanceSupplierFactory;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
 import io.github.stellmap.StellMapClient;
 import io.opentelemetry.api.OpenTelemetry;
@@ -78,6 +82,38 @@ public class StellfluxStellMapAutoConfiguration {
     }
 
     /**
+     * 注册默认服务实例负载均衡器。
+     *
+     * @param properties StellMap 配置属性
+     * @return 服务实例负载均衡器
+     */
+    @Bean
+    @ConditionalOnBean(StellMapClient.class)
+    @ConditionalOnMissingBean(name = "stellfluxServiceInstanceLoadBalancer")
+    public StellfluxLoadBalancer<StellfluxServiceInstance> stellfluxServiceInstanceLoadBalancer(
+            StellfluxStellMapProperties properties) {
+        return StellfluxLoadBalancers.of(properties.getDiscovery().getLoadBalancer());
+    }
+
+    /**
+     * 注册基于 watch 的实例提供器工厂。
+     *
+     * @param stellMapClient StellMap 客户端
+     * @param properties StellMap 配置属性
+     * @return watch 型实例提供器工厂
+     */
+    @Bean(destroyMethod = "close")
+    @ConditionalOnBean(StellMapClient.class)
+    @ConditionalOnMissingBean
+    public StellMapWatchingServiceInstanceSupplierFactory
+            stellMapWatchingServiceInstanceSupplierFactory(
+                    StellMapClient stellMapClient, StellfluxStellMapProperties properties) {
+        StellfluxStellMapProperties.DiscoveryProperties discovery = properties.getDiscovery();
+        return new StellMapWatchingServiceInstanceSupplierFactory(
+                stellMapClient, discovery.getNamespace());
+    }
+
+    /**
      * 绑定可选的运行时资源 bean。
      *
      * @param options StellMap 客户端配置
@@ -98,10 +134,10 @@ public class StellfluxStellMapAutoConfiguration {
                         applicationContext,
                         runtimeProperties.getHeartbeatExecutorBeanName(),
                         ScheduledExecutorService.class));
-        StellfluxStellMapProperties.HttpOptionsProperties httpOptions = runtimeProperties.getHttpOptions();
+        StellfluxStellMapProperties.HttpOptionsProperties httpOptions =
+                runtimeProperties.getHttpOptions();
         options.setWatchExecutor(
-                resolveBean(
-                        applicationContext, httpOptions.getExecutorBeanName(), ExecutorService.class));
+                resolveBean(applicationContext, httpOptions.getExecutorBeanName(), ExecutorService.class));
         options.setWatchReconnectScheduler(
                 resolveBean(
                         applicationContext,

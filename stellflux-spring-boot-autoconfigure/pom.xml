@@ -27,6 +27,16 @@
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-loadbalancer</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-loadbalancer-stellmap</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
             <artifactId>stellflux-stellmap</artifactId>
             <optional>true</optional>
         </dependency>

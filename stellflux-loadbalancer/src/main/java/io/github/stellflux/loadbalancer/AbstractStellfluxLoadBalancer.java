@@ -15,7 +15,8 @@ abstract class AbstractStellfluxLoadBalancer<T extends StellfluxServiceInstance>
         if (instances.size() == 1) {
             return Optional.of(instances.get(0));
         }
-        return Optional.of(doChoose(instances, request == null ? StellfluxLoadBalancerRequest.empty() : request));
+        return Optional.of(
+                doChoose(instances, request == null ? StellfluxLoadBalancerRequest.empty() : request));
     }
 
     /**

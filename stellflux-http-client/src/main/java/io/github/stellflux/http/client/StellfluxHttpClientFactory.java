@@ -43,6 +43,24 @@ public class StellfluxHttpClientFactory {
             builder.addInterceptor(new StellfluxHttpClientTelemetryInterceptor(this.openTelemetry));
         }
 
-        return new StellfluxHttpClient(builder.build(), options.getBaseUrl());
+        return new StellfluxHttpClient(
+                builder.build(),
+                options.getBaseUrl(),
+                buildDefaultRequest(options),
+                options.getServiceInstanceSupplier(),
+                options.getLoadBalancer());
+    }
+
+    private io.github.stellflux.loadbalancer.StellfluxLoadBalancerRequest buildDefaultRequest(
+            StellfluxHttpClientOptions options) {
+        io.github.stellflux.loadbalancer.StellfluxLoadBalancerRequest defaultRequest =
+                options.getLoadBalancerRequest() == null
+                        ? io.github.stellflux.loadbalancer.StellfluxLoadBalancerRequest.empty()
+                        : options.getLoadBalancerRequest();
+        return io.github.stellflux.loadbalancer.StellfluxLoadBalancerRequest.builder()
+                .serviceId(options.getServiceId())
+                .hashKey(defaultRequest.getHashKey())
+                .attributes(defaultRequest.getAttributes())
+                .build();
     }
 }

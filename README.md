@@ -5,6 +5,7 @@
 - `stellflux-bom`
 - `stellflux-http-client`
 - `stellflux-loadbalancer`
+- `stellflux-loadbalancer-stellmap`
 - `stellflux-stellmap`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
@@ -20,3 +21,9 @@
 ```bash
 mvn clean install
 ```
+
+## 文档
+
+- [客户端发现模型](./docs/stellflux-client-discovery-model.md)
+- [客户端 Bean 关系图](./docs/stellflux-client-bean-relationship.svg)
+- [动态服务发现流程图](./docs/stellflux-service-discovery-flow.svg)

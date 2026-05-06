@@ -2,6 +2,8 @@ package io.github.stellflux.stellmap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.stellflux.loadbalancer.StellfluxLoadBalancer;
+import io.github.stellflux.loadbalancer.stellmap.StellMapWatchingServiceInstanceSupplierFactory;
 import io.github.stellmap.StellMapClient;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +38,9 @@ class StellfluxStellMapAutoConfigurationTest {
                         context -> {
                             assertThat(context).hasSingleBean(StellfluxStellMapClientOptions.class);
                             assertThat(context).hasSingleBean(StellMapClient.class);
+                            assertThat(context).hasSingleBean(StellfluxLoadBalancer.class);
+                            assertThat(context)
+                                    .hasSingleBean(StellMapWatchingServiceInstanceSupplierFactory.class);
 
                             StellfluxStellMapClientOptions options =
                                     context.getBean(StellfluxStellMapClientOptions.class);
@@ -69,8 +74,7 @@ class StellfluxStellMapAutoConfigurationTest {
     void shouldSkipClientWhenDisabled() {
         contextRunner
                 .withPropertyValues(
-                        "stellflux.stellmap.enabled=false",
-                        "stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                        "stellflux.stellmap.enabled=false", "stellflux.stellmap.base-url=http://127.0.0.1:8080")
                 .run(
                         context -> {
                             assertThat(context).doesNotHaveBean(StellfluxStellMapClientOptions.class);

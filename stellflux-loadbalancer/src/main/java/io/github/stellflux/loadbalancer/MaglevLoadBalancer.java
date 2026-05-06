@@ -39,13 +39,12 @@ public class MaglevLoadBalancer<T extends StellfluxServiceInstance>
             T backend = expandedBackends.get(i);
             offsets[i] =
                     (int)
-                            (HashingSupport.positiveHash64(backend.getInstanceId() + "#offset")
-                                    % this.tableSize);
+                            (HashingSupport.positiveHash64(backend.getInstanceId() + "#offset") % this.tableSize);
             skips[i] =
                     (int)
-                            (HashingSupport.positiveHash64(backend.getInstanceId() + "#skip")
+                                    (HashingSupport.positiveHash64(backend.getInstanceId() + "#skip")
                                             % (this.tableSize - 1))
-                                    + 1;
+                            + 1;
         }
 
         int filled = 0;
@@ -63,9 +62,7 @@ public class MaglevLoadBalancer<T extends StellfluxServiceInstance>
         }
 
         int requestSlot =
-                (int)
-                        (HashingSupport.positiveHash64(resolveHashKey(request))
-                                % this.tableSize);
+                (int) (HashingSupport.positiveHash64(resolveHashKey(request)) % this.tableSize);
         return lookup[requestSlot];
     }
 
@@ -80,11 +77,7 @@ public class MaglevLoadBalancer<T extends StellfluxServiceInstance>
             } else {
                 replicas =
                         Math.max(
-                                1,
-                                (int)
-                                        Math.round(
-                                                (instance.getWeight() * 1D / totalWeight)
-                                                        * maxReplicaBudget));
+                                1, (int) Math.round((instance.getWeight() * 1D / totalWeight) * maxReplicaBudget));
             }
             for (int i = 0; i < replicas; i++) {
                 backends.add(instance);

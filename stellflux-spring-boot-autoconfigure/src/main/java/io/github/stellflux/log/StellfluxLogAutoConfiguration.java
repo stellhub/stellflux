@@ -18,8 +18,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
-@AutoConfigureAfter(
-        StellfluxOpenTelemetryAutoConfiguration.class)
+@AutoConfigureAfter(StellfluxOpenTelemetryAutoConfiguration.class)
 @ConditionalOnClass({StellfluxSpringBootLogAdapter.class, OpenTelemetry.class})
 @EnableConfigurationProperties(StellfluxLogProperties.class)
 @ConditionalOnProperty(

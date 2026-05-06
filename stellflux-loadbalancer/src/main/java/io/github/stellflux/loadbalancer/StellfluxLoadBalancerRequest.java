@@ -18,8 +18,7 @@ public final class StellfluxLoadBalancerRequest {
             String serviceId, String hashKey, Map<String, String> attributes) {
         this.serviceId = normalizeText(serviceId);
         this.hashKey = normalizeText(hashKey);
-        this.attributes =
-                attributes == null ? Map.of() : Map.copyOf(new LinkedHashMap<>(attributes));
+        this.attributes = attributes == null ? Map.of() : Map.copyOf(new LinkedHashMap<>(attributes));
     }
 
     /**
@@ -29,6 +28,25 @@ public final class StellfluxLoadBalancerRequest {
      */
     public static StellfluxLoadBalancerRequest empty() {
         return StellfluxLoadBalancerRequest.builder().build();
+    }
+
+    /**
+     * 使用回退请求上下文补全当前请求。
+     *
+     * @param fallback 回退请求上下文
+     * @return 合并后的请求上下文
+     */
+    public StellfluxLoadBalancerRequest withFallback(StellfluxLoadBalancerRequest fallback) {
+        if (fallback == null) {
+            return this;
+        }
+        Map<String, String> mergedAttributes = new LinkedHashMap<>(fallback.getAttributes());
+        mergedAttributes.putAll(this.attributes);
+        return StellfluxLoadBalancerRequest.builder()
+                .serviceId(this.serviceId != null ? this.serviceId : fallback.getServiceId())
+                .hashKey(this.hashKey != null ? this.hashKey : fallback.getHashKey())
+                .attributes(mergedAttributes)
+                .build();
     }
 
     private String normalizeText(String value) {

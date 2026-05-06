@@ -19,10 +19,7 @@ class WeightedRoundRobinLoadBalancerTest {
 
         List<String> chosen =
                 TestLoadBalancerSupport.chooseMany(
-                        loadBalancer,
-                        instances,
-                        TestLoadBalancerSupport.request("rr-sequence"),
-                        7);
+                        loadBalancer, instances, TestLoadBalancerSupport.request("rr-sequence"), 7);
 
         assertThat(chosen)
                 .containsExactly("node-a", "node-a", "node-b", "node-a", "node-c", "node-a", "node-a");

@@ -19,10 +19,14 @@ class RingHashLoadBalancerTest {
                         TestLoadBalancerSupport.instance("cache-c", 1, 0));
 
         String first =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("product-100")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("product-100"))
+                        .orElseThrow()
                         .getInstanceId();
         String second =
-                loadBalancer.choose(instances, TestLoadBalancerSupport.request("product-100")).orElseThrow()
+                loadBalancer
+                        .choose(instances, TestLoadBalancerSupport.request("product-100"))
+                        .orElseThrow()
                         .getInstanceId();
 
         assertThat(second).isEqualTo(first);

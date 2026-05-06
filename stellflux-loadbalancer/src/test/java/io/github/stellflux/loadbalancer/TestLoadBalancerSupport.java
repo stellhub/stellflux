@@ -7,8 +7,7 @@ final class TestLoadBalancerSupport {
 
     private TestLoadBalancerSupport() {}
 
-    static StellfluxServiceInstance instance(
-            String instanceId, int weight, long activeRequests) {
+    static StellfluxServiceInstance instance(String instanceId, int weight, long activeRequests) {
         return StellfluxServiceInstance.builder()
                 .serviceId("order-service")
                 .instanceId(instanceId)

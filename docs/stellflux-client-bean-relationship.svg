@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="1140" viewBox="0 0 1760 1140">
+  <defs>
+    <style>
+      .bg { fill: #ffffff; }
+      .title { font: 700 30px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #16324b; }
+      .subtitle { font: 700 22px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #214e77; }
+      .label { font: 700 18px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #17324d; }
+      .text { font: 15px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #244764; }
+      .small { font: 14px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #4a627a; }
+      .note { font: 15px "Microsoft YaHei", "PingFang SC", sans-serif; fill: #314b66; }
+      .boxA { fill: #f7fbff; stroke: #5b88b2; stroke-width: 2; rx: 18; ry: 18; }
+      .boxB { fill: #eef7ef; stroke: #4d8b63; stroke-width: 2; rx: 18; ry: 18; }
+      .boxC { fill: #fff8ea; stroke: #b28c45; stroke-width: 2; rx: 18; ry: 18; }
+      .boxD { fill: #fdf1f4; stroke: #b45b7c; stroke-width: 2; rx: 18; ry: 18; }
+      .summary { fill: #f4f7fb; stroke: #7c8fa2; stroke-width: 1.8; rx: 18; ry: 18; }
+      .arrow { stroke: #426b91; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7b8998; stroke-width: 2.2; fill: none; stroke-dasharray: 8 8; marker-end: url(#arrow2); }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#426b91"/>
+    </marker>
+    <marker id="arrow2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#7b8998"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1760" height="1140" class="bg"/>
+
+  <text x="60" y="58" class="title">stellflux HTTP / gRPC 客户端 Bean 创建关系图</text>
+
+  <rect x="460" y="86" width="1220" height="108" class="summary"/>
+  <text x="490" y="124" class="note">结论 1：自动装配层只提供工厂和注解扫描器，不再默认创建 `stellfluxHttpClient` 或 `stellfluxManagedChannel`。</text>
+  <text x="490" y="154" class="note">结论 2：每个 `@OkHttpClient` / `@RpcClient` 标注类都会注册一个 `FactoryBean`，最终产出一个独立客户端 Bean。</text>
+  <text x="490" y="184" class="note">结论 3：同一个 serviceId 的多个客户端 Bean 可以共享同一份 StellMap watch supplier，但不会自动合并成同一个客户端对象。</text>
+
+  <text x="60" y="120" class="subtitle">HTTP 路径</text>
+
+  <rect x="60" y="220" width="390" height="158" class="boxA"/>
+  <text x="86" y="258" class="label">1. HTTP 自动装配基础设施</text>
+  <text x="86" y="292" class="text">StellfluxHttpClientAutoConfiguration</text>
+  <text x="86" y="320" class="text">#stellfluxHttpClientFactory(...)</text>
+  <text x="86" y="348" class="text">#stellfluxOkHttpClientBeanDefinitionRegistryPostProcessor()</text>
+  <text x="86" y="372" class="small">这里不再默认创建 `StellfluxHttpClient` Bean。</text>
+
+  <rect x="60" y="440" width="390" height="220" class="boxB"/>
+  <text x="86" y="478" class="label">2. 多个注解 Bean 路径</text>
+  <text x="86" y="512" class="text">StellfluxOkHttpClientBeanDefinitionRegistryPostProcessor</text>
+  <text x="86" y="540" class="text">扫描每个 `@OkHttpClient` 标注类</text>
+  <text x="86" y="568" class="text">为每个标注类注册一个 `StellfluxAnnotatedHttpClientFactoryBean`</text>
+  <text x="86" y="604" class="small">真正的多个 `StellfluxHttpClient` 是在这里注册出来的，</text>
+  <text x="86" y="630" class="small">多个客户端 Bean 都来自注解扫描注册，不存在默认方法里的批量创建逻辑。</text>
+
+  <rect x="520" y="440" width="400" height="240" class="boxB"/>
+  <text x="546" y="478" class="label">3. HTTP Bean name 解析规则</text>
+  <text x="546" y="512" class="text">resolveBeanName(...)</text>
+  <text x="546" y="544" class="text">优先使用 `annotation.beanName()`</text>
+  <text x="546" y="576" class="text">否则使用 `annotation.value()`</text>
+  <text x="546" y="608" class="text">否则使用 `decapitalize(标注类名)`</text>
+  <text x="546" y="644" class="small">示例：`OrderApiClient.class` -> `orderApiClient`</text>
+
+  <rect x="990" y="420" width="430" height="290" class="boxC"/>
+  <text x="1016" y="458" class="label">4. HTTP FactoryBean 创建真实客户端</text>
+  <text x="1016" y="492" class="text">StellfluxAnnotatedHttpClientFactoryBean#getObject()</text>
+  <text x="1016" y="522" class="text">先合并 `clients[serviceId] + 注解覆盖`</text>
+  <text x="1016" y="556" class="text">如果 `baseUrl` 有值：直接返回直连模式客户端</text>
+  <text x="1016" y="588" class="text">如果只有 `serviceId`：补 supplier + loadBalancer 后再创建客户端</text>
+  <text x="1016" y="622" class="small">发现模式最小只需 `serviceId`，其它走默认值。</text>
+  <text x="1016" y="648" class="small">每个注解类最终仍对应 1 个独立 `StellfluxHttpClient` Bean。</text>
+
+  <rect x="1480" y="430" width="220" height="260" class="boxD"/>
+  <text x="1506" y="468" class="label">5. 同 serviceId 的共享层</text>
+  <text x="1506" y="502" class="text">StellMapWatchingServiceInstanceSupplierFactory</text>
+  <text x="1506" y="536" class="text">缓存 key:</text>
+  <text x="1506" y="566" class="small">namespace + serviceId + http</text>
+  <text x="1506" y="602" class="small">多个 HTTP Bean 可以共用同一份</text>
+  <text x="1506" y="628" class="small">watch supplier / 实例快照。</text>
+
+  <text x="60" y="760" class="subtitle">gRPC 路径</text>
+
+  <rect x="60" y="820" width="390" height="158" class="boxA"/>
+  <text x="86" y="858" class="label">6. gRPC 自动装配基础设施</text>
+  <text x="86" y="892" class="text">StellfluxGrpcClientAutoConfiguration</text>
+  <text x="86" y="920" class="text">#stellfluxGrpcChannelFactory(...)</text>
+  <text x="86" y="948" class="text">#stellfluxRpcClientBeanDefinitionRegistryPostProcessor()</text>
+  <text x="86" y="972" class="small">这里不再默认创建 `ManagedChannel` Bean。</text>
+
+  <rect x="60" y="1010" width="390" height="110" class="boxB"/>
+  <text x="86" y="1048" class="label">7. 多个注解 Channel 路径</text>
+  <text x="86" y="1082" class="text">`StellfluxRpcClientBeanDefinitionRegistryPostProcessor` 扫描每个 `@RpcClient`，并逐个注册 `StellfluxAnnotatedRpcClientFactoryBean`。</text>
+
+  <rect x="520" y="820" width="400" height="220" class="boxB"/>
+  <text x="546" y="858" class="label">8. gRPC Bean name 解析规则</text>
+  <text x="546" y="892" class="text">优先使用 `annotation.beanName()`</text>
+  <text x="546" y="924" class="text">否则使用 `annotation.value()`</text>
+  <text x="546" y="956" class="text">否则使用 `decapitalize(标注类名)`</text>
+  <text x="546" y="992" class="small">示例：`OrderGrpcClient.class` -> `orderGrpcClient`</text>
+
+  <rect x="990" y="800" width="430" height="250" class="boxC"/>
+  <text x="1016" y="838" class="label">9. gRPC FactoryBean 创建真实 Channel</text>
+  <text x="1016" y="872" class="text">StellfluxAnnotatedRpcClientFactoryBean#getObject()</text>
+  <text x="1016" y="902" class="text">先合并 `clients[serviceId] + 注解覆盖`</text>
+  <text x="1016" y="936" class="text">如果 `host + port` 有值：走直连模式</text>
+  <text x="1016" y="968" class="text">如果只有 `serviceId`：补 supplier + loadBalancer 后建 Channel</text>
+  <text x="1016" y="1002" class="small">发现模式最小只需 `serviceId`，默认固定走 grpc endpoint。</text>
+  <text x="1016" y="1028" class="small">多个相同 serviceId 的 `@RpcClient` 仍然各自产生独立 `ManagedChannel` Bean。</text>
+
+  <rect x="1480" y="810" width="220" height="240" class="boxD"/>
+  <text x="1506" y="848" class="label">10. 同 serviceId 的共享层</text>
+  <text x="1506" y="882" class="text">缓存 key:</text>
+  <text x="1506" y="912" class="small">namespace + serviceId + grpc</text>
+  <text x="1506" y="948" class="small">多个 gRPC Bean 可共享同一个</text>
+  <text x="1506" y="974" class="small">watch supplier，但 Channel 仍各自独立。</text>
+
+  <path d="M450 548 L520 548" class="arrow"/>
+  <path d="M920 560 L990 560" class="arrow"/>
+  <path d="M1420 560 L1480 560" class="arrow"/>
+  <path d="M450 930 L520 930" class="arrow"/>
+  <path d="M920 930 L990 930" class="arrow"/>
+  <path d="M1420 930 L1480 930" class="arrow"/>
+  <path d="M255 378 L255 440" class="dash"/>
+  <path d="M255 978 L255 1010" class="dash"/>
+</svg>

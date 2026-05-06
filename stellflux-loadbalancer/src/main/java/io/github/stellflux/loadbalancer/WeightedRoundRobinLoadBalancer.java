@@ -46,8 +46,7 @@ public class WeightedRoundRobinLoadBalancer<T extends StellfluxServiceInstance>
         String selectedInstanceId = selected.getInstanceId();
         long totalWeightSnapshot = totalWeight;
         currentWeights.computeIfPresent(
-                selectedInstanceId,
-                (instanceId, currentWeight) -> currentWeight - totalWeightSnapshot);
+                selectedInstanceId, (instanceId, currentWeight) -> currentWeight - totalWeightSnapshot);
         return selected;
     }
 }
