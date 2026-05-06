@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="980" viewBox="0 0 1720 980" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry Baggage Propagation Example</title>
+  <desc id="desc">A diagram showing how baggage is stored in local context, injected into outbound headers, extracted by downstream services, and becomes downstream local context again.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f3ec; }
+      .title { font: 700 30px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #2a231d; }
+      .subtitle { font: 400 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4c4138; }
+      .panel { fill: #fffdf8; stroke: #6c6055; stroke-width: 2; rx: 18; ry: 18; }
+      .panel-title { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #2a231d; }
+      .box { fill: #fff; stroke: #6c6055; stroke-width: 2; rx: 16; ry: 16; }
+      .blue { fill: #eaf4ff; }
+      .green { fill: #edf8ef; }
+      .yellow { fill: #fff5d9; }
+      .purple { fill: #f2ebff; }
+      .red { fill: #fdeceb; }
+      .gray { fill: #f1efe9; }
+      .label { font: 700 21px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #241d18; }
+      .text { font: 400 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #3f352e; }
+      .small { font: 400 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #544a42; }
+      .mono { font: 400 16px Consolas, 'Courier New', monospace; fill: #2e2722; }
+      .arrow { stroke: #6c6055; stroke-width: 3; fill: none; marker-end: url(#arrowHead); }
+      .arrow-dashed { stroke: #6c6055; stroke-width: 2.5; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrowHead); }
+      .note { fill: #fffaf1; stroke: #8c7c70; stroke-width: 1.5; rx: 14; ry: 14; }
+    </style>
+    <marker id="arrowHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#6c6055"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1720" height="980"/>
+
+  <text x="860" y="52" text-anchor="middle" class="title">OpenTelemetry Baggage 传播示例链路图</text>
+  <text x="860" y="82" text-anchor="middle" class="subtitle">Baggage 先存在本地 Context 中，跨服务时通过 inject 写入 header，下游再 extract 还原</text>
+
+  <rect class="panel" x="40" y="120" width="520" height="760"/>
+  <text x="70" y="158" class="panel-title">上游服务 A</text>
+
+  <rect class="box purple" x="80" y="190" width="430" height="110"/>
+  <text x="295" y="228" text-anchor="middle" class="label">1. 业务代码构造 Baggage</text>
+  <text x="295" y="256" text-anchor="middle" class="mono">Baggage.builder().put("tenant.id", "t1")</text>
+  <text x="295" y="280" text-anchor="middle" class="mono">.put("locale", "zh-CN").build()</text>
+
+  <rect class="box blue" x="80" y="340" width="430" height="120"/>
+  <text x="295" y="378" text-anchor="middle" class="label">2. 放进本地 Context</text>
+  <text x="295" y="406" text-anchor="middle" class="mono">Context ctx = baggage.storeInContext(Context.current())</text>
+  <text x="295" y="432" text-anchor="middle" class="small">此时只是当前进程内可读，还没有跨服务传播</text>
+
+  <rect class="box green" x="80" y="500" width="430" height="120"/>
+  <text x="295" y="538" text-anchor="middle" class="label">3. 出站前 inject</text>
+  <text x="295" y="566" text-anchor="middle" class="mono">propagator.inject(ctx, headers, SETTER)</text>
+  <text x="295" y="592" text-anchor="middle" class="small">把 Baggage 和 SpanContext 写入出站 carrier</text>
+
+  <rect class="box yellow" x="80" y="660" width="430" height="140"/>
+  <text x="295" y="698" text-anchor="middle" class="label">4. 出站 carrier 示例</text>
+  <text x="295" y="730" text-anchor="middle" class="mono">traceparent: 00-4bf92f3577b34da6...</text>
+  <text x="295" y="758" text-anchor="middle" class="mono">baggage: tenant.id=t1,locale=zh-CN</text>
+  <text x="295" y="784" text-anchor="middle" class="small">通常是 header / metadata，不是 JVM 内存对象本身</text>
+
+  <rect class="panel" x="600" y="120" width="520" height="760"/>
+  <text x="630" y="158" class="panel-title">网络 / 网关 / 中间件</text>
+
+  <rect class="box gray" x="650" y="250" width="420" height="120"/>
+  <text x="860" y="288" text-anchor="middle" class="label">传输的是“文本载体”</text>
+  <text x="860" y="316" text-anchor="middle" class="text">HTTP headers / gRPC Metadata / MQ headers</text>
+  <text x="860" y="342" text-anchor="middle" class="small">跨进程时不会传 Java Context 对象，只会传编码后的键值对</text>
+
+  <rect class="box red" x="650" y="430" width="420" height="180"/>
+  <text x="860" y="468" text-anchor="middle" class="label">风险点</text>
+  <text x="860" y="500" text-anchor="middle" class="small">1. header 太大可能被网关限制或丢弃</text>
+  <text x="860" y="526" text-anchor="middle" class="small">2. 敏感信息会进入网络传输链路，不适合放入 Baggage</text>
+  <text x="860" y="552" text-anchor="middle" class="small">3. 只有配置了 baggage propagator，才会真正传播 baggage</text>
+  <text x="860" y="578" text-anchor="middle" class="small">4. 某些代理可能只保留部分 header</text>
+
+  <rect class="note" x="650" y="670" width="420" height="110"/>
+  <text x="670" y="706" class="text">这里最重要的理解：</text>
+  <text x="670" y="734" class="small">Baggage 并不是“自动跟着对象走”。</text>
+  <text x="670" y="758" class="small">它必须先被 inject 成 carrier 中的键值对，下游才能再 extract 回来。</text>
+
+  <rect class="panel" x="1160" y="120" width="520" height="760"/>
+  <text x="1190" y="158" class="panel-title">下游服务 B</text>
+
+  <rect class="box green" x="1210" y="190" width="420" height="120"/>
+  <text x="1420" y="228" text-anchor="middle" class="label">5. 入站时 extract</text>
+  <text x="1420" y="256" text-anchor="middle" class="mono">Context extracted = propagator.extract(...)</text>
+  <text x="1420" y="282" text-anchor="middle" class="small">从 traceparent / baggage header 里还原出本地 Context</text>
+
+  <rect class="box purple" x="1210" y="350" width="420" height="130"/>
+  <text x="1420" y="388" text-anchor="middle" class="label">6. 下游本地 Context</text>
+  <text x="1420" y="416" text-anchor="middle" class="mono">Baggage.current().getEntryValue("tenant.id") == "t1"</text>
+  <text x="1420" y="442" text-anchor="middle" class="small">这时候业务代码才能在当前服务内读取到 tenant.id / locale</text>
+
+  <rect class="box blue" x="1210" y="520" width="420" height="120"/>
+  <text x="1420" y="558" text-anchor="middle" class="label">7. 继续创建本服务的 Span</text>
+  <text x="1420" y="586" text-anchor="middle" class="mono">spanBuilder(...).setParent(extracted).startSpan()</text>
+  <text x="1420" y="612" text-anchor="middle" class="small">链路身份和业务 Baggage 都可以继续往下游传</text>
+
+  <rect class="box yellow" x="1210" y="680" width="420" height="120"/>
+  <text x="1420" y="718" text-anchor="middle" class="label">8. 如果还要继续调下游</text>
+  <text x="1420" y="746" text-anchor="middle" class="mono">再一次 inject(...)</text>
+  <text x="1420" y="772" text-anchor="middle" class="small">把当前 Context 中的 SpanContext / Baggage 继续传下去</text>
+
+  <line class="arrow" x1="510" y1="560" x2="650" y2="560"/>
+  <line class="arrow" x1="1070" y1="280" x2="1210" y2="250"/>
+  <line class="arrow" x1="1070" y1="740" x2="1210" y2="740"/>
+
+  <line class="arrow-dashed" x1="295" y1="300" x2="295" y2="340"/>
+  <line class="arrow-dashed" x1="295" y1="460" x2="295" y2="500"/>
+  <line class="arrow-dashed" x1="1420" y1="310" x2="1420" y2="350"/>
+  <line class="arrow-dashed" x1="1420" y1="480" x2="1420" y2="520"/>
+  <line class="arrow-dashed" x1="1420" y1="640" x2="1420" y2="680"/>
+
+  <rect class="note" x="80" y="900" width="1550" height="44"/>
+  <text x="855" y="928" text-anchor="middle" class="small">结论：Baggage 适合少量、低敏、需要跨服务传播的业务上下文；不适合大对象、秘密信息、只在本进程有效的临时 KV。</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="540" viewBox="0 0 1180 540">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#375a7f" />
+    </marker>
+    <style>
+      .title { font: 700 28px 'Segoe UI', Arial, sans-serif; fill: #16324f; }
+      .label { font: 600 16px 'Segoe UI', Arial, sans-serif; fill: #16324f; }
+      .text { font: 14px 'Segoe UI', Arial, sans-serif; fill: #29465f; }
+      .mono { font: 13px 'Cascadia Code', Consolas, monospace; fill: #0d3559; }
+      .box { fill: #f6fbff; stroke: #6aa0d8; stroke-width: 2; rx: 18; }
+      .note { fill: #fff8e8; stroke: #d8b04b; stroke-width: 1.5; rx: 12; }
+      .line { stroke: #375a7f; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="540" fill="#eef6fb" />
+  <text x="70" y="60" class="title">Trace tree: traceId / spanId / parentSpanId</text>
+
+  <rect x="80" y="110" width="280" height="140" class="box" />
+  <text x="105" y="145" class="label">Root span</text>
+  <text x="105" y="180" class="text">name: HTTP GET /bridge</text>
+  <text x="105" y="210" class="mono">traceId = T-4ac970afda42...</text>
+  <text x="105" y="235" class="mono">spanId = S-root</text>
+
+  <rect x="455" y="110" width="290" height="140" class="box" />
+  <text x="480" y="145" class="label">Child span A</text>
+  <text x="480" y="180" class="text">name: gRPC CreateOrder client</text>
+  <text x="480" y="210" class="mono">traceId = T-4ac970afda42...</text>
+  <text x="480" y="235" class="mono">spanId = S-a</text>
+  <text x="480" y="260" class="mono">parentSpanId = S-root</text>
+
+  <rect x="840" y="90" width="260" height="140" class="box" />
+  <text x="865" y="125" class="label">Child span B</text>
+  <text x="865" y="160" class="text">name: gRPC server handler</text>
+  <text x="865" y="190" class="mono">traceId = T-4ac970afda42...</text>
+  <text x="865" y="215" class="mono">spanId = S-b</text>
+  <text x="865" y="240" class="mono">parentSpanId = S-a</text>
+
+  <rect x="840" y="290" width="260" height="140" class="box" />
+  <text x="865" y="325" class="label">Grandchild span</text>
+  <text x="865" y="360" class="text">name: persist-order</text>
+  <text x="865" y="390" class="mono">traceId = T-4ac970afda42...</text>
+  <text x="865" y="415" class="mono">spanId = S-c</text>
+  <text x="865" y="440" class="mono">parentSpanId = S-b</text>
+
+  <path d="M 360 180 C 400 180, 410 180, 455 180" class="line" />
+  <path d="M 745 180 C 790 180, 800 160, 840 160" class="line" />
+  <path d="M 970 230 C 970 250, 970 260, 970 290" class="line" />
+
+  <rect x="80" y="320" width="520" height="130" class="note" />
+  <text x="105" y="355" class="label">Rules</text>
+  <text x="105" y="385" class="text">1. All spans in one trace share the same traceId.</text>
+  <text x="105" y="410" class="text">2. Each span has its own unique spanId.</text>
+  <text x="105" y="435" class="text">3. A child span stores its direct parent's spanId in parentSpanId.</text>
+
+  <rect x="660" y="320" width="420" height="130" class="note" />
+  <text x="685" y="355" class="label">Meaning</text>
+  <text x="685" y="385" class="text">traceId answers: which end-to-end request is this?</text>
+  <text x="685" y="410" class="text">spanId answers: which node is this in the tree?</text>
+  <text x="685" y="435" class="text">parentSpanId answers: who is the direct parent of this node?</text>
+</svg>

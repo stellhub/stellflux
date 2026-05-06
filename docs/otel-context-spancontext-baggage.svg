@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="760" viewBox="0 0 1320 760">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a5b84" />
+    </marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9a6a14" />
+    </marker>
+    <style>
+      .title { font: 700 30px 'Segoe UI', Arial, sans-serif; fill: #17324d; }
+      .subtitle { font: 600 18px 'Segoe UI', Arial, sans-serif; fill: #34536f; }
+      .label { font: 600 17px 'Segoe UI', Arial, sans-serif; fill: #17324d; }
+      .text { font: 14px 'Segoe UI', Arial, sans-serif; fill: #35516b; }
+      .mono { font: 13px 'Cascadia Code', Consolas, monospace; fill: #103b61; }
+      .context-box { fill: #edf7ff; stroke: #5b99cc; stroke-width: 2.5; rx: 20; }
+      .span-box { fill: #f4fbf2; stroke: #77a763; stroke-width: 2; rx: 18; }
+      .baggage-box { fill: #fff7e6; stroke: #d4a64d; stroke-width: 2; rx: 18; }
+      .note-box { fill: #f7f9fb; stroke: #a8b5c1; stroke-width: 1.5; rx: 14; }
+      .blue-line { stroke: #2a5b84; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .gold-line { stroke: #9a6a14; stroke-width: 3; fill: none; marker-end: url(#arrow-gold); }
+      .dashed-line { stroke: #7a8fa5; stroke-width: 2.5; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrow-blue); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1320" height="760" fill="#f2f7fb" />
+
+  <text x="70" y="60" class="title">OpenTelemetry: Context / SpanContext / Baggage</text>
+  <text x="70" y="95" class="subtitle">In-process propagation uses Context. Trace identity lives in SpanContext. Business tags live in Baggage.</text>
+
+  <rect x="70" y="140" width="1180" height="360" class="context-box" />
+  <text x="100" y="180" class="label">Context</text>
+  <text x="100" y="210" class="text">Runtime container bound to the current thread / coroutine / request scope.</text>
+  <text x="100" y="235" class="text">It carries the current Span and may also carry Baggage.</text>
+
+  <rect x="120" y="275" width="450" height="170" class="span-box" />
+  <text x="145" y="310" class="label">Current Span</text>
+  <text x="145" y="340" class="text">The active span object for the current execution path.</text>
+  <text x="145" y="370" class="text">When a new child span is created, it usually uses Context.current().</text>
+
+  <rect x="180" y="390" width="330" height="110" class="span-box" />
+  <text x="205" y="425" class="label">SpanContext</text>
+  <text x="205" y="455" class="mono">traceId = same for one trace</text>
+  <text x="205" y="480" class="mono">spanId = current node id</text>
+  <text x="205" y="505" class="mono">traceFlags / traceState</text>
+
+  <rect x="720" y="275" width="450" height="170" class="baggage-box" />
+  <text x="745" y="310" class="label">Baggage</text>
+  <text x="745" y="340" class="text">Cross-process business key-values.</text>
+  <text x="745" y="370" class="text">Examples: tenantId, userId, grayTag, regionHint.</text>
+  <text x="745" y="395" class="text">It is not where traceId is stored.</text>
+
+  <rect x="780" y="390" width="300" height="110" class="baggage-box" />
+  <text x="805" y="425" class="label">Entries</text>
+  <text x="805" y="455" class="mono">tenant.id = tenant-001</text>
+  <text x="805" y="480" class="mono">user.id = u-9527</text>
+  <text x="805" y="505" class="mono">gray.tag = canary-a</text>
+
+  <path d="M 570 330 C 635 330, 655 330, 720 330" class="dashed-line" />
+  <text x="600" y="315" class="text">Context may hold both</text>
+
+  <path d="M 345 500 C 345 560, 275 595, 205 615" class="blue-line" />
+  <text x="115" y="590" class="text">trace identity comes from SpanContext</text>
+
+  <path d="M 930 500 C 930 560, 1010 595, 1090 615" class="gold-line" />
+  <text x="965" y="590" class="text">business tags come from Baggage</text>
+
+  <rect x="70" y="545" width="520" height="165" class="note-box" />
+  <text x="95" y="580" class="label">When gRPC server receives a request</text>
+  <text x="95" y="610" class="text">1. Extract traceparent from headers / metadata.</text>
+  <text x="95" y="635" class="text">2. Build a server Span and put it into Context.</text>
+  <text x="95" y="660" class="text">3. Downstream HTTP client uses Context.current() to create a child span.</text>
+  <text x="95" y="685" class="text">4. Result: traceId stays the same, only spanId changes.</text>
+
+  <rect x="650" y="545" width="600" height="165" class="note-box" />
+  <text x="675" y="580" class="label">Key distinction</text>
+  <text x="675" y="610" class="mono">Context       = in-process runtime carrier</text>
+  <text x="675" y="635" class="mono">SpanContext   = trace/span identity inside the current span</text>
+  <text x="675" y="660" class="mono">Baggage       = business metadata propagated with the request</text>
+  <text x="675" y="685" class="mono">traceId is read from Span.current().getSpanContext(), not from Baggage</text>
+</svg>

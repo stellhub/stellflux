@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="980" viewBox="0 0 1680 980" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry Context Propagation Flow</title>
+  <desc id="desc">A diagram showing inbound extract, in-process context propagation with Context.current, with, storeInContext, makeCurrent, and outbound inject.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f6f2ea; }
+      .title { font: 700 30px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #2a231d; }
+      .subtitle { font: 400 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4a4037; }
+      .lane { fill: #fffdf8; stroke: #6b5f54; stroke-width: 2; rx: 18; ry: 18; }
+      .lane-title { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #2a231d; }
+      .box { fill: #ffffff; stroke: #6b5f54; stroke-width: 2; rx: 18; ry: 18; }
+      .blue { fill: #e8f3ff; }
+      .green { fill: #edf9ef; }
+      .yellow { fill: #fff5d9; }
+      .purple { fill: #f2ebff; }
+      .red { fill: #fdeceb; }
+      .gray { fill: #f2efea; }
+      .label { font: 700 22px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #241d18; }
+      .text { font: 400 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #40362f; }
+      .mono { font: 400 16px Consolas, 'Courier New', monospace; fill: #2c2621; }
+      .small { font: 400 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4f453d; }
+      .arrow { stroke: #6b5f54; stroke-width: 3; fill: none; marker-end: url(#arrowHead); }
+      .arrow-dashed { stroke: #6b5f54; stroke-width: 2.5; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrowHead); }
+      .note { fill: #fffaf1; stroke: #8a7b6e; stroke-width: 1.5; rx: 14; ry: 14; }
+    </style>
+    <marker id="arrowHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#6b5f54"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1680" height="980"/>
+
+  <text x="840" y="52" text-anchor="middle" class="title">OpenTelemetry 上下文传播流程图</text>
+  <text x="840" y="82" text-anchor="middle" class="subtitle">入站请求先 extract，上下文在当前进程内通过 Context API 传递，出站请求再 inject 给下游</text>
+
+  <rect class="lane" x="40" y="120" width="1600" height="210"/>
+  <text x="70" y="158" class="lane-title">1. 入站请求：从网络载体中 extract 上游上下文</text>
+
+  <rect class="box gray" x="80" y="190" width="250" height="90"/>
+  <text x="205" y="226" text-anchor="middle" class="label">Carrier</text>
+  <text x="205" y="254" text-anchor="middle" class="text">HTTP headers / gRPC Metadata</text>
+
+  <rect class="box green" x="410" y="176" width="420" height="120"/>
+  <text x="620" y="213" text-anchor="middle" class="label">TextMapPropagator.extract(...)</text>
+  <text x="620" y="242" text-anchor="middle" class="mono">extract(Context.current(), headers, GETTER)</text>
+  <text x="620" y="270" text-anchor="middle" class="text">从入站 carrier 中解析 traceparent / baggage</text>
+
+  <rect class="box purple" x="920" y="190" width="280" height="90"/>
+  <text x="1060" y="226" text-anchor="middle" class="label">extracted Context</text>
+  <text x="1060" y="254" text-anchor="middle" class="text">带着上游 SpanContext / Baggage</text>
+
+  <rect class="box blue" x="1280" y="176" width="300" height="120"/>
+  <text x="1430" y="213" text-anchor="middle" class="label">startSpan + setParent</text>
+  <text x="1430" y="242" text-anchor="middle" class="mono">spanBuilder(...).setParent(extracted)</text>
+  <text x="1430" y="270" text-anchor="middle" class="text">当前服务创建自己的 SERVER span</text>
+
+  <line class="arrow" x1="330" y1="235" x2="410" y2="235"/>
+  <line class="arrow" x1="830" y1="235" x2="920" y2="235"/>
+  <line class="arrow" x1="1200" y1="235" x2="1280" y2="235"/>
+
+  <rect class="lane" x="40" y="360" width="1600" height="370"/>
+  <text x="70" y="398" class="lane-title">2. 当前进程内：Context 如何承载和切换上下文</text>
+
+  <rect class="box purple" x="80" y="450" width="270" height="110"/>
+  <text x="215" y="490" text-anchor="middle" class="label">Context.current()</text>
+  <text x="215" y="518" text-anchor="middle" class="text">拿到当前线程上的活动 Context</text>
+  <text x="215" y="542" text-anchor="middle" class="small">它只是“读取当前值”，不做修改</text>
+
+  <rect class="box blue" x="430" y="440" width="340" height="130"/>
+  <text x="600" y="478" text-anchor="middle" class="label">with(span)</text>
+  <text x="600" y="506" text-anchor="middle" class="mono">Context context = extracted.with(span)</text>
+  <text x="600" y="534" text-anchor="middle" class="text">基于旧 Context 生成一个新 Context</text>
+  <text x="600" y="558" text-anchor="middle" class="small">新 Context 里放入当前 Span</text>
+
+  <rect class="box green" x="850" y="440" width="340" height="130"/>
+  <text x="1020" y="478" text-anchor="middle" class="label">storeInContext(...)</text>
+  <text x="1020" y="506" text-anchor="middle" class="mono">baggage.storeInContext(context)</text>
+  <text x="1020" y="534" text-anchor="middle" class="text">对象把自己存进 Context，返回新的 Context</text>
+  <text x="1020" y="558" text-anchor="middle" class="small">常见对象：Span、Baggage</text>
+
+  <rect class="box yellow" x="1270" y="440" width="280" height="130"/>
+  <text x="1410" y="478" text-anchor="middle" class="label">makeCurrent()</text>
+  <text x="1410" y="506" text-anchor="middle" class="mono">try (Scope ignored = context.makeCurrent())</text>
+  <text x="1410" y="534" text-anchor="middle" class="text">让这个新 Context 成为当前执行片段的活动 Context</text>
+  <text x="1410" y="558" text-anchor="middle" class="small">退出 Scope 后恢复上一个 Context</text>
+
+  <line class="arrow" x1="350" y1="505" x2="430" y2="505"/>
+  <line class="arrow" x1="770" y1="505" x2="850" y2="505"/>
+  <line class="arrow" x1="1190" y1="505" x2="1270" y2="505"/>
+
+  <rect class="note" x="115" y="600" width="1420" height="90"/>
+  <text x="140" y="632" class="text">理解要点：</text>
+  <text x="140" y="660" class="small">1. with(...) 和 storeInContext(...) 都不会原地修改旧 Context，而是返回一个新的 Context。</text>
+  <text x="140" y="684" class="small">2. makeCurrent() 只是让“某个已经构造好的 Context”在当前线程范围内生效，本身不负责往 Context 里塞值。</text>
+
+  <rect class="box red" x="360" y="600" width="360" height="72" opacity="0.0"/>
+  <rect class="box red" x="680" y="450" width="120" height="70" opacity="0"/>
+
+  <rect class="box blue" x="430" y="620" width="420" height="70"/>
+  <text x="640" y="648" text-anchor="middle" class="mono">Span.current() / Baggage.current()</text>
+  <text x="640" y="672" text-anchor="middle" class="small">当前代码执行期间，就是从活动 Context 里读取当前 Span / Baggage</text>
+
+  <line class="arrow-dashed" x1="1410" y1="570" x2="1410" y2="620"/>
+  <line class="arrow-dashed" x1="1410" y1="620" x2="850" y2="620"/>
+
+  <rect class="lane" x="40" y="760" width="1600" height="180"/>
+  <text x="70" y="798" class="lane-title">3. 出站调用：把当前进程里的活动 Context inject 到请求头里</text>
+
+  <rect class="box yellow" x="100" y="820" width="330" height="90"/>
+  <text x="265" y="856" text-anchor="middle" class="label">当前活动 Context</text>
+  <text x="265" y="884" text-anchor="middle" class="text">里面已有当前 SpanContext / Baggage</text>
+
+  <rect class="box green" x="510" y="806" width="430" height="120"/>
+  <text x="725" y="843" text-anchor="middle" class="label">TextMapPropagator.inject(...)</text>
+  <text x="725" y="872" text-anchor="middle" class="mono">inject(context, headers, SETTER)</text>
+  <text x="725" y="900" text-anchor="middle" class="text">把本地 Context 中可传播的内容写入出站 carrier</text>
+
+  <rect class="box gray" x="1020" y="820" width="250" height="90"/>
+  <text x="1145" y="856" text-anchor="middle" class="label">Carrier</text>
+  <text x="1145" y="884" text-anchor="middle" class="text">HTTP headers / gRPC Metadata</text>
+
+  <rect class="box blue" x="1350" y="820" width="220" height="90"/>
+  <text x="1460" y="856" text-anchor="middle" class="label">下游服务</text>
+  <text x="1460" y="884" text-anchor="middle" class="text">收到后再 extract</text>
+
+  <line class="arrow" x1="430" y1="865" x2="510" y2="865"/>
+  <line class="arrow" x1="940" y1="865" x2="1020" y2="865"/>
+  <line class="arrow" x1="1270" y1="865" x2="1350" y2="865"/>
+
+  <rect class="note" x="1140" y="128" width="440" height="36"/>
+  <text x="1360" y="152" text-anchor="middle" class="small">客户端一般是 inject；服务端一般是 extract；它们是一对配套动作。</text>
+</svg>

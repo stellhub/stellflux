@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.stellhub</groupId>
+        <artifactId>stellflux</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>stellflux-spring-boot-starter-parent</artifactId>
+    <packaging>pom</packaging>
+
+    <name>stellhub-spring-boot-starter-parent</name>
+    <description>Parent project for stellflux starter modules</description>
+
+    <modules>
+        <module>stellflux-spring-boot-starter-opentelemetry</module>
+        <module>stellflux-spring-boot-starter-web</module>
+        <module>stellflux-spring-boot-starter-grpc</module>
+        <module>stellflux-spring-boot-starter-log</module>
+        <module>stellflux-spring-boot-starter-metrics</module>
+        <module>stellflux-spring-boot-starter-traces</module>
+        <module>stellflux-spring-boot-http-client</module>
+    </modules>
+</project>

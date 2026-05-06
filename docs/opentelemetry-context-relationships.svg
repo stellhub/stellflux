@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="title desc">
+  <title id="title">OpenTelemetry Context Relationships</title>
+  <desc id="desc">Diagram showing relationships among OpenTelemetry, ContextPropagators, TextMapPropagator, Context, Span, SpanContext, Baggage, Resource, TracerProvider, MeterProvider, Tracer, and Meter.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f4ee; }
+      .panel { fill: #fffdf9; stroke: #5b5147; stroke-width: 2; rx: 18; ry: 18; }
+      .panel-title { font: 700 24px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #2b241e; }
+      .box { fill: #fff; stroke: #5b5147; stroke-width: 2; rx: 16; ry: 16; }
+      .box-blue { fill: #eaf4ff; }
+      .box-green { fill: #edf8ef; }
+      .box-yellow { fill: #fff6d8; }
+      .box-red { fill: #fdeceb; }
+      .box-purple { fill: #f3ecff; }
+      .box-gray { fill: #f3f1ed; }
+      .label { font: 700 21px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #241d18; }
+      .sub { font: 400 17px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #3c332c; }
+      .small { font: 400 15px 'Microsoft YaHei', 'PingFang SC', sans-serif; fill: #4b413a; }
+      .arrow { stroke: #65584f; stroke-width: 2.5; fill: none; marker-end: url(#arrowHead); }
+      .arrow-dashed { stroke: #65584f; stroke-width: 2.5; fill: none; stroke-dasharray: 8 7; marker-end: url(#arrowHead); }
+      .arrow-thin { stroke: #7b6c61; stroke-width: 2; fill: none; marker-end: url(#arrowHeadSmall); }
+      .note { fill: #fffaf0; stroke: #8b7c6d; stroke-width: 1.5; rx: 14; ry: 14; }
+      .legend-line { stroke: #65584f; stroke-width: 2.5; fill: none; }
+    </style>
+    <marker id="arrowHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#65584f"/>
+    </marker>
+    <marker id="arrowHeadSmall" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7b6c61"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="1180"/>
+
+  <text x="800" y="52" text-anchor="middle" class="panel-title" style="font-size:30px;">OpenTelemetry 中 Context / Propagator / Baggage / Resource 的关系图</text>
+  <text x="800" y="84" text-anchor="middle" class="sub">重点区分：哪些东西在请求链路里传播，哪些东西只是进程级或 SDK 级配置</text>
+
+  <rect class="panel" x="40" y="110" width="1520" height="290"/>
+  <text x="70" y="145" class="panel-title">1. OpenTelemetry 根对象与 Provider / Propagator</text>
+
+  <rect class="box box-blue" x="80" y="180" width="280" height="120"/>
+  <text x="220" y="220" text-anchor="middle" class="label">OpenTelemetry</text>
+  <text x="220" y="252" text-anchor="middle" class="sub">应用总入口</text>
+  <text x="220" y="278" text-anchor="middle" class="small">能拿到 Tracer / Meter / Propagators</text>
+
+  <rect class="box box-yellow" x="450" y="160" width="280" height="95"/>
+  <text x="590" y="195" text-anchor="middle" class="label">TracerProvider</text>
+  <text x="590" y="224" text-anchor="middle" class="small">创建 Tracer</text>
+
+  <rect class="box box-yellow" x="450" y="275" width="280" height="95"/>
+  <text x="590" y="310" text-anchor="middle" class="label">MeterProvider</text>
+  <text x="590" y="339" text-anchor="middle" class="small">创建 Meter</text>
+
+  <rect class="box box-green" x="820" y="160" width="300" height="95"/>
+  <text x="970" y="195" text-anchor="middle" class="label">ContextPropagators</text>
+  <text x="970" y="224" text-anchor="middle" class="small">一组“上下文传播规则”的统一入口</text>
+
+  <rect class="box box-green" x="1180" y="160" width="310" height="95"/>
+  <text x="1335" y="195" text-anchor="middle" class="label">TextMapPropagator</text>
+  <text x="1335" y="224" text-anchor="middle" class="small">处理 HTTP header / gRPC metadata 这类文本键值对载体</text>
+
+  <rect class="box box-red" x="820" y="275" width="300" height="95"/>
+  <text x="970" y="310" text-anchor="middle" class="label">Resource</text>
+  <text x="970" y="338" text-anchor="middle" class="small">描述“这个进程/服务是谁”</text>
+  <text x="970" y="360" text-anchor="middle" class="small">例如 service.name、service.version、host.name</text>
+
+  <line class="arrow" x1="360" y1="225" x2="450" y2="207"/>
+  <line class="arrow" x1="360" y1="255" x2="450" y2="322"/>
+  <line class="arrow" x1="360" y1="240" x2="820" y2="207"/>
+  <text x="401" y="197" class="small">getTracer(...)</text>
+  <text x="395" y="338" class="small">getMeter(...)</text>
+  <text x="575" y="188" class="small">提供</text>
+  <text x="745" y="198" class="small">getPropagators()</text>
+
+  <line class="arrow" x1="1120" y1="207" x2="1180" y2="207"/>
+  <text x="1148" y="194" class="small">getTextMapPropagator()</text>
+
+  <line class="arrow-dashed" x1="970" y1="275" x2="590" y2="255"/>
+  <line class="arrow-dashed" x1="970" y1="275" x2="590" y2="370"/>
+  <text x="720" y="286" class="small">Provider 持有 Resource</text>
+  <text x="731" y="373" class="small">导出 span / metric 时附带</text>
+
+  <rect class="note" x="1160" y="282" width="330" height="82"/>
+  <text x="1180" y="310" class="small">Resource 不在 Context 里。</text>
+  <text x="1180" y="334" class="small">它不是“某次请求的上下文”，而是“这个服务实例的身份信息”。</text>
+  <text x="1180" y="358" class="small">所以它通常不会通过 extract / inject 在服务之间传播。</text>
+
+  <rect class="panel" x="40" y="430" width="1520" height="420"/>
+  <text x="70" y="465" class="panel-title">2. 运行时链路上下文：Context / Span / SpanContext / Baggage</text>
+
+  <rect class="box box-purple" x="80" y="510" width="370" height="250"/>
+  <text x="265" y="548" text-anchor="middle" class="label">Context</text>
+  <text x="265" y="580" text-anchor="middle" class="sub">线程内 / 调用链内的“上下文容器”</text>
+  <text x="265" y="608" text-anchor="middle" class="small">Context.current() 拿当前上下文</text>
+  <text x="265" y="634" text-anchor="middle" class="small">with(...) 返回一个新的 Context</text>
+  <text x="265" y="660" text-anchor="middle" class="small">makeCurrent() 让它在当前执行片段生效</text>
+  <text x="265" y="704" text-anchor="middle" class="small">里面常放：当前 Span、SpanContext、Baggage</text>
+  <text x="265" y="730" text-anchor="middle" class="small">它是“本地运行时载体”，不是跨进程协议本身</text>
+
+  <rect class="box box-blue" x="530" y="510" width="310" height="110"/>
+  <text x="685" y="548" text-anchor="middle" class="label">Span</text>
+  <text x="685" y="577" text-anchor="middle" class="small">一次具体操作的运行时对象</text>
+  <text x="685" y="599" text-anchor="middle" class="small">可记录事件、属性、状态、异常</text>
+
+  <rect class="box box-blue" x="530" y="655" width="310" height="130"/>
+  <text x="685" y="694" text-anchor="middle" class="label">SpanContext</text>
+  <text x="685" y="723" text-anchor="middle" class="small">Span 的“可传播身份”</text>
+  <text x="685" y="745" text-anchor="middle" class="small">包含 traceId、spanId、traceFlags、traceState</text>
+  <text x="685" y="767" text-anchor="middle" class="small">它是不可变的，适合跨进程传播</text>
+
+  <rect class="box box-green" x="930" y="545" width="330" height="145"/>
+  <text x="1095" y="584" text-anchor="middle" class="label">Baggage</text>
+  <text x="1095" y="613" text-anchor="middle" class="small">一组业务键值对</text>
+  <text x="1095" y="635" text-anchor="middle" class="small">例如 tenant.id、user.id、locale</text>
+  <text x="1095" y="657" text-anchor="middle" class="small">也可以放进 Context，并通过 Propagator 传播</text>
+  <text x="1095" y="679" text-anchor="middle" class="small">但它不是 Span 身份，不等于 SpanContext</text>
+
+  <rect class="box box-gray" x="1330" y="520" width="190" height="80"/>
+  <text x="1425" y="553" text-anchor="middle" class="label">Scope</text>
+  <text x="1425" y="579" text-anchor="middle" class="small">makeCurrent() 返回</text>
+
+  <line class="arrow" x1="450" y1="575" x2="530" y2="565"/>
+  <text x="465" y="554" class="small">Context 里通常放“当前 Span”</text>
+
+  <line class="arrow" x1="685" y1="620" x2="685" y2="655"/>
+  <text x="710" y="642" class="small">Span 持有</text>
+
+  <line class="arrow" x1="450" y1="662" x2="530" y2="710"/>
+  <text x="452" y="690" class="small">也可从 Context 中取到当前 SpanContext</text>
+
+  <line class="arrow" x1="450" y1="710" x2="930" y2="618"/>
+  <text x="700" y="688" class="small">Context 里也可携带 Baggage</text>
+
+  <line class="arrow" x1="450" y1="603" x2="1330" y2="560"/>
+  <text x="930" y="538" class="small">makeCurrent() 后返回 Scope，关闭它可恢复之前 Context</text>
+
+  <rect class="note" x="1285" y="640" width="235" height="120"/>
+  <text x="1305" y="670" class="small">最容易混淆的点：</text>
+  <text x="1305" y="695" class="small">Context = 本地容器</text>
+  <text x="1305" y="720" class="small">Span = 当前操作对象</text>
+  <text x="1305" y="745" class="small">SpanContext = Span 可传播的身份</text>
+
+  <rect class="panel" x="40" y="880" width="1520" height="250"/>
+  <text x="70" y="915" class="panel-title">3. Propagator 在调用中的作用：extract / inject</text>
+
+  <rect class="box box-gray" x="80" y="960" width="240" height="90"/>
+  <text x="200" y="995" text-anchor="middle" class="label">Carrier</text>
+  <text x="200" y="1023" text-anchor="middle" class="small">HTTP headers / gRPC Metadata</text>
+
+  <rect class="box box-green" x="410" y="948" width="360" height="120"/>
+  <text x="590" y="985" text-anchor="middle" class="label">TextMapPropagator.extract(...)</text>
+  <text x="590" y="1014" text-anchor="middle" class="small">从 carrier 里读 traceparent / baggage 等字段</text>
+  <text x="590" y="1038" text-anchor="middle" class="small">解析后生成新的 Context</text>
+
+  <rect class="box box-purple" x="860" y="960" width="250" height="90"/>
+  <text x="985" y="995" text-anchor="middle" class="label">extracted Context</text>
+  <text x="985" y="1023" text-anchor="middle" class="small">带着上游 SpanContext / Baggage</text>
+
+  <rect class="box box-blue" x="1190" y="948" width="290" height="120"/>
+  <text x="1335" y="985" text-anchor="middle" class="label">spanBuilder(...).setParent(extracted)</text>
+  <text x="1335" y="1014" text-anchor="middle" class="small">新建 SERVER / CLIENT Span</text>
+  <text x="1335" y="1038" text-anchor="middle" class="small">让当前操作接到上游链路下面</text>
+
+  <line class="arrow" x1="320" y1="1005" x2="410" y2="1005"/>
+  <line class="arrow" x1="770" y1="1005" x2="860" y2="1005"/>
+  <line class="arrow" x1="1110" y1="1005" x2="1190" y2="1005"/>
+
+  <text x="205" y="1088" class="small">反方向的 inject(...)：把当前 Context 里的 SpanContext / Baggage 写回 carrier，再发给下游服务。</text>
+  <text x="205" y="1112" class="small">所以 Propagator 负责“跨进程搬运”，Context 负责“本地运行时承载”，SpanContext / Baggage 是被搬运的主要内容。</text>
+
+  <rect class="note" x="1030" y="1080" width="490" height="38"/>
+  <text x="1275" y="1105" text-anchor="middle" class="small">Resource 既不由 extract 得到，也不会靠 inject 传出去；它跟随 Provider/Exporter 附着在遥测数据上。</text>
+
+  <g transform="translate(80,1128)">
+    <line class="legend-line" x1="0" y1="0" x2="48" y2="0"/>
+    <text x="60" y="5" class="small">实线：直接持有 / 创建 / 运行时包含关系</text>
+    <line class="legend-line" x1="410" y1="0" x2="458" y2="0" style="stroke-dasharray:8 7;"/>
+    <text x="470" y="5" class="small">虚线：附着 / 导出时带上，但不进入当前请求 Context</text>
+  </g>
+</svg>

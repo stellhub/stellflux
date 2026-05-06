@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="900" viewBox="0 0 1480 900">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#245680" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3f7c46" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a96a13" />
+    </marker>
+    <style>
+      .title { font: 700 30px 'Segoe UI', Arial, sans-serif; fill: #15314b; }
+      .subtitle { font: 600 18px 'Segoe UI', Arial, sans-serif; fill: #365470; }
+      .section { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #15314b; }
+      .label { font: 600 16px 'Segoe UI', Arial, sans-serif; fill: #15314b; }
+      .text { font: 14px 'Segoe UI', Arial, sans-serif; fill: #35516a; }
+      .mono { font: 13px 'Cascadia Code', Consolas, monospace; fill: #0d3a5f; }
+      .lane { fill: #f4f8fb; stroke: #c4d2de; stroke-width: 1.5; rx: 16; }
+      .http-box { fill: #eef7ff; stroke: #6aa1d2; stroke-width: 2; rx: 18; }
+      .grpc-box { fill: #eefbf0; stroke: #74ab79; stroke-width: 2; rx: 18; }
+      .ctx-box { fill: #f6f1ff; stroke: #8c75c6; stroke-width: 2; rx: 18; }
+      .export-box { fill: #fff7e8; stroke: #d2a44a; stroke-width: 2; rx: 18; }
+      .note-box { fill: #f8fafc; stroke: #a8b4bf; stroke-width: 1.5; rx: 14; }
+      .blue-line { stroke: #245680; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .green-line { stroke: #3f7c46; stroke-width: 3; fill: none; marker-end: url(#arrow-green); }
+      .orange-line { stroke: #a96a13; stroke-width: 3; fill: none; marker-end: url(#arrow-orange); }
+      .dashed-line { stroke: #6e8294; stroke-width: 2.5; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrow-blue); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1480" height="900" fill="#eef4f8" />
+
+  <text x="70" y="60" class="title">HTTP / gRPC / Context / OTLP exporter flow</text>
+  <text x="70" y="95" class="subtitle">How trace context enters the app, flows inside the app, leaves the app, and is finally exported to localhost:4317</text>
+
+  <rect x="60" y="130" width="1360" height="120" class="lane" />
+  <rect x="60" y="280" width="1360" height="180" class="lane" />
+  <rect x="60" y="490" width="1360" height="180" class="lane" />
+  <rect x="60" y="700" width="1360" height="150" class="lane" />
+
+  <text x="90" y="165" class="section">1. Inbound request</text>
+  <text x="90" y="315" class="section">2. In-process propagation</text>
+  <text x="90" y="525" class="section">3. Outbound propagation</text>
+  <text x="90" y="735" class="section">4. OTLP export</text>
+
+  <rect x="110" y="175" width="300" height="55" class="http-box" />
+  <text x="135" y="208" class="label">HTTP header</text>
+  <text x="250" y="208" class="mono">traceparent / baggage</text>
+
+  <rect x="450" y="175" width="330" height="55" class="grpc-box" />
+  <text x="475" y="208" class="label">gRPC Metadata</text>
+  <text x="620" y="208" class="mono">traceparent / baggage</text>
+
+  <rect x="920" y="160" width="430" height="80" class="ctx-box" />
+  <text x="945" y="193" class="label">Server extractor</text>
+  <text x="945" y="218" class="text">HTTP server filter or gRPC server interceptor calls</text>
+  <text x="945" y="240" class="mono">propagator.extract(Context.current(), carrier, getter)</text>
+
+  <path d="M 410 202 C 425 202, 432 202, 450 202" class="dashed-line" />
+  <path d="M 780 202 C 830 202, 860 202, 920 202" class="blue-line" />
+
+  <rect x="130" y="335" width="380" height="95" class="ctx-box" />
+  <text x="155" y="368" class="label">Extracted Context</text>
+  <text x="155" y="393" class="text">If inbound traceparent is valid, it contains parent SpanContext.</text>
+  <text x="155" y="417" class="text">If missing or invalid, it is effectively an empty context.</text>
+
+  <rect x="560" y="320" width="330" height="125" class="ctx-box" />
+  <text x="585" y="353" class="label">Server span creation</text>
+  <text x="585" y="378" class="mono">spanBuilder(...).setParent(extracted).startSpan()</text>
+  <text x="585" y="403" class="text">If no valid parent exists, this becomes a root span.</text>
+  <text x="585" y="427" class="text">traceId is created here by OTel SDK when needed.</text>
+
+  <rect x="940" y="320" width="350" height="125" class="ctx-box" />
+  <text x="965" y="353" class="label">Current Context inside the app</text>
+  <text x="965" y="378" class="mono">context = extracted.with(serverSpan)</text>
+  <text x="965" y="403" class="mono">try (Scope ignored = context.makeCurrent())</text>
+  <text x="965" y="427" class="text">Logs, child spans, and metrics all run under this active context.</text>
+
+  <path d="M 510 382 C 530 382, 540 382, 560 382" class="blue-line" />
+  <path d="M 890 382 C 910 382, 920 382, 940 382" class="blue-line" />
+
+  <rect x="130" y="545" width="350" height="95" class="grpc-box" />
+  <text x="155" y="578" class="label">gRPC server business code</text>
+  <text x="155" y="603" class="text">A child span created here keeps the same traceId.</text>
+  <text x="155" y="627" class="mono">parentSpanId = current server spanId</text>
+
+  <rect x="550" y="530" width="360" height="125" class="http-box" />
+  <text x="575" y="563" class="label">HTTP client or gRPC client</text>
+  <text x="575" y="588" class="mono">spanBuilder(...).startSpan()</text>
+  <text x="575" y="613" class="text">No Baggage lookup for traceId.</text>
+  <text x="575" y="637" class="text">Parent is taken from Context.current().</text>
+
+  <rect x="980" y="530" width="330" height="125" class="http-box" />
+  <text x="1005" y="563" class="label">Outbound injection</text>
+  <text x="1005" y="588" class="mono">propagator.inject(context, carrier, setter)</text>
+  <text x="1005" y="613" class="text">Writes traceparent and baggage to HTTP headers or gRPC metadata.</text>
+
+  <path d="M 480 592 C 510 592, 520 592, 550 592" class="green-line" />
+  <path d="M 910 592 C 940 592, 950 592, 980 592" class="blue-line" />
+
+  <rect x="130" y="755" width="390" height="65" class="export-box" />
+  <text x="155" y="792" class="label">BatchSpanProcessor</text>
+  <text x="315" y="792" class="mono">buffers finished spans</text>
+
+  <rect x="570" y="740" width="400" height="95" class="export-box" />
+  <text x="595" y="773" class="label">OTLP exporter</text>
+  <text x="595" y="798" class="mono">OtlpGrpcSpanExporter -> http://localhost:4317</text>
+  <text x="595" y="821" class="text">Exports span payloads, not raw traceparent strings.</text>
+
+  <rect x="1030" y="740" width="320" height="95" class="export-box" />
+  <text x="1055" y="773" class="label">Collector receives</text>
+  <text x="1055" y="798" class="mono">ExportTraceServiceRequest</text>
+  <text x="1055" y="821" class="text">resourceSpans -> instrumentationLibrarySpans -> spans</text>
+
+  <path d="M 1120 655 C 1120 690, 300 690, 300 755" class="orange-line" />
+  <path d="M 520 788 C 540 788, 550 788, 570 788" class="orange-line" />
+  <path d="M 970 788 C 995 788, 1005 788, 1030 788" class="orange-line" />
+
+  <rect x="1090" y="305" width="280" height="110" class="note-box" />
+  <text x="1115" y="338" class="label">Important</text>
+  <text x="1115" y="363" class="text">traceId is not stored in Baggage.</text>
+  <text x="1115" y="387" class="text">traceId lives in SpanContext.</text>
+  <text x="1115" y="411" class="text">Baggage is for business key-values.</text>
+
+  <rect x="1030" y="150" width="320" height="80" opacity="0" />
+  <rect x="1110" y="545" width="260" height="95" class="note-box" />
+  <text x="1135" y="578" class="label">Same app rule</text>
+  <text x="1135" y="603" class="text">gRPC server receives request</text>
+  <text x="1135" y="627" class="text">then HTTP client sends request</text>
+
+  <rect x="60" y="850" width="1360" height="30" fill="none" />
+  <text x="70" y="874" class="mono">Summary: inbound traceparent -> extract -> Context.current() -> child spans -> inject -> OTLP ExportTraceServiceRequest to localhost:4317</text>
+</svg>
