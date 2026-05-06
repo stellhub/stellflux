@@ -20,6 +20,7 @@
         <module>stellflux-metrics</module>
         <module>stellflux-traces</module>
         <module>stellflux-http-client</module>
+        <module>stellflux-loadbalancer</module>
         <module>stellflux-stellmap</module>
         <module>stellflux-grpc-server</module>
         <module>stellflux-grpc-client</module>
@@ -81,6 +82,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-http-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-loadbalancer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

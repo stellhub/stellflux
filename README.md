@@ -4,6 +4,7 @@
 
 - `stellflux-bom`
 - `stellflux-http-client`
+- `stellflux-loadbalancer`
 - `stellflux-stellmap`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
