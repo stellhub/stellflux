@@ -11,18 +11,18 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stellflux-spring-boot-starter-grpc</artifactId>
-    <name>stellflux-spring-boot-starter-grpc</name>
-    <description>Aggregate Spring Boot starter for stellflux gRPC client and server</description>
+    <artifactId>stellflux-spring-boot-starter-http</artifactId>
+    <name>stellflux-spring-boot-starter-http</name>
+    <description>Aggregate Spring Boot starter for stellflux HTTP client and server</description>
 
     <dependencies>
         <dependency>
             <groupId>io.github.stellhub</groupId>
-            <artifactId>stellflux-spring-boot-starter-grpc-client</artifactId>
+            <artifactId>stellflux-spring-boot-starter-http-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
-            <artifactId>stellflux-spring-boot-starter-grpc-server</artifactId>
+            <artifactId>stellflux-spring-boot-starter-http-server</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -18,12 +18,15 @@
 
     <modules>
         <module>stellflux-spring-boot-starter-opentelemetry</module>
-        <module>stellflux-spring-boot-starter-web</module>
+        <module>stellflux-spring-boot-starter-http-server</module>
+        <module>stellflux-spring-boot-starter-http</module>
         <module>stellflux-spring-boot-starter-grpc</module>
+        <module>stellflux-spring-boot-starter-grpc-client</module>
+        <module>stellflux-spring-boot-starter-grpc-server</module>
         <module>stellflux-spring-boot-starter-log</module>
         <module>stellflux-spring-boot-starter-metrics</module>
         <module>stellflux-spring-boot-starter-traces</module>
         <module>stellflux-spring-boot-starter-stellmap</module>
-        <module>stellflux-spring-boot-http-client</module>
+        <module>stellflux-spring-boot-starter-http-client</module>
     </modules>
 </project>

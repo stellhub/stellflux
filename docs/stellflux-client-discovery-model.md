@@ -7,6 +7,14 @@
 - 注解显式配置优先级高于配置文件
 - 直连模式仍然保留，但它是显式选择
 
+## 推荐 starter
+
+- HTTP 客户端场景推荐引入 `stellflux-spring-boot-starter-http-client`
+- gRPC 客户端场景推荐引入 `stellflux-spring-boot-starter-grpc-client`
+- 如果应用同时需要客户端和服务端，可以使用聚合 starter：
+  - `stellflux-spring-boot-starter-http`
+  - `stellflux-spring-boot-starter-grpc`
+
 ## 配置规则
 
 HTTP 客户端：

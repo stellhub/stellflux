@@ -5,7 +5,9 @@ import io.github.stellflux.log.springboot.StellfluxSpringBootLogAdapter;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetryRuntime;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -27,6 +29,9 @@ import org.springframework.context.annotation.Bean;
         havingValue = "true",
         matchIfMissing = true)
 public class StellfluxLogAutoConfiguration {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(StellfluxLogAutoConfiguration.class.getName());
 
     /**
      * 初始化 stellflux 日志适配器。
@@ -73,5 +78,27 @@ public class StellfluxLogAutoConfiguration {
     public StellfluxLogBootstrapResult stellfluxLogBootstrapResult(
             StellfluxSpringBootLogAdapter adapter) {
         return adapter.getBootstrapResult();
+    }
+
+    /**
+     * 记录日志 starter 启动日志。
+     *
+     * @param properties 日志配置
+     * @param bootstrapResult 日志初始化结果
+     * @return 启动日志探针
+     */
+    @Bean("stellfluxLogStarterStartupLogger")
+    public SmartInitializingSingleton stellfluxLogStarterStartupLogger(
+            StellfluxLogProperties properties, StellfluxLogBootstrapResult bootstrapResult) {
+        return () ->
+                LOGGER.info(
+                        () ->
+                                "Starter stellflux-spring-boot-starter-log started successfully"
+                                        + ", enabled=" + properties.isEnabled()
+                                        + ", instrumentationScopeName="
+                                        + properties.getInstrumentationScopeName()
+                                        + ", bootstrapMode=" + bootstrapResult.getMode()
+                                        + ", installedLogbackBridge="
+                                        + bootstrapResult.isInstalledLogbackBridge());
     }
 }

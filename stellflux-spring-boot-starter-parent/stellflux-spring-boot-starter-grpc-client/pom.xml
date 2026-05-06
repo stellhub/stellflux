@@ -11,22 +11,22 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stellflux-spring-boot-http-client</artifactId>
-    <name>stellflux-spring-boot-http-client</name>
-    <description>Spring Boot starter for stellflux HTTP client</description>
+    <artifactId>stellflux-spring-boot-starter-grpc-client</artifactId>
+    <name>stellflux-spring-boot-starter-grpc-client</name>
+    <description>Spring Boot starter for stellflux gRPC client</description>
 
     <dependencies>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-spring-boot-autoconfigure</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
             <artifactId>stellflux-spring-boot-starter-opentelemetry</artifactId>
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
-            <artifactId>stellflux-http-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>stellflux-grpc-client</artifactId>
         </dependency>
     </dependencies>
 </project>

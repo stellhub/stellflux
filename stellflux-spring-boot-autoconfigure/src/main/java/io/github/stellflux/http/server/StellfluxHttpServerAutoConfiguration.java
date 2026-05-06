@@ -1,6 +1,9 @@
 package io.github.stellflux.http.server;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.logging.Logger;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -24,6 +27,9 @@ import org.springframework.web.servlet.DispatcherServlet;
         matchIfMissing = true)
 @EnableConfigurationProperties(StellfluxHttpServerProperties.class)
 public class StellfluxHttpServerAutoConfiguration {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(StellfluxHttpServerAutoConfiguration.class.getName());
 
     @Bean
     @ConditionalOnMissingBean
@@ -62,5 +68,26 @@ public class StellfluxHttpServerAutoConfiguration {
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         registration.addUrlPatterns("/*");
         return registration;
+    }
+
+    /**
+     * 记录 HTTP 服务端 starter 启动日志。
+     *
+     * @param properties HTTP 服务端配置
+     * @param telemetryFilterProvider 遥测过滤器提供者
+     * @return 启动日志探针
+     */
+    @Bean("stellfluxHttpServerStarterStartupLogger")
+    public SmartInitializingSingleton stellfluxHttpServerStarterStartupLogger(
+            StellfluxHttpServerProperties properties,
+            ObjectProvider<StellfluxHttpServerTelemetryFilter> telemetryFilterProvider) {
+        return () ->
+                LOGGER.info(
+                        () ->
+                                "Starter stellflux-spring-boot-starter-http-server started successfully"
+                                        + ", enabled=" + properties.isEnabled()
+                                        + ", servletType=SERVLET"
+                                        + ", telemetryFilterEnabled="
+                                        + (telemetryFilterProvider.getIfAvailable() != null));
     }
 }

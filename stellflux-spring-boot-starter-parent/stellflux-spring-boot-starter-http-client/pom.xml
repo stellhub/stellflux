@@ -11,9 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>stellflux-spring-boot-starter-web</artifactId>
-    <name>stellflux-spring-boot-starter-web</name>
-    <description>Spring Boot starter for stellflux web server</description>
+    <artifactId>stellflux-spring-boot-starter-http-client</artifactId>
+    <name>stellflux-spring-boot-starter-http-client</name>
+    <description>Spring Boot starter for stellflux HTTP client</description>
 
     <dependencies>
         <dependency>
@@ -25,8 +25,12 @@
             <artifactId>stellflux-spring-boot-starter-opentelemetry</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-http-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
     </dependencies>
 </project>

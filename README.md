@@ -11,10 +11,13 @@
 - `stellflux-grpc-client`
 - `stellflux-spring-boot-autoconfigure`
 - `stellhub-spring-boot-starter-parent`
-- `stellflux-spring-boot-starter-web`
+- `stellflux-spring-boot-starter-http-server`
+- `stellflux-spring-boot-starter-http-client`
+- `stellflux-spring-boot-starter-http`
+- `stellflux-spring-boot-starter-grpc-client`
+- `stellflux-spring-boot-starter-grpc-server`
 - `stellflux-spring-boot-starter-grpc`
 - `stellflux-spring-boot-starter-stellmap`
-- `stellflux-spring-boot-http-client`
 
 ## 构建
 
@@ -25,5 +28,6 @@ mvn clean install
 ## 文档
 
 - [客户端发现模型](./docs/stellflux-client-discovery-model.md)
+- [Starter 模块说明](./docs/starter-modules.md)
 - [客户端 Bean 关系图](./docs/stellflux-client-bean-relationship.svg)
 - [动态服务发现流程图](./docs/stellflux-service-discovery-flow.svg)

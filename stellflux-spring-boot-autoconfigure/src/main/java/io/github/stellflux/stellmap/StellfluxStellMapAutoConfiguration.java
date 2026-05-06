@@ -7,10 +7,12 @@ import io.github.stellflux.loadbalancer.stellmap.StellMapWatchingServiceInstance
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
 import io.github.stellmap.StellMapClient;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.logging.Logger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,6 +28,9 @@ import org.springframework.util.StringUtils;
 @ConditionalOnClass(StellMapClient.class)
 @EnableConfigurationProperties(StellfluxStellMapProperties.class)
 public class StellfluxStellMapAutoConfiguration {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(StellfluxStellMapAutoConfiguration.class.getName());
 
     /**
      * 注册 StellMap 客户端工厂。
@@ -114,6 +119,36 @@ public class StellfluxStellMapAutoConfiguration {
     }
 
     /**
+     * 记录 StellMap starter 启动日志。
+     *
+     * @param properties StellMap 配置
+     * @return 启动日志探针
+     */
+    @Bean("stellfluxStellMapStarterStartupLogger")
+    @ConditionalOnBean(StellMapClient.class)
+    public SmartInitializingSingleton stellfluxStellMapStarterStartupLogger(
+            StellfluxStellMapProperties properties) {
+        return () ->
+                LOGGER.info(
+                        () ->
+                                "Starter stellflux-spring-boot-starter-stellmap started successfully"
+                                        + ", enabled=" + properties.isEnabled()
+                                        + ", baseUrl=" + safeText(properties.getBaseUrl())
+                                        + ", namespace=" + safeText(properties.getDiscovery().getNamespace())
+                                        + ", loadBalancer=" + properties.getDiscovery().getLoadBalancer()
+                                        + ", requestTimeout=" + properties.getRequestTimeout()
+                                        + ", followLeaderRedirect=" + properties.isFollowLeaderRedirect()
+                                        + ", maxLeaderRedirects=" + properties.getMaxLeaderRedirects()
+                                        + ", watchAutoReconnect=" + properties.isWatchAutoReconnect()
+                                        + ", watchReconnectInitialDelay="
+                                        + properties.getWatchReconnectInitialDelay()
+                                        + ", watchReconnectMaxDelay="
+                                        + properties.getWatchReconnectMaxDelay()
+                                        + ", watchReconnectMaxAttempts="
+                                        + properties.getWatchReconnectMaxAttempts());
+    }
+
+    /**
      * 绑定可选的运行时资源 bean。
      *
      * @param options StellMap 客户端配置
@@ -154,5 +189,9 @@ public class StellfluxStellMapAutoConfiguration {
             return null;
         }
         return applicationContext.getBean(beanName, beanType);
+    }
+
+    private String safeText(String value) {
+        return value == null || value.isBlank() ? "<default>" : value;
     }
 }
