@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
 import io.github.stellflux.log.StellfluxLoggerFactory;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.ArrayList;
 import java.util.Iterator;

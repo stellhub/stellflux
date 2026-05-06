@@ -1,6 +1,6 @@
 package io.github.stellflux.opentelemetry.internal;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.github.stellflux.opentelemetry.exporter.ConsoleLogRecordExporter;
 import io.github.stellflux.opentelemetry.exporter.FallbackLogRecordExporter;
 import io.github.stellflux.opentelemetry.exporter.RetryingLogRecordExporter;

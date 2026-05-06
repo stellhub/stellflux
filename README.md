@@ -4,12 +4,14 @@
 
 - `stellflux-bom`
 - `stellflux-http-client`
+- `stellflux-stellmap`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
 - `stellflux-spring-boot-autoconfigure`
 - `stellhub-spring-boot-starter-parent`
 - `stellflux-spring-boot-starter-web`
 - `stellflux-spring-boot-starter-grpc`
+- `stellflux-spring-boot-starter-stellmap`
 - `stellflux-spring-boot-http-client`
 
 ## 构建

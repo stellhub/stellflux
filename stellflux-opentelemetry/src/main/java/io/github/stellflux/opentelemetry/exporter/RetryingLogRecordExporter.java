@@ -1,6 +1,6 @@
 package io.github.stellflux.opentelemetry.exporter;
 
-import io.github.stellflux.opentelemetry.config.RetryConfig;
+import io.github.stellflux.opentelemetry.RetryConfig;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;

@@ -5,7 +5,7 @@ import io.github.stellflux.log.bridge.StellfluxErrorDescriptor;
 import io.github.stellflux.log.bridge.StellfluxLogEvent;
 import io.github.stellflux.log.internal.AttributeUtil;
 import io.github.stellflux.log.internal.MessageTruncator;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;

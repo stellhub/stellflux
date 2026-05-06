@@ -23,6 +23,7 @@
         <module>stellflux-spring-boot-starter-log</module>
         <module>stellflux-spring-boot-starter-metrics</module>
         <module>stellflux-spring-boot-starter-traces</module>
+        <module>stellflux-spring-boot-starter-stellmap</module>
         <module>stellflux-spring-boot-http-client</module>
     </modules>
 </project>

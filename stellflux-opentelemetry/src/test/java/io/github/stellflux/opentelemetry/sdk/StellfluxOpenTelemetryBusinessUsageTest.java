@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageEntryMetadata;

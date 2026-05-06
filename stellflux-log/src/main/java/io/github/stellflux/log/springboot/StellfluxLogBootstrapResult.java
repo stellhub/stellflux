@@ -1,6 +1,6 @@
 package io.github.stellflux.log.springboot;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import lombok.Builder;
 import lombok.Getter;

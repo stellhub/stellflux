@@ -1,6 +1,6 @@
 package io.github.stellflux.opentelemetry.internal;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;

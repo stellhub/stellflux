@@ -1,6 +1,7 @@
-io.github.stellflux.http.server.config.StellfluxHttpServerAutoConfiguration
-io.github.stellflux.http.client.config.StellfluxHttpClientAutoConfiguration
-io.github.stellflux.grpc.server.config.StellfluxGrpcServerAutoConfiguration
-io.github.stellflux.grpc.client.config.StellfluxGrpcClientAutoConfiguration
-io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryAutoConfiguration
-io.github.stellflux.log.config.StellfluxLogAutoConfiguration
+io.github.stellflux.http.server.StellfluxHttpServerAutoConfiguration
+io.github.stellflux.http.client.StellfluxHttpClientAutoConfiguration
+io.github.stellflux.grpc.server.StellfluxGrpcServerAutoConfiguration
+io.github.stellflux.grpc.client.StellfluxGrpcClientAutoConfiguration
+io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration
+io.github.stellflux.stellmap.StellfluxStellMapAutoConfiguration
+io.github.stellflux.log.StellfluxLogAutoConfiguration

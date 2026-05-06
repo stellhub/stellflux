@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetryRuntime;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetrySdk;
 import io.grpc.CallOptions;

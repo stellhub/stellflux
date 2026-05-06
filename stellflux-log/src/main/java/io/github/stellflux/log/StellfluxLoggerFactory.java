@@ -3,7 +3,7 @@ package io.github.stellflux.log;
 import io.github.stellflux.log.bridge.StellfluxAppender;
 import io.github.stellflux.log.bridge.StellfluxLogger;
 import io.github.stellflux.log.sdk.OtelLogAppender;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 

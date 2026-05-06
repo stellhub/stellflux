@@ -20,6 +20,7 @@
         <module>stellflux-metrics</module>
         <module>stellflux-traces</module>
         <module>stellflux-http-client</module>
+        <module>stellflux-stellmap</module>
         <module>stellflux-grpc-server</module>
         <module>stellflux-grpc-client</module>
         <module>stellflux-spring-boot-autoconfigure</module>
@@ -32,6 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>3.5.14</spring-boot.version>
         <protobuf.version>3.25.5</protobuf.version>
+        <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
         <lombok.version>1.18.46</lombok.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     </properties>
@@ -55,6 +57,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellmap-java-sdk</artifactId>
+                <version>${stellmap-java-sdk.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf.version}</version>
@@ -73,6 +81,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-http-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-stellmap</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -133,6 +146,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-traces</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-stellmap</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

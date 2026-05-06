@@ -1,7 +1,7 @@
 package io.github.stellflux.log.springboot;
 
 import io.github.stellflux.log.bridge.logback.StellfluxLogbackBridgeInstaller;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Map;
 import java.util.Objects;

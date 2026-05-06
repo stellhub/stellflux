@@ -1,8 +1,8 @@
 package io.github.stellflux.opentelemetry.sdk;
 
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfigLoader;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfigValidator;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfigLoader;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfigValidator;
 import io.github.stellflux.opentelemetry.internal.OpenTelemetryExporterFactory;
 import io.github.stellflux.opentelemetry.internal.ResourceBuilderFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;

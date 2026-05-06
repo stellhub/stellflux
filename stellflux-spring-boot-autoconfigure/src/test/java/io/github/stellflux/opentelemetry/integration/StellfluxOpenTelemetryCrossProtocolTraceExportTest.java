@@ -14,7 +14,7 @@ import io.github.stellflux.grpc.server.StellfluxGrpcServerOptions;
 import io.github.stellflux.http.client.StellfluxHttpClient;
 import io.github.stellflux.http.client.StellfluxHttpClientFactory;
 import io.github.stellflux.http.client.StellfluxHttpClientOptions;
-import io.github.stellflux.opentelemetry.config.StellfluxOpenTelemetryConfig;
+import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetryRuntime;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetrySdk;
 import io.grpc.CallOptions;
