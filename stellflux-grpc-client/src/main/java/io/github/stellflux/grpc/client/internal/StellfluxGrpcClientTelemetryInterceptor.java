@@ -89,19 +89,16 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
                 this.context = Context.current().with(this.span);
                 this.startNanos = System.nanoTime();
                 populateSpanAttributes(this.span, method);
-                // 把当前 trace 上下文注入到 gRPC metadata 请求头里。
                 openTelemetry
                         .getPropagators()
                         .getTextMapPropagator()
                         .inject(this.context, headers, METADATA_SETTER);
-                // 在真正启动底层 gRPC 调用时，把当前 span 设成生效上下文。
                 try (Scope ignored = this.context.makeCurrent()) {
                     super.start(
                             new ForwardingClientCallListener.SimpleForwardingClientCallListener<>(
                                     responseListener) {
                                 @Override
                                 public void onHeaders(Metadata headers) {
-                                    // 回调响应头前重新进入这个 span 的上下文，保证链路连续。
                                     try (Scope innerIgnored = context.makeCurrent()) {
                                         super.onHeaders(headers);
                                     }
@@ -109,7 +106,6 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
 
                                 @Override
                                 public void onMessage(RespT message) {
-                                    // 收到响应消息时重新进入 span 上下文，让后续处理仍挂在这次调用上。
                                     try (Scope innerIgnored = context.makeCurrent()) {
                                         super.onMessage(message);
                                     }
@@ -117,20 +113,16 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
 
                                 @Override
                                 public void onClose(Status status, Metadata trailers) {
-                                    // 关闭回调前先恢复 span 上下文，确保收尾逻辑关联到当前调用。
                                     try (Scope innerIgnored = context.makeCurrent()) {
-                                        // 根据最终 gRPC 状态记录 span 结果和指标数据。
                                         recordCompletion(method, span, startNanos, status, null);
                                         super.onClose(status, trailers);
                                     } finally {
-                                        // RPC 生命周期真正结束后，关闭这个 span。
                                         span.end();
                                     }
                                 }
 
                                 @Override
                                 public void onReady() {
-                                    // 就绪回调同样恢复 span 上下文，保证回调阶段上下文一致。
                                     try (Scope innerIgnored = context.makeCurrent()) {
                                         super.onReady();
                                     }
@@ -138,9 +130,7 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
                             },
                             headers);
                 } catch (RuntimeException exception) {
-                    // 如果启动调用时直接抛异常，要立刻记录失败 telemetry。
                     recordFailure(method, span, startNanos, exception);
-                    // 因为调用没有进入正常关闭流程，所以这里主动结束 span。
                     this.span.end();
                     throw exception;
                 }
@@ -148,7 +138,6 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
 
             @Override
             public void sendMessage(ReqT message) {
-                // 发送请求消息时临时切回当前调用的 span 上下文。
                 try (Scope ignored = this.context == null ? null : this.context.makeCurrent()) {
                     super.sendMessage(message);
                 }
@@ -158,12 +147,9 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
             public void cancel(String message, Throwable cause) {
                 if (this.span != null) {
                     if (cause != null) {
-                        // 如果取消时带了异常原因，就按失败路径记录 telemetry。
                         recordFailure(method, this.span, this.startNanos, cause);
                     } else {
-                        // 如果只是普通取消，就按 CANCELLED 状态记录完成信息。
                         recordCompletion(method, this.span, this.startNanos, Status.CANCELLED, null);
-                        // 调用没有正常完成，因此把 span 标记为错误状态。
                         this.span.setStatus(StatusCode.ERROR);
                     }
                 }
