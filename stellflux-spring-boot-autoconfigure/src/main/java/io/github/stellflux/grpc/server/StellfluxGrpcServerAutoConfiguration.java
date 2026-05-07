@@ -1,5 +1,6 @@
 package io.github.stellflux.grpc.server;
 
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerInterceptor;
@@ -114,17 +115,25 @@ public class StellfluxGrpcServerAutoConfiguration {
     @Bean("stellfluxGrpcServerStarterStartupLogger")
     public SmartInitializingSingleton stellfluxGrpcServerStarterStartupLogger(
             StellfluxGrpcServerProperties properties,
-            ObjectProvider<StellfluxGrpcServiceRegistry> serviceRegistryProvider) {
+            ObjectProvider<StellfluxGrpcServiceRegistry> serviceRegistryProvider,
+            ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         StellfluxGrpcServiceRegistry serviceRegistry = serviceRegistryProvider.getIfAvailable();
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-grpc-server started successfully"
-                                        + ", configuredPort=" + properties.getPort()
-                                        + ", shutdownTimeout=" + properties.getShutdownTimeout()
-                                        + ", discoveredServices="
-                                        + (serviceRegistry != null
-                                                ? serviceRegistry.getRegistrations().size()
-                                                : 0));
+                {
+                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+                    if (moduleInfoMeter != null) {
+                        moduleInfoMeter.registerModule(
+                                "stellflux-grpc-server", StellfluxGrpcServerFactory.class);
+                    }
+                    LOGGER.info(
+                            () ->
+                                    "Starter stellflux-spring-boot-starter-grpc-server started successfully"
+                                            + ", configuredPort=" + properties.getPort()
+                                            + ", shutdownTimeout=" + properties.getShutdownTimeout()
+                                            + ", discoveredServices="
+                                            + (serviceRegistry != null
+                                                    ? serviceRegistry.getRegistrations().size()
+                                                    : 0));
+                };
     }
 }

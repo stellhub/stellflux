@@ -3,6 +3,8 @@ package io.github.stellflux.metrics;
 /** Stellflux 内置指标名称常量。 */
 public final class StellfluxMetricNames {
 
+    public static final String MODULE_INFO = "stellflux_module_info";
+
     public static final String HTTP_CLIENT_REQUESTS = "stellflux_http_client_requests";
 
     public static final String HTTP_CLIENT_DURATION = "stellflux_http_client_duration";

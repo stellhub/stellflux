@@ -1,5 +1,6 @@
 package io.github.stellflux.opentelemetry.log;
 
+import io.github.stellflux.opentelemetry.scope.StellfluxTelemetryScopeFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -22,6 +23,27 @@ public final class StellfluxAccessLogEmitter {
     public StellfluxAccessLogEmitter(
             OpenTelemetry openTelemetry, String instrumentationScopeName, String eventName) {
         this.logger = openTelemetry.getLogsBridge().loggerBuilder(instrumentationScopeName).build();
+        this.eventName = eventName;
+    }
+
+    /**
+     * 创建带模块版本的 access log 发射器。
+     *
+     * @param openTelemetry 全局 OpenTelemetry
+     * @param instrumentationScopeName instrumentation scope 名称
+     * @param eventName 事件名称
+     * @param artifactId Maven artifactId
+     * @param anchorClass 模块锚点类型
+     */
+    public StellfluxAccessLogEmitter(
+            OpenTelemetry openTelemetry,
+            String instrumentationScopeName,
+            String eventName,
+            String artifactId,
+            Class<?> anchorClass) {
+        this.logger =
+                StellfluxTelemetryScopeFactory.createLogger(
+                        openTelemetry, instrumentationScopeName, artifactId, anchorClass);
         this.eventName = eventName;
     }
 

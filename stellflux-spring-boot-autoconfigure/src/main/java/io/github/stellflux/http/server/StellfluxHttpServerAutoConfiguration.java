@@ -1,5 +1,6 @@
 package io.github.stellflux.http.server;
 
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.ObjectProvider;
@@ -74,13 +75,22 @@ public class StellfluxHttpServerAutoConfiguration {
     @Bean("stellfluxHttpServerStarterStartupLogger")
     public SmartInitializingSingleton stellfluxHttpServerStarterStartupLogger(
             StellfluxHttpServerProperties properties,
-            ObjectProvider<StellfluxHttpServerTelemetryFilter> telemetryFilterProvider) {
+            ObjectProvider<StellfluxHttpServerTelemetryFilter> telemetryFilterProvider,
+            ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-http-server started successfully"
-                                        + ", servletType=SERVLET"
-                                        + ", telemetryFilterEnabled="
-                                        + (telemetryFilterProvider.getIfAvailable() != null));
+                {
+                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+                    if (moduleInfoMeter != null) {
+                        moduleInfoMeter.registerModule(
+                                "stellflux-spring-boot-autoconfigure",
+                                StellfluxHttpServerAutoConfiguration.class);
+                    }
+                    LOGGER.info(
+                            () ->
+                                    "Starter stellflux-spring-boot-starter-http-server started successfully"
+                                            + ", servletType=SERVLET"
+                                            + ", telemetryFilterEnabled="
+                                            + (telemetryFilterProvider.getIfAvailable() != null));
+                };
     }
 }

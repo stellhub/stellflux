@@ -3,6 +3,7 @@ package io.github.stellflux.grpc.client.internal;
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.metrics.StellfluxMetricNames;
 import io.github.stellflux.opentelemetry.log.StellfluxAccessLogEmitter;
+import io.github.stellflux.opentelemetry.scope.StellfluxTelemetryScopeFactory;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -37,6 +38,8 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
 
     private static final String ACCESS_LOG_EVENT_NAME = "rpc.client.request";
 
+    private static final String ARTIFACT_ID = "stellflux-grpc-client";
+
     private static final StellfluxMeterFactory METER_FACTORY = new StellfluxMeterFactory();
 
     private static final TextMapSetter<Metadata> METADATA_SETTER =
@@ -61,10 +64,25 @@ public class StellfluxGrpcClientTelemetryInterceptor implements ClientIntercepto
         this.openTelemetry = openTelemetry;
         this.host = host;
         this.port = port;
-        this.tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE_NAME);
+        this.tracer =
+                StellfluxTelemetryScopeFactory.createTracer(
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxGrpcClientTelemetryInterceptor.class);
         this.accessLogEmitter =
-                new StellfluxAccessLogEmitter(openTelemetry, ACCESS_LOG_SCOPE_NAME, ACCESS_LOG_EVENT_NAME);
-        Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE_NAME);
+                new StellfluxAccessLogEmitter(
+                        openTelemetry,
+                        ACCESS_LOG_SCOPE_NAME,
+                        ACCESS_LOG_EVENT_NAME,
+                        ARTIFACT_ID,
+                        StellfluxGrpcClientTelemetryInterceptor.class);
+        Meter meter =
+                METER_FACTORY.create(
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxGrpcClientTelemetryInterceptor.class);
         this.requestCounter =
                 METER_FACTORY.createCounter(
                         meter, StellfluxMetricNames.GRPC_CLIENT_REQUESTS, "Total gRPC client requests");

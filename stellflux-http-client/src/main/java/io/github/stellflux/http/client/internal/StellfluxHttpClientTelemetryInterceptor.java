@@ -3,6 +3,7 @@ package io.github.stellflux.http.client.internal;
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.metrics.StellfluxMetricNames;
 import io.github.stellflux.opentelemetry.log.StellfluxAccessLogEmitter;
+import io.github.stellflux.opentelemetry.scope.StellfluxTelemetryScopeFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -31,6 +32,8 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
 
     private static final String ACCESS_LOG_EVENT_NAME = "http.client.request";
 
+    private static final String ARTIFACT_ID = "stellflux-http-client";
+
     private static final StellfluxMeterFactory METER_FACTORY = new StellfluxMeterFactory();
 
     private static final TextMapSetter<Request.Builder> REQUEST_SETTER =
@@ -48,10 +51,25 @@ public class StellfluxHttpClientTelemetryInterceptor implements Interceptor {
 
     public StellfluxHttpClientTelemetryInterceptor(OpenTelemetry openTelemetry) {
         this.openTelemetry = openTelemetry;
-        this.tracer = openTelemetry.getTracer(INSTRUMENTATION_SCOPE_NAME);
+        this.tracer =
+                StellfluxTelemetryScopeFactory.createTracer(
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxHttpClientTelemetryInterceptor.class);
         this.accessLogEmitter =
-                new StellfluxAccessLogEmitter(openTelemetry, ACCESS_LOG_SCOPE_NAME, ACCESS_LOG_EVENT_NAME);
-        Meter meter = openTelemetry.getMeter(INSTRUMENTATION_SCOPE_NAME);
+                new StellfluxAccessLogEmitter(
+                        openTelemetry,
+                        ACCESS_LOG_SCOPE_NAME,
+                        ACCESS_LOG_EVENT_NAME,
+                        ARTIFACT_ID,
+                        StellfluxHttpClientTelemetryInterceptor.class);
+        Meter meter =
+                METER_FACTORY.create(
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxHttpClientTelemetryInterceptor.class);
         this.requestCounter =
                 METER_FACTORY.createCounter(
                         meter, StellfluxMetricNames.HTTP_CLIENT_REQUESTS, "Total HTTP client requests");

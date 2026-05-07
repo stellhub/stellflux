@@ -17,6 +17,8 @@ public final class StellfluxLogbackBridgeInstaller {
 
     private static final String APPENDER_NAME_PREFIX = "stellflux-logback-";
 
+    private static final String ARTIFACT_ID = "stellflux-log";
+
     private StellfluxLogbackBridgeInstaller() {}
 
     /**
@@ -65,7 +67,12 @@ public final class StellfluxLogbackBridgeInstaller {
         StellfluxLogbackAppender appender =
                 new StellfluxLogbackAppender(
                         new StellfluxLoggerFactory()
-                                .createAppender(openTelemetry, instrumentationScopeName, config));
+                                .createAppender(
+                                        openTelemetry,
+                                        instrumentationScopeName,
+                                        ARTIFACT_ID,
+                                        StellfluxLogbackBridgeInstaller.class,
+                                        config));
         appender.setContext(context);
         appender.setName(appenderName);
         appender.start();

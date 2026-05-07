@@ -1,9 +1,11 @@
 package io.github.stellflux.http.client;
 
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import okhttp3.OkHttpClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -51,13 +53,21 @@ public class StellfluxHttpClientAutoConfiguration {
      */
     @Bean("stellfluxHttpClientStarterStartupLogger")
     public SmartInitializingSingleton stellfluxHttpClientStarterStartupLogger(
-            StellfluxHttpClientProperties properties) {
+            StellfluxHttpClientProperties properties,
+            ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-http-client started successfully"
-                                        + ", configuredClients=" + properties.getClients().size()
-                                        + ", clients=" + summarizeClients(properties.getClients()));
+                {
+                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+                    if (moduleInfoMeter != null) {
+                        moduleInfoMeter.registerModule(
+                                "stellflux-http-client", StellfluxHttpClientFactory.class);
+                    }
+                    LOGGER.info(
+                            () ->
+                                    "Starter stellflux-spring-boot-starter-http-client started successfully"
+                                            + ", configuredClients=" + properties.getClients().size()
+                                            + ", clients=" + summarizeClients(properties.getClients()));
+                };
     }
 
     private String summarizeClients(Map<String, StellfluxHttpClientProperties.ClientProperties> clients) {

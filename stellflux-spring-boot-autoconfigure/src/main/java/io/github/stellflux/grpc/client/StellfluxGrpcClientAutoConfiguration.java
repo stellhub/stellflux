@@ -1,10 +1,12 @@
 package io.github.stellflux.grpc.client;
 
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.grpc.ManagedChannel;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -51,13 +53,21 @@ public class StellfluxGrpcClientAutoConfiguration {
      */
     @Bean("stellfluxGrpcClientStarterStartupLogger")
     public SmartInitializingSingleton stellfluxGrpcClientStarterStartupLogger(
-            StellfluxGrpcClientProperties properties) {
+            StellfluxGrpcClientProperties properties,
+            ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-grpc-client started successfully"
-                                        + ", configuredClients=" + properties.getClients().size()
-                                        + ", clients=" + summarizeClients(properties.getClients()));
+                {
+                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+                    if (moduleInfoMeter != null) {
+                        moduleInfoMeter.registerModule(
+                                "stellflux-grpc-client", StellfluxGrpcChannelFactory.class);
+                    }
+                    LOGGER.info(
+                            () ->
+                                    "Starter stellflux-spring-boot-starter-grpc-client started successfully"
+                                            + ", configuredClients=" + properties.getClients().size()
+                                            + ", clients=" + summarizeClients(properties.getClients()));
+                };
     }
 
     private String summarizeClients(Map<String, StellfluxGrpcClientProperties.ClientProperties> clients) {

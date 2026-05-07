@@ -1,5 +1,6 @@
 package io.github.stellflux.log;
 
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.github.stellflux.log.springboot.StellfluxLogBootstrapResult;
 import io.github.stellflux.log.springboot.StellfluxSpringBootLogAdapter;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
@@ -89,16 +90,26 @@ public class StellfluxLogAutoConfiguration {
      */
     @Bean("stellfluxLogStarterStartupLogger")
     public SmartInitializingSingleton stellfluxLogStarterStartupLogger(
-            StellfluxLogProperties properties, StellfluxLogBootstrapResult bootstrapResult) {
+            StellfluxLogProperties properties,
+            StellfluxLogBootstrapResult bootstrapResult,
+            ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-log started successfully"
-                                        + ", enabled=" + properties.isEnabled()
-                                        + ", instrumentationScopeName="
-                                        + properties.getInstrumentationScopeName()
-                                        + ", bootstrapMode=" + bootstrapResult.getMode()
-                                        + ", installedLogbackBridge="
-                                        + bootstrapResult.isInstalledLogbackBridge());
+                {
+                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+                    if (moduleInfoMeter != null) {
+                        moduleInfoMeter.registerModule(
+                                "stellflux-log",
+                                io.github.stellflux.log.bridge.logback.StellfluxLogbackBridgeInstaller.class);
+                    }
+                    LOGGER.info(
+                            () ->
+                                    "Starter stellflux-spring-boot-starter-log started successfully"
+                                            + ", enabled=" + properties.isEnabled()
+                                            + ", instrumentationScopeName="
+                                            + properties.getInstrumentationScopeName()
+                                            + ", bootstrapMode=" + bootstrapResult.getMode()
+                                            + ", installedLogbackBridge="
+                                            + bootstrapResult.isInstalledLogbackBridge());
+                };
     }
 }
