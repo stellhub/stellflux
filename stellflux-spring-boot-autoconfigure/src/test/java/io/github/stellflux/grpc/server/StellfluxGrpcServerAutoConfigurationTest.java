@@ -16,6 +16,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,17 @@ class StellfluxGrpcServerAutoConfigurationTest {
                     assertThat(context).doesNotHaveBean(Server.class);
                     assertThat(context).doesNotHaveBean(StellfluxGrpcServiceRegistry.class);
                 });
+    }
+
+    @Test
+    void shouldSkipAutoConfigurationWhenGrpcServerFactoryIsMissing() {
+        this.contextRunner
+                .withClassLoader(new FilteredClassLoader(StellfluxGrpcServerFactory.class))
+                .run(
+                        context -> {
+                            assertThat(context).doesNotHaveBean(StellfluxGrpcServerFactory.class);
+                            assertThat(context).hasNotFailed();
+                        });
     }
 
     @Test
@@ -82,6 +94,26 @@ class StellfluxGrpcServerAutoConfigurationTest {
         AtomicBoolean shutdownInvoked = new AtomicBoolean();
         AtomicBoolean awaitInvoked = new AtomicBoolean();
         Server server = new TestServer(shutdownInvoked, awaitInvoked);
+        StellfluxGrpcServerProperties properties = new StellfluxGrpcServerProperties();
+        StellfluxGrpcServiceRegistry registry =
+                StellfluxGrpcServiceRegistry.from(
+                        java.util.Map.of("echoService", new AnnotatedEchoService()));
+        StellfluxGrpcServerLifecycle lifecycle =
+                new StellfluxGrpcServerLifecycle(server, properties, registry);
+
+        lifecycle.start();
+        lifecycle.stop();
+
+        assertThat(lifecycle.isRunning()).isFalse();
+        assertThat(shutdownInvoked).isTrue();
+        assertThat(awaitInvoked).isTrue();
+    }
+
+    @Test
+    void shouldStopLifecycleWithoutReadingPortFromTerminatedServer() {
+        AtomicBoolean shutdownInvoked = new AtomicBoolean();
+        AtomicBoolean awaitInvoked = new AtomicBoolean();
+        Server server = new PortUnavailableAfterShutdownServer(shutdownInvoked, awaitInvoked);
         StellfluxGrpcServerProperties properties = new StellfluxGrpcServerProperties();
         StellfluxGrpcServiceRegistry registry =
                 StellfluxGrpcServiceRegistry.from(
@@ -223,6 +255,22 @@ class StellfluxGrpcServerAutoConfigurationTest {
         @Override
         public void awaitTermination() {
             this.awaitInvoked.set(true);
+        }
+    }
+
+    static class PortUnavailableAfterShutdownServer extends TestServer {
+
+        PortUnavailableAfterShutdownServer(
+                AtomicBoolean shutdownInvoked, AtomicBoolean awaitInvoked) {
+            super(shutdownInvoked, awaitInvoked);
+        }
+
+        @Override
+        public int getPort() {
+            if (isShutdown()) {
+                throw new IllegalStateException("Already terminated");
+            }
+            return super.getPort();
         }
     }
 }

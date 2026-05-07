@@ -22,6 +22,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
     private final StellfluxGrpcServiceRegistry serviceRegistry;
 
     private volatile boolean running;
+    private volatile Integer listeningPort;
 
     /**
      * 启动 gRPC Server。
@@ -38,10 +39,11 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
         }
         try {
             this.server.start();
+            this.listeningPort = this.server.getPort();
             this.running = true;
             LOGGER.info(
                     () ->
-                            "Started StellfluxGrpcServer listeningPort=" + this.server.getPort()
+                            "Started StellfluxGrpcServer listeningPort=" + this.listeningPort
                                     + ", configuredPort=" + this.properties.getPort()
                                     + ", exposedServices=" + this.serviceRegistry.getRegistrations().size()
                                     + ", services="
@@ -88,7 +90,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
             this.running = false;
             LOGGER.info(
                     () ->
-                            "Stopped StellfluxGrpcServer listeningPort=" + this.server.getPort()
+                            "Stopped StellfluxGrpcServer listeningPort=" + safeListeningPort()
                                     + ", shutdownTimeout=" + timeout);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -112,5 +114,9 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
     @Override
     public int getPhase() {
         return 1000;
+    }
+
+    private String safeListeningPort() {
+        return this.listeningPort != null ? String.valueOf(this.listeningPort) : "<unknown>";
     }
 }

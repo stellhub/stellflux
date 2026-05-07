@@ -28,12 +28,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 /** StellMap 自动装配。 */
 @AutoConfiguration(after = StellfluxOpenTelemetryAutoConfiguration.class)
-@ConditionalOnClass(StellMapClient.class)
+@ConditionalOnClass({
+    StellMapClient.class, StellfluxStellMapClientFactory.class, StellfluxStellMapClientOptions.class
+})
+@Import({
+    StellfluxStellMapAutoConfiguration.LoadBalancerConfiguration.class,
+    StellfluxStellMapAutoConfiguration.WatchingSupplierConfiguration.class
+})
 @EnableConfigurationProperties(StellfluxStellMapProperties.class)
 public class StellfluxStellMapAutoConfiguration {
 
@@ -92,38 +100,6 @@ public class StellfluxStellMapAutoConfiguration {
     public StellMapClient stellMapClient(
             StellfluxStellMapClientFactory factory, StellfluxStellMapClientOptions options) {
         return factory.create(options);
-    }
-
-    /**
-     * 注册默认服务实例负载均衡器。
-     *
-     * @param properties StellMap 配置属性
-     * @return 服务实例负载均衡器
-     */
-    @Bean
-    @ConditionalOnBean(StellMapClient.class)
-    @ConditionalOnMissingBean(name = "stellfluxServiceInstanceLoadBalancer")
-    public StellfluxLoadBalancer<StellfluxServiceInstance> stellfluxServiceInstanceLoadBalancer(
-            StellfluxStellMapProperties properties) {
-        return StellfluxLoadBalancers.of(properties.getDiscovery().getLoadBalancer());
-    }
-
-    /**
-     * 注册基于 watch 的实例提供器工厂。
-     *
-     * @param stellMapClient StellMap 客户端
-     * @param properties StellMap 配置属性
-     * @return watch 型实例提供器工厂
-     */
-    @Bean(destroyMethod = "close")
-    @ConditionalOnBean(StellMapClient.class)
-    @ConditionalOnMissingBean
-    public StellMapWatchingServiceInstanceSupplierFactory
-            stellMapWatchingServiceInstanceSupplierFactory(
-                    StellMapClient stellMapClient, StellfluxStellMapProperties properties) {
-        StellfluxStellMapProperties.DiscoveryProperties discovery = properties.getDiscovery();
-        return new StellMapWatchingServiceInstanceSupplierFactory(
-                stellMapClient, discovery.getNamespace());
     }
 
     /**
@@ -263,5 +239,61 @@ public class StellfluxStellMapAutoConfiguration {
 
     private String safeText(String value) {
         return value == null || value.isBlank() ? "<default>" : value;
+    }
+
+    /** StellMap discovery 负载均衡自动装配。 */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass({
+        StellfluxLoadBalancer.class, StellfluxLoadBalancers.class, StellfluxServiceInstance.class
+    })
+    static class LoadBalancerConfiguration {
+
+        /**
+         * 注册默认服务实例负载均衡器。
+         *
+         * @param properties StellMap 配置属性
+         * @return 服务实例负载均衡器
+         */
+        @Bean
+        @ConditionalOnProperty(
+                prefix = "stellflux.stellmap",
+                name = "enabled",
+                havingValue = "true",
+                matchIfMissing = true)
+        @ConditionalOnProperty(prefix = "stellflux.stellmap", name = "base-url")
+        @ConditionalOnMissingBean(name = "stellfluxServiceInstanceLoadBalancer")
+        public StellfluxLoadBalancer<StellfluxServiceInstance> stellfluxServiceInstanceLoadBalancer(
+                StellfluxStellMapProperties properties) {
+            return StellfluxLoadBalancers.of(properties.getDiscovery().getLoadBalancer());
+        }
+    }
+
+    /** StellMap watch 实例提供器自动装配。 */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(StellMapWatchingServiceInstanceSupplierFactory.class)
+    static class WatchingSupplierConfiguration {
+
+        /**
+         * 注册基于 watch 的实例提供器工厂。
+         *
+         * @param stellMapClient StellMap 客户端
+         * @param properties StellMap 配置属性
+         * @return watch 型实例提供器工厂
+         */
+        @Bean(destroyMethod = "close")
+        @ConditionalOnProperty(
+                prefix = "stellflux.stellmap",
+                name = "enabled",
+                havingValue = "true",
+                matchIfMissing = true)
+        @ConditionalOnProperty(prefix = "stellflux.stellmap", name = "base-url")
+        @ConditionalOnMissingBean
+        public StellMapWatchingServiceInstanceSupplierFactory
+                stellMapWatchingServiceInstanceSupplierFactory(
+                        StellMapClient stellMapClient, StellfluxStellMapProperties properties) {
+            StellfluxStellMapProperties.DiscoveryProperties discovery = properties.getDiscovery();
+            return new StellMapWatchingServiceInstanceSupplierFactory(
+                    stellMapClient, discovery.getNamespace());
+        }
     }
 }

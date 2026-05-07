@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -79,6 +80,37 @@ class StellfluxStellMapAutoConfigurationTest {
                         context -> {
                             assertThat(context).doesNotHaveBean(StellfluxStellMapClientOptions.class);
                             assertThat(context).doesNotHaveBean(StellMapClient.class);
+                        });
+    }
+
+    @Test
+    void shouldKeepClientAvailableWhenLoadBalancerModuleIsMissing() {
+        contextRunner
+                .withClassLoader(new FilteredClassLoader(StellfluxLoadBalancer.class))
+                .withPropertyValues("stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                .run(
+                        context -> {
+                            assertThat(context).hasSingleBean(StellfluxStellMapClientOptions.class);
+                            assertThat(context).hasSingleBean(StellMapClient.class);
+                            assertThat(context).doesNotHaveBean(StellfluxLoadBalancer.class);
+                            assertThat(context).hasNotFailed();
+                        });
+    }
+
+    @Test
+    void shouldKeepClientAvailableWhenWatchingSupplierModuleIsMissing() {
+        contextRunner
+                .withClassLoader(
+                        new FilteredClassLoader(StellMapWatchingServiceInstanceSupplierFactory.class))
+                .withPropertyValues("stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                .run(
+                        context -> {
+                            assertThat(context).hasSingleBean(StellfluxStellMapClientOptions.class);
+                            assertThat(context).hasSingleBean(StellMapClient.class);
+                            assertThat(context).hasSingleBean(StellfluxLoadBalancer.class);
+                            assertThat(context)
+                                    .doesNotHaveBean(StellMapWatchingServiceInstanceSupplierFactory.class);
+                            assertThat(context).hasNotFailed();
                         });
     }
 

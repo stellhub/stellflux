@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 
 /** gRPC client auto configuration. */
 @AutoConfiguration
-@ConditionalOnClass(ManagedChannel.class)
+@ConditionalOnClass({ManagedChannel.class, StellfluxGrpcChannelFactory.class})
 @EnableConfigurationProperties(StellfluxGrpcClientProperties.class)
 public class StellfluxGrpcClientAutoConfiguration {
 

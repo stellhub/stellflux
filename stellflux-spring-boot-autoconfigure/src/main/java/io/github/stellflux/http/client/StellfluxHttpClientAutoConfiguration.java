@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 
 /** HTTP client auto configuration. */
 @AutoConfiguration
-@ConditionalOnClass({OkHttpClient.class, StellfluxHttpClient.class})
+@ConditionalOnClass({OkHttpClient.class, StellfluxHttpClient.class, StellfluxHttpClientFactory.class})
 @EnableConfigurationProperties(StellfluxHttpClientProperties.class)
 public class StellfluxHttpClientAutoConfiguration {
 

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
 
 /** gRPC server auto configuration. */
 @AutoConfiguration
-@ConditionalOnClass(NettyServerBuilder.class)
+@ConditionalOnClass({NettyServerBuilder.class, StellfluxGrpcServerFactory.class})
 @EnableConfigurationProperties(StellfluxGrpcServerProperties.class)
 public class StellfluxGrpcServerAutoConfiguration {
 
