@@ -13,6 +13,8 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.lite.ProtoLiteUtils;
 import io.grpc.stub.ServerCalls;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -106,6 +108,28 @@ class StellfluxGrpcServerAutoConfigurationTest {
 
         assertThat(lifecycle.isRunning()).isFalse();
         assertThat(shutdownInvoked).isTrue();
+        assertThat(awaitInvoked).isTrue();
+    }
+
+    @Test
+    void shouldWaitForServerTerminationAfterStart() throws InterruptedException {
+        AtomicBoolean shutdownInvoked = new AtomicBoolean();
+        AtomicBoolean awaitInvoked = new AtomicBoolean();
+        CountDownLatch awaitStarted = new CountDownLatch(1);
+        Server server = new AwaitingServer(shutdownInvoked, awaitInvoked, awaitStarted);
+        StellfluxGrpcServerProperties properties = new StellfluxGrpcServerProperties();
+        StellfluxGrpcServiceRegistry registry =
+                StellfluxGrpcServiceRegistry.from(
+                        java.util.Map.of("echoService", new AnnotatedEchoService()));
+        StellfluxGrpcServerLifecycle lifecycle =
+                new StellfluxGrpcServerLifecycle(server, properties, registry);
+
+        lifecycle.start();
+
+        assertThat(awaitStarted.await(1, TimeUnit.SECONDS)).isTrue();
+
+        lifecycle.stop();
+
         assertThat(awaitInvoked).isTrue();
     }
 
@@ -271,6 +295,31 @@ class StellfluxGrpcServerAutoConfigurationTest {
                 throw new IllegalStateException("Already terminated");
             }
             return super.getPort();
+        }
+    }
+
+    static class AwaitingServer extends TestServer {
+
+        private final CountDownLatch awaitStarted;
+
+        AwaitingServer(
+                AtomicBoolean shutdownInvoked,
+                AtomicBoolean awaitInvoked,
+                CountDownLatch awaitStarted) {
+            super(shutdownInvoked, awaitInvoked);
+            this.awaitStarted = awaitStarted;
+        }
+
+        @Override
+        public void awaitTermination() {
+            this.awaitStarted.countDown();
+            try {
+                while (!isShutdown()) {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                }
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }

@@ -13,6 +13,8 @@ public class StellfluxOpenTelemetryExampleApplication {
      * @param args 启动参数
      */
     public static void main(String[] args) {
+        // only for local mode
+        System.setProperty("log.stdout","true");
         SpringApplication.run(StellfluxOpenTelemetryExampleApplication.class, args);
     }
 }

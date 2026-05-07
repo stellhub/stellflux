@@ -13,6 +13,8 @@ public class StellfluxStellMapExampleApplication {
      * @param args 启动参数
      */
     public static void main(String[] args) {
+        // only for local mode
+        System.setProperty("log.stdout","true");
         SpringApplication.run(StellfluxStellMapExampleApplication.class, args);
     }
 }

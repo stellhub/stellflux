@@ -13,6 +13,8 @@ public class StellfluxGrpcServerExampleApplication {
      * @param args 启动参数
      */
     public static void main(String[] args) {
+        // only for local mode
+        System.setProperty("log.stdout","true");
         SpringApplication.run(StellfluxGrpcServerExampleApplication.class, args);
     }
 }

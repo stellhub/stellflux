@@ -1,9 +1,12 @@
 package io.github.stellflux.grpc.server;
 
 import io.grpc.Server;
+import io.github.stellflux.stellmap.registration.StellfluxRegistrationProperties;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.SmartLifecycle;
@@ -23,6 +26,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
 
     private volatile boolean running;
     private volatile Integer listeningPort;
+    private volatile Thread awaitThread;
 
     /**
      * 启动 gRPC Server。
@@ -41,16 +45,30 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
             this.server.start();
             this.listeningPort = this.server.getPort();
             this.running = true;
+            startAwaitThread();
             LOGGER.info(
                     () ->
                             "Started StellfluxGrpcServer listeningPort=" + this.listeningPort
                                     + ", configuredPort=" + this.properties.getPort()
+                                    + ", config=" + summarizeConfig()
                                     + ", exposedServices=" + this.serviceRegistry.getRegistrations().size()
                                     + ", services="
                                     + this.serviceRegistry.summarizeRegistrations()
                                     + ", skippedServices="
                                     + this.serviceRegistry.summarizeSkippedBeans());
         } catch (IOException exception) {
+            LOGGER.log(
+                    Level.SEVERE,
+                    () ->
+                            "Failed to start StellfluxGrpcServer configuredPort="
+                                    + this.properties.getPort()
+                                    + ", config="
+                                    + summarizeConfig()
+                                    + ", exposedServices="
+                                    + this.serviceRegistry.getRegistrations().size()
+                                    + ", services="
+                                    + this.serviceRegistry.summarizeRegistrations());
+            LOGGER.log(Level.SEVERE, "StellfluxGrpcServer start exception", exception);
             throw new IllegalStateException("Failed to start StellfluxGrpcServer", exception);
         }
     }
@@ -88,6 +106,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
                 this.server.shutdownNow();
             }
             this.running = false;
+            clearAwaitThread();
             LOGGER.info(
                     () ->
                             "Stopped StellfluxGrpcServer listeningPort=" + safeListeningPort()
@@ -95,6 +114,14 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             this.server.shutdownNow();
+            LOGGER.log(
+                    Level.SEVERE,
+                    () ->
+                            "Interrupted while stopping StellfluxGrpcServer listeningPort="
+                                    + safeListeningPort()
+                                    + ", shutdownTimeout="
+                                    + this.properties.getShutdownTimeout());
+            LOGGER.log(Level.SEVERE, "StellfluxGrpcServer stop exception", exception);
             throw new IllegalStateException("Interrupted while stopping StellfluxGrpcServer", exception);
         } finally {
             callback.run();
@@ -116,7 +143,62 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
         return 1000;
     }
 
+    private void startAwaitThread() {
+        Thread thread =
+                new Thread(
+                        () -> {
+                            try {
+                                this.server.awaitTermination();
+                            } catch (InterruptedException exception) {
+                                Thread.currentThread().interrupt();
+                            } catch (Exception exception) {
+                                LOGGER.log(Level.SEVERE, "StellfluxGrpcServer await thread failed", exception);
+                            }
+                        },
+                        "stellflux-grpc-server-await");
+        thread.setDaemon(false);
+        thread.start();
+        this.awaitThread = thread;
+    }
+
+    private void clearAwaitThread() {
+        Thread thread = this.awaitThread;
+        this.awaitThread = null;
+        if (thread != null) {
+            thread.interrupt();
+        }
+    }
+
     private String safeListeningPort() {
         return this.listeningPort != null ? String.valueOf(this.listeningPort) : "<unknown>";
+    }
+
+    private String summarizeConfig() {
+        StellfluxRegistrationProperties registration = this.properties.getRegistration();
+        return "{port=" + this.properties.getPort()
+                + ", shutdownTimeout=" + this.properties.getShutdownTimeout()
+                + ", registration={enabled=" + registration.isEnabled()
+                + ", namespace=" + safeText(registration.getNamespace())
+                + ", host=" + safeText(registration.getHost())
+                + ", instanceId=" + safeText(registration.getInstanceId())
+                + ", organization=" + safeText(registration.getOrganization())
+                + ", businessDomain=" + safeText(registration.getBusinessDomain())
+                + ", capabilityDomain=" + safeText(registration.getCapabilityDomain())
+                + ", application=" + safeText(registration.getApplication())
+                + ", role=" + safeText(registration.getRole())
+                + ", zone=" + safeText(registration.getZone())
+                + ", leaseTtlSeconds=" + registration.getLeaseTtlSeconds()
+                + ", weight=" + registration.getWeight()
+                + ", labels=" + formatAttributes(registration.getLabels())
+                + ", metadata=" + formatAttributes(registration.getMetadata())
+                + "}}";
+    }
+
+    private String safeText(String value) {
+        return value == null || value.isBlank() ? "<none>" : value;
+    }
+
+    private String formatAttributes(Map<String, String> attributes) {
+        return attributes == null || attributes.isEmpty() ? "{}" : attributes.toString();
     }
 }

@@ -22,6 +22,7 @@
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
         <log.stdout>true</log.stdout>
+        <netty.unsafe.memory.access>allow</netty.unsafe.memory.access>
     </properties>
 
     <modules>
@@ -43,6 +44,9 @@
                     <arguments>
                         <argument>--log.stdout=${log.stdout}</argument>
                     </arguments>
+                    <jvmArguments>
+                        --sun-misc-unsafe-memory-access=${netty.unsafe.memory.access}
+                    </jvmArguments>
                 </configuration>
             </plugin>
         </plugins>
