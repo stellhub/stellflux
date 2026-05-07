@@ -1,5 +1,6 @@
 package io.github.stellflux.http.server;
 
+import io.github.stellflux.stellmap.registration.StellfluxRegistrationProperties;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,6 +11,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "stellflux.http.server")
 public class StellfluxHttpServerProperties {
 
-    /** Enable the HTTP server support. */
-    private boolean enabled = true;
+    /** HTTP 服务注册标识。 */
+    private String serviceId;
+
+    /** HTTP 服务注册配置。 */
+    private final StellfluxRegistrationProperties registration = new StellfluxRegistrationProperties();
 }

@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -20,11 +19,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 @AutoConfiguration
 @ConditionalOnClass(DispatcherServlet.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnProperty(
-        prefix = "stellflux.http.server",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true)
 @EnableConfigurationProperties(StellfluxHttpServerProperties.class)
 public class StellfluxHttpServerAutoConfiguration {
 
@@ -85,7 +79,6 @@ public class StellfluxHttpServerAutoConfiguration {
                 LOGGER.info(
                         () ->
                                 "Starter stellflux-spring-boot-starter-http-server started successfully"
-                                        + ", enabled=" + properties.isEnabled()
                                         + ", servletType=SERVLET"
                                         + ", telemetryFilterEnabled="
                                         + (telemetryFilterProvider.getIfAvailable() != null));

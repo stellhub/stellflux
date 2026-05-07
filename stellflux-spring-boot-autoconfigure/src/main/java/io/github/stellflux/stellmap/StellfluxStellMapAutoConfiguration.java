@@ -1,12 +1,18 @@
 package io.github.stellflux.stellmap;
 
+import io.github.stellflux.grpc.server.StellfluxGrpcServiceRegistry;
+import io.github.stellflux.grpc.server.StellfluxGrpcServerProperties;
+import io.github.stellflux.http.server.StellfluxHttpServerProperties;
 import io.github.stellflux.loadbalancer.StellfluxLoadBalancer;
 import io.github.stellflux.loadbalancer.StellfluxLoadBalancers;
 import io.github.stellflux.loadbalancer.StellfluxServiceInstance;
 import io.github.stellflux.loadbalancer.stellmap.StellMapWatchingServiceInstanceSupplierFactory;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
+import io.github.stellflux.stellmap.registration.StellfluxGrpcServiceStellMapRegistrationLifecycle;
+import io.github.stellflux.stellmap.registration.StellfluxHttpServerStellMapRegistrationLifecycle;
 import io.github.stellmap.StellMapClient;
 import io.opentelemetry.api.OpenTelemetry;
+import io.grpc.Server;
 import java.util.logging.Logger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,9 +24,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 /** StellMap 自动装配。 */
@@ -116,6 +124,68 @@ public class StellfluxStellMapAutoConfiguration {
         StellfluxStellMapProperties.DiscoveryProperties discovery = properties.getDiscovery();
         return new StellMapWatchingServiceInstanceSupplierFactory(
                 stellMapClient, discovery.getNamespace());
+    }
+
+    /**
+     * 注册 HTTP 服务的 StellMap 生命周期。
+     *
+     * @param stellMapClient StellMap 客户端
+     * @param applicationContext WebServer 应用上下文
+     * @param properties HTTP 服务端配置
+     * @param stellMapProperties StellMap 配置
+     * @param environment Spring 环境
+     * @return HTTP 注册生命周期
+     */
+    @Bean("stellfluxHttpServerStellMapRegistrationLifecycle")
+    @ConditionalOnBean(StellMapClient.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    @ConditionalOnProperty(prefix = "stellflux.http.server", name = "service-id")
+    @ConditionalOnMissingBean(name = "stellfluxHttpServerStellMapRegistrationLifecycle")
+    public StellfluxHttpServerStellMapRegistrationLifecycle
+            stellfluxHttpServerStellMapRegistrationLifecycle(
+                    StellMapClient stellMapClient,
+                    ApplicationContext applicationContext,
+                    StellfluxHttpServerProperties properties,
+                    StellfluxStellMapProperties stellMapProperties,
+                    Environment environment) {
+        return new StellfluxHttpServerStellMapRegistrationLifecycle(
+                stellMapClient,
+                org.springframework.boot.web.context.WebServerApplicationContext.class.cast(
+                        applicationContext),
+                properties,
+                stellMapProperties.getDiscovery().getNamespace(),
+                environment);
+    }
+
+    /**
+     * 注册 gRPC 服务的 StellMap 生命周期。
+     *
+     * @param stellMapClient StellMap 客户端
+     * @param server gRPC Server
+     * @param properties gRPC 配置
+     * @param serviceRegistry gRPC 服务注册表
+     * @param stellMapProperties StellMap 配置
+     * @param environment Spring 环境
+     * @return gRPC 注册生命周期
+     */
+    @Bean("stellfluxGrpcServiceStellMapRegistrationLifecycle")
+    @ConditionalOnBean({StellMapClient.class, Server.class, StellfluxGrpcServiceRegistry.class})
+    @ConditionalOnMissingBean(name = "stellfluxGrpcServiceStellMapRegistrationLifecycle")
+    public StellfluxGrpcServiceStellMapRegistrationLifecycle
+            stellfluxGrpcServiceStellMapRegistrationLifecycle(
+                    StellMapClient stellMapClient,
+                    Server server,
+                    StellfluxGrpcServerProperties properties,
+                    StellfluxGrpcServiceRegistry serviceRegistry,
+                    StellfluxStellMapProperties stellMapProperties,
+                    Environment environment) {
+        return new StellfluxGrpcServiceStellMapRegistrationLifecycle(
+                stellMapClient,
+                server,
+                properties,
+                serviceRegistry,
+                stellMapProperties.getDiscovery().getNamespace(),
+                environment);
     }
 
     /**
