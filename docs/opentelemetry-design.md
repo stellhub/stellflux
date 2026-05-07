@@ -106,6 +106,12 @@
 - traces provider 与采样器配置  
   [StellfluxOpenTelemetrySdk.java](/E:/PersonalCode/JavaProject/stellflux/stellflux-opentelemetry/src/main/java/io/github/stellflux/opentelemetry/sdk/StellfluxOpenTelemetrySdk.java:89)
 
+### 5.1.1 `TraceId` 默认生成算法
+
+当前 `stellflux` 没有自定义 `IdGenerator`，因此 `SdkTracerProvider.builder()` 会使用 OpenTelemetry Java SDK 默认的 `IdGenerator.random()`。基于当前项目实际依赖的 `opentelemetry-sdk-trace:1.49.0` 反编译结果可以确认：默认实现是 `RandomIdGenerator`，在标准 JDK 上通过 `ThreadLocalRandom.current()` 取随机数，连续生成两个 `long` 作为一个 128 bit 的 `traceId`，并保证结果不是全 0，最终编码为 32 位小写十六进制字符串。也就是说，当前 `traceId` 不是时间戳、雪花算法或 UUID 文本，而是符合 W3C Trace Context 预期的随机追踪标识。
+
+这一默认实现适合生产环境中的分布式追踪场景，业界主流做法也是直接使用 OpenTelemetry 默认生成器，而不是主动自定义。只有在需要兼容历史链路 ID 格式、接入特定厂商协议，或测试中需要可预测 ID 时，才建议显式自定义 `IdGenerator`。需要注意的是，`traceId` 的职责是链路关联，不应被当作认证凭证、权限令牌或其他安全边界来使用。
+
 ### 5.2 HTTP server 入站
 
 HTTP server telemetry 由 filter 负责：
