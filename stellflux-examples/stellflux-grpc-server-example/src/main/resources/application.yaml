@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: stellflux-grpc-server-example
+
+stellflux:
+  grpc:
+    server:
+      port: 19090
+  opentelemetry:
+    resource:
+      service-name: stellflux-grpc-server-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

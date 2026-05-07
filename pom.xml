@@ -27,6 +27,7 @@
         <module>stellflux-grpc-client</module>
         <module>stellflux-spring-boot-autoconfigure</module>
         <module>stellflux-spring-boot-starter-parent</module>
+        <module>stellflux-examples</module>
     </modules>
 
     <properties>

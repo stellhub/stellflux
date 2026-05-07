@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: stellflux-http-client-example
+  main:
+    web-application-type: none
+
+example:
+  http:
+    client:
+      invoke-on-startup: false
+
+stellflux:
+  opentelemetry:
+    resource:
+      service-name: stellflux-http-client-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

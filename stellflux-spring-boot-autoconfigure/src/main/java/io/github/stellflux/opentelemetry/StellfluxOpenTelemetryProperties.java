@@ -82,6 +82,7 @@ public class StellfluxOpenTelemetryProperties {
         private String k8sClusterName;
         private String cloudRegion;
         private String cloudAvailabilityZone;
+        private String idc;
         private String hostName;
         private String hostIp;
         private String k8sNodeName;

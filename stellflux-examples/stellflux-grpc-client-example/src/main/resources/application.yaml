@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: stellflux-grpc-client-example
+  main:
+    web-application-type: none
+
+example:
+  grpc:
+    client:
+      invoke-on-startup: false
+
+stellflux:
+  opentelemetry:
+    resource:
+      service-name: stellflux-grpc-client-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

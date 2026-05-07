@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: stellflux-http-server-example
+
+server:
+  port: 18080
+
+stellflux:
+  http:
+    server:
+      service-id: example.http.server
+  opentelemetry:
+    resource:
+      service-name: stellflux-http-server-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

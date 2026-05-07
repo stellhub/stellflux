@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.stellhub</groupId>
+        <artifactId>stellflux</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>stellflux-examples</artifactId>
+    <packaging>pom</packaging>
+
+    <name>stellflux-examples</name>
+    <description>Example applications for stellflux</description>
+
+    <properties>
+        <grpc.version>1.80.0</grpc.version>
+        <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+        <javax.annotation-api.version>1.3.2</javax.annotation-api.version>
+        <log.stdout>true</log.stdout>
+    </properties>
+
+    <modules>
+        <module>stellflux-http-server-example</module>
+        <module>stellflux-http-client-example</module>
+        <module>stellflux-grpc-client-example</module>
+        <module>stellflux-grpc-server-example</module>
+        <module>stellflux-opentelemetry-example</module>
+        <module>stellflux-stellmap-example</module>
+    </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <arguments>
+                        <argument>--log.stdout=${log.stdout}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

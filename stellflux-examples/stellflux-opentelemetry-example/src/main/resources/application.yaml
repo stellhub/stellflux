@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: stellflux-opentelemetry-example
+  main:
+    web-application-type: none
+
+stellflux:
+  opentelemetry:
+    resource:
+      service-name: stellflux-opentelemetry-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: true
