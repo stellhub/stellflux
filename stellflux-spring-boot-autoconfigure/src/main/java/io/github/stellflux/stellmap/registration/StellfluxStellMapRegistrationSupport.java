@@ -39,7 +39,14 @@ public final class StellfluxStellMapRegistrationSupport {
         String namespace = resolveNamespace(registration, defaultNamespace);
         String host = resolveHost(registration, environment);
         String application = resolveApplication(serviceId, registration, environment);
-        String instanceId = resolveInstanceId(serviceId, host, port, registration);
+        String organization = resolveOrganization(serviceId, application, registration);
+        String businessDomain = resolveBusinessDomain(serviceId, application, registration);
+        String capabilityDomain = resolveCapabilityDomain(serviceId, application, registration);
+        String role = resolveRole(registration);
+        String structuredService =
+                buildStructuredServiceIdentity(
+                        organization, businessDomain, capabilityDomain, application, role);
+        String instanceId = resolveInstanceId(structuredService, host, port, registration);
         Map<String, String> labels = new LinkedHashMap<>(registration.getLabels());
         labels.putIfAbsent("transport", "http");
         Map<String, String> metadata = new LinkedHashMap<>(registration.getMetadata());
@@ -55,13 +62,13 @@ public final class StellfluxStellMapRegistrationSupport {
                         .build();
         return RegisterRequest.builder()
                 .namespace(namespace)
-                .service(serviceId)
+                .service(structuredService)
                 .application(application)
-                .role(resolveRole(registration))
+                .role(role)
                 .instanceId(instanceId)
-                .organization(trimToNull(registration.getOrganization()))
-                .businessDomain(trimToNull(registration.getBusinessDomain()))
-                .capabilityDomain(trimToNull(registration.getCapabilityDomain()))
+                .organization(organization)
+                .businessDomain(businessDomain)
+                .capabilityDomain(capabilityDomain)
                 .zone(trimToNull(registration.getZone()))
                 .labels(labels)
                 .metadata(metadata)
@@ -91,7 +98,14 @@ public final class StellfluxStellMapRegistrationSupport {
         String namespace = resolveNamespace(registration, defaultNamespace);
         String host = resolveHost(registration, environment);
         String application = resolveApplication(serviceId, registration, environment);
-        String instanceId = resolveInstanceId(serviceId, host, port, registration);
+        String organization = resolveOrganization(serviceId, application, registration);
+        String businessDomain = resolveBusinessDomain(serviceId, application, registration);
+        String capabilityDomain = resolveCapabilityDomain(serviceId, application, registration);
+        String role = resolveRole(registration);
+        String structuredService =
+                buildStructuredServiceIdentity(
+                        organization, businessDomain, capabilityDomain, application, role);
+        String instanceId = resolveInstanceId(structuredService, host, port, registration);
         Map<String, String> labels = new LinkedHashMap<>(registration.getLabels());
         labels.putIfAbsent("transport", "grpc");
         Map<String, String> metadata = new LinkedHashMap<>(registration.getMetadata());
@@ -115,13 +129,13 @@ public final class StellfluxStellMapRegistrationSupport {
                         .build();
         return RegisterRequest.builder()
                 .namespace(namespace)
-                .service(serviceId)
+                .service(structuredService)
                 .application(application)
-                .role(resolveRole(registration))
+                .role(role)
                 .instanceId(instanceId)
-                .organization(trimToNull(registration.getOrganization()))
-                .businessDomain(trimToNull(registration.getBusinessDomain()))
-                .capabilityDomain(trimToNull(registration.getCapabilityDomain()))
+                .organization(organization)
+                .businessDomain(businessDomain)
+                .capabilityDomain(capabilityDomain)
                 .zone(trimToNull(registration.getZone()))
                 .labels(labels)
                 .metadata(metadata)
@@ -210,6 +224,78 @@ public final class StellfluxStellMapRegistrationSupport {
 
     private static String resolveRole(StellfluxRegistrationProperties registration) {
         return StringUtils.hasText(registration.getRole()) ? registration.getRole().trim() : "provider";
+    }
+
+    private static String buildStructuredServiceIdentity(
+            String organization,
+            String businessDomain,
+            String capabilityDomain,
+            String application,
+            String role) {
+        return String.join(
+                ".",
+                organization.trim(),
+                businessDomain.trim(),
+                capabilityDomain.trim(),
+                application.trim(),
+                role.trim());
+    }
+
+    private static String resolveOrganization(
+            String serviceId,
+            String application,
+            StellfluxRegistrationProperties registration) {
+        List<String> serviceIdSegments = splitServiceId(serviceId);
+        return firstNonBlank(
+                trimToNull(registration.getOrganization()),
+                segmentAt(serviceIdSegments, 0),
+                application,
+                serviceId);
+    }
+
+    private static String resolveBusinessDomain(
+            String serviceId,
+            String application,
+            StellfluxRegistrationProperties registration) {
+        List<String> serviceIdSegments = splitServiceId(serviceId);
+        return firstNonBlank(
+                trimToNull(registration.getBusinessDomain()),
+                segmentAt(serviceIdSegments, 1),
+                segmentAt(serviceIdSegments, 0),
+                application,
+                serviceId);
+    }
+
+    private static String resolveCapabilityDomain(
+            String serviceId,
+            String application,
+            StellfluxRegistrationProperties registration) {
+        List<String> serviceIdSegments = splitServiceId(serviceId);
+        return firstNonBlank(
+                trimToNull(registration.getCapabilityDomain()),
+                segmentAt(serviceIdSegments, 2),
+                segmentAt(serviceIdSegments, 1),
+                segmentAt(serviceIdSegments, 0),
+                application,
+                serviceId);
+    }
+
+    private static List<String> splitServiceId(String serviceId) {
+        String[] segments = StringUtils.tokenizeToStringArray(serviceId, ".");
+        return segments == null ? List.of() : List.of(segments);
+    }
+
+    private static String segmentAt(List<String> segments, int index) {
+        return index >= 0 && index < segments.size() ? segments.get(index) : null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (StringUtils.hasText(value)) {
+                return value.trim();
+            }
+        }
+        return null;
     }
 
     private static String normalizeHttpPath(String contextPath) {

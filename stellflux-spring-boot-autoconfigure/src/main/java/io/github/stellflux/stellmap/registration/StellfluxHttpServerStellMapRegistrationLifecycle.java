@@ -1,6 +1,7 @@
 package io.github.stellflux.stellmap.registration;
 
 import io.github.stellflux.http.server.StellfluxHttpServerProperties;
+import io.github.stellflux.opentelemetry.StellfluxServiceNameResolver;
 import io.github.stellmap.HeartbeatSubscription;
 import io.github.stellmap.StellMapClient;
 import io.github.stellmap.model.DeregisterRequest;
@@ -8,6 +9,8 @@ import io.github.stellmap.model.RegisterRequest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.boot.web.context.WebServerApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
@@ -15,7 +18,8 @@ import org.springframework.util.StringUtils;
 
 /** HTTP 服务 StellMap 注册生命周期。 */
 @RequiredArgsConstructor
-public class StellfluxHttpServerStellMapRegistrationLifecycle implements SmartLifecycle {
+public class StellfluxHttpServerStellMapRegistrationLifecycle
+        implements SmartLifecycle, ApplicationListener<ServletWebServerInitializedEvent> {
 
     private static final Logger LOGGER =
             Logger.getLogger(StellfluxHttpServerStellMapRegistrationLifecycle.class.getName());
@@ -32,38 +36,21 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle implements SmartLi
 
     private volatile boolean running;
 
+    private volatile boolean lifecycleStarted;
+
+    private volatile Integer webServerPort;
+
     private volatile HeartbeatSubscription heartbeatSubscription;
 
     private volatile RegisterRequest registerRequest;
 
     @Override
     public synchronized void start() {
-        if (this.running) {
+        if (this.lifecycleStarted) {
             return;
         }
-        if (!StringUtils.hasText(this.properties.getServiceId())
-                || !this.properties.getRegistration().isEnabled()) {
-            return;
-        }
-        int port = this.applicationContext.getWebServer().getPort();
-        this.registerRequest =
-                StellfluxStellMapRegistrationSupport.buildHttpRegisterRequest(
-                        this.properties.getServiceId().trim(),
-                        port,
-                        this.environment.getProperty("server.servlet.context-path"),
-                        this.properties.getRegistration(),
-                        this.defaultNamespace,
-                        this.environment);
-        this.heartbeatSubscription =
-                this.stellMapClient.registerAndScheduleHeartbeat(this.registerRequest);
-        this.running = true;
-        LOGGER.info(
-                () ->
-                        "Registered HTTP service to StellMap serviceId="
-                                + this.registerRequest.getService()
-                                + ", namespace=" + this.registerRequest.getNamespace()
-                                + ", port=" + port
-                                + ", instanceId=" + this.registerRequest.getInstanceId());
+        this.lifecycleStarted = true;
+        registerIfReady();
     }
 
     @Override
@@ -75,6 +62,7 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle implements SmartLi
     @Override
     public synchronized void stop(Runnable callback) {
         try {
+            this.lifecycleStarted = false;
             if (!this.running) {
                 return;
             }
@@ -93,6 +81,8 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle implements SmartLi
                                         + ", instanceId=" + deregisterRequest.getInstanceId());
             }
             this.running = false;
+            this.heartbeatSubscription = null;
+            this.registerRequest = null;
         } catch (RuntimeException exception) {
             LOGGER.log(Level.WARNING, "Failed to deregister HTTP service from StellMap", exception);
         } finally {
@@ -111,7 +101,45 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle implements SmartLi
     }
 
     @Override
+    public synchronized void onApplicationEvent(ServletWebServerInitializedEvent event) {
+        if (event.getApplicationContext() != this.applicationContext) {
+            return;
+        }
+        this.webServerPort = event.getWebServer().getPort();
+        registerIfReady();
+    }
+
+    @Override
     public int getPhase() {
         return 1100;
+    }
+
+    private void registerIfReady() {
+        if (this.running || !this.lifecycleStarted || !this.properties.getRegistration().isEnabled()) {
+            return;
+        }
+        String serviceName = StellfluxServiceNameResolver.resolve(this.environment);
+        if (!StringUtils.hasText(serviceName) || this.webServerPort == null || this.webServerPort <= 0) {
+            return;
+        }
+        int port = this.webServerPort;
+        this.registerRequest =
+                StellfluxStellMapRegistrationSupport.buildHttpRegisterRequest(
+                        serviceName,
+                        port,
+                        this.environment.getProperty("server.servlet.context-path"),
+                        this.properties.getRegistration(),
+                        this.defaultNamespace,
+                        this.environment);
+        this.heartbeatSubscription =
+                this.stellMapClient.registerAndScheduleHeartbeat(this.registerRequest);
+        this.running = true;
+        LOGGER.info(
+                () ->
+                        "Registered HTTP service to StellMap serviceId="
+                                + this.registerRequest.getService()
+                                + ", namespace=" + this.registerRequest.getNamespace()
+                                + ", port=" + port
+                                + ", instanceId=" + this.registerRequest.getInstanceId());
     }
 }

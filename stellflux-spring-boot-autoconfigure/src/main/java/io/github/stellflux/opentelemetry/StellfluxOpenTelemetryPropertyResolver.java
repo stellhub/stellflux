@@ -243,26 +243,7 @@ final class StellfluxOpenTelemetryPropertyResolver {
     }
 
     private String resolveServiceName() {
-        String serviceName =
-                firstNonBlank(
-                        findString(PropertySourceLayer.CONFIGURATION, RESOURCE_PREFIX + ".service-name"),
-                        findString(PropertySourceLayer.CONFIGURATION, "spring.application.name"),
-                        findString(
-                                PropertySourceLayer.COMMAND_LINE,
-                                RESOURCE_PREFIX + ".service-name",
-                                "spring.application.name",
-                                "stellflux_OTEL_SERVICE_NAME",
-                                "OTEL_SERVICE_NAME",
-                                "STELLAR_APP_NAME"),
-                        findString(
-                                PropertySourceLayer.ENVIRONMENT,
-                                RESOURCE_PREFIX + ".service-name",
-                                "spring.application.name",
-                                "stellflux_OTEL_SERVICE_NAME",
-                                "OTEL_SERVICE_NAME",
-                                "STELLAR_APP_NAME"),
-                        findString(PropertySourceLayer.DEFAULT, RESOURCE_PREFIX + ".service-name"));
-        return firstNonBlank(serviceName, "unknown-service");
+        return StellfluxServiceNameResolver.resolve(this.environment);
     }
 
     private String resolveEnvironment() {

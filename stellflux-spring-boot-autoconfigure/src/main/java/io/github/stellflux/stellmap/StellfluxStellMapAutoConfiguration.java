@@ -115,7 +115,6 @@ public class StellfluxStellMapAutoConfiguration {
     @Bean("stellfluxHttpServerStellMapRegistrationLifecycle")
     @ConditionalOnBean(StellMapClient.class)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    @ConditionalOnProperty(prefix = "stellflux.http.server", name = "service-id")
     @ConditionalOnMissingBean(name = "stellfluxHttpServerStellMapRegistrationLifecycle")
     public StellfluxHttpServerStellMapRegistrationLifecycle
             stellfluxHttpServerStellMapRegistrationLifecycle(

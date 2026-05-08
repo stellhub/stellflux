@@ -1,22 +1,19 @@
 spring:
   application:
-    name: stellflux-stellmap-example
+    name: http-example
 
 server:
   port: 18081
 
 stellflux:
-  http:
-    server:
-      service-id: example.stellmap.http
+  stellmap:
+    base-url: http://192.168.1.14:8080
   opentelemetry:
     resource:
-      service-name: stellflux-stellmap-example
+      service-name: stellhub.examples.http
     logs:
       enabled: false
     metrics:
       enabled: false
     traces:
       enabled: false
-  # stellmap:
-  #   base-url: http://127.0.0.1:8080

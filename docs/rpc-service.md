@@ -40,9 +40,9 @@ HTTP 服务注册到 StellMap 的最小配置：
 stellflux:
   stellmap:
     base-url: http://127.0.0.1:8080
-  http:
-    server:
-      service-id: edge.gateway.http
+  opentelemetry:
+    resource:
+      service-name: edge.gateway.http
 ```
 
 这里不需要也不应该再写 `stellflux.http.server.enabled=true`。

@@ -47,14 +47,19 @@ class StellfluxGrpcServiceStellMapRegistrationLifecycleTest {
                         context -> {
                             assertThat(stellMapClient.registerRequests).hasSize(1);
                             RegisterRequest request = stellMapClient.registerRequests.getFirst();
-                            assertThat(request.getService()).isEqualTo("trade.order.rpc");
+                            assertThat(request.getService())
+                                    .isEqualTo("trade.order.rpc.trade-center.provider");
+                            assertThat(request.getOrganization()).isEqualTo("trade");
+                            assertThat(request.getBusinessDomain()).isEqualTo("order");
+                            assertThat(request.getCapabilityDomain()).isEqualTo("rpc");
                             assertThat(request.getApplication()).isEqualTo("trade-center");
                             assertThat(request.getEndpoints()).hasSize(1);
                             assertThat(request.getEndpoints().getFirst().getProtocol()).isEqualTo("grpc");
                         });
 
         assertThat(stellMapClient.deregisterRequests).hasSize(1);
-        assertThat(stellMapClient.deregisterRequests.getFirst().getService()).isEqualTo("trade.order.rpc");
+        assertThat(stellMapClient.deregisterRequests.getFirst().getService())
+                .isEqualTo("trade.order.rpc.trade-center.provider");
     }
 
     @Configuration(proxyBeanMethods = false)

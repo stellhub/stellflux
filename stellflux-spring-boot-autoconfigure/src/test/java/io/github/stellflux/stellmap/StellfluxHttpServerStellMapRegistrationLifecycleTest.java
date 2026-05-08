@@ -21,7 +21,7 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 class StellfluxHttpServerStellMapRegistrationLifecycleTest {
 
     @Test
-    void shouldRegisterAndDeregisterHttpServiceWhenContextStartsAndStops() {
+    void shouldRegisterAndDeregisterHttpServiceUsingResolvedOpenTelemetryServiceName() {
         RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
         new WebApplicationContextRunner(
                         org.springframework.boot.web.servlet.context
@@ -34,23 +34,80 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
                 .withBean(ServletWebServerFactory.class, FakeServletWebServerFactory::new)
                 .withPropertyValues(
                         "spring.application.name=edge-gateway",
+                        "stellflux.opentelemetry.resource.service-name=edge.gateway.http",
                         "server.servlet.context-path=/api",
-                        "stellflux.http.server.service-id=edge.gateway.http",
                         "stellflux.stellmap.base-url=http://127.0.0.1:8080")
                 .run(
                         context -> {
                             assertThat(stellMapClient.registerRequests).hasSize(1);
                             RegisterRequest request = stellMapClient.registerRequests.getFirst();
-                            assertThat(request.getService()).isEqualTo("edge.gateway.http");
+                            assertThat(request.getService())
+                                    .isEqualTo("edge.gateway.http.edge-gateway.provider");
+                            assertThat(request.getOrganization()).isEqualTo("edge");
+                            assertThat(request.getBusinessDomain()).isEqualTo("gateway");
+                            assertThat(request.getCapabilityDomain()).isEqualTo("http");
                             assertThat(request.getApplication()).isEqualTo("edge-gateway");
                             assertThat(request.getEndpoints()).hasSize(1);
                             assertThat(request.getEndpoints().getFirst().getProtocol()).isEqualTo("http");
+                            assertThat(request.getEndpoints().getFirst().getPort()).isEqualTo(18080);
                             assertThat(request.getEndpoints().getFirst().getPath()).isEqualTo("/api");
                         });
 
         assertThat(stellMapClient.deregisterRequests).hasSize(1);
         assertThat(stellMapClient.deregisterRequests.getFirst().getService())
-                .isEqualTo("edge.gateway.http");
+                .isEqualTo("edge.gateway.http.edge-gateway.provider");
+    }
+
+    @Test
+    void shouldFallbackToSpringApplicationNameWhenOpenTelemetryServiceNameMissing() {
+        RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
+        new WebApplicationContextRunner(
+                        org.springframework.boot.web.servlet.context
+                                .AnnotationConfigServletWebServerApplicationContext::new)
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                StellfluxHttpServerAutoConfiguration.class,
+                                StellfluxStellMapAutoConfiguration.class))
+                .withBean(StellMapClient.class, () -> stellMapClient)
+                .withBean(ServletWebServerFactory.class, FakeServletWebServerFactory::new)
+                .withPropertyValues(
+                        "spring.application.name=edge-gateway",
+                        "stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                .run(
+                        context -> {
+                            assertThat(stellMapClient.registerRequests).hasSize(1);
+                            RegisterRequest request = stellMapClient.registerRequests.getFirst();
+                            assertThat(request.getService())
+                                    .isEqualTo("edge-gateway.edge-gateway.edge-gateway.edge-gateway.provider");
+                            assertThat(request.getApplication()).isEqualTo("edge-gateway");
+                        });
+    }
+
+    @Test
+    void shouldBuildStructuredServiceIdentityFromOpenTelemetryServiceName() {
+        RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
+        new WebApplicationContextRunner(
+                        org.springframework.boot.web.servlet.context
+                                .AnnotationConfigServletWebServerApplicationContext::new)
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                StellfluxHttpServerAutoConfiguration.class,
+                                StellfluxStellMapAutoConfiguration.class))
+                .withBean(StellMapClient.class, () -> stellMapClient)
+                .withBean(ServletWebServerFactory.class, FakeServletWebServerFactory::new)
+                .withPropertyValues(
+                        "stellflux.opentelemetry.resource.service-name=stellhub.examples.stellmap-simple",
+                        "stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                .run(
+                        context -> {
+                            assertThat(stellMapClient.registerRequests).hasSize(1);
+                            RegisterRequest request = stellMapClient.registerRequests.getFirst();
+                            assertThat(request.getService())
+                                    .isEqualTo(
+                                            "stellhub.examples.stellmap-simple.stellhub.examples.stellmap-simple.provider");
+                            assertThat(request.getApplication())
+                                    .isEqualTo("stellhub.examples.stellmap-simple");
+                        });
     }
 
     static final class RecordingStellMapClient extends StellMapClient {
@@ -118,14 +175,21 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
 
     static final class FakeWebServer implements WebServer {
 
+        private boolean started;
+
         @Override
-        public void start() {}
+        public void start() {
+            this.started = true;
+        }
 
         @Override
         public void stop() {}
 
         @Override
         public int getPort() {
+            if (!this.started) {
+                throw new IllegalStateException("Port should only be read after the web server starts");
+            }
             return 18080;
         }
     }
