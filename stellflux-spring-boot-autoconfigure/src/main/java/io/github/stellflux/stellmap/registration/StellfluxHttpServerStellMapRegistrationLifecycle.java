@@ -9,9 +9,9 @@ import io.github.stellmap.model.RegisterRequest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.context.WebServerApplicationContext;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.boot.web.context.WebServerApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
@@ -55,8 +55,7 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle
 
     @Override
     public synchronized void stop() {
-        stop(() -> {
-        });
+        stop(() -> {});
     }
 
     @Override
@@ -77,8 +76,10 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle
                         () ->
                                 "Deregistered HTTP service from StellMap serviceId="
                                         + deregisterRequest.getService()
-                                        + ", namespace=" + deregisterRequest.getNamespace()
-                                        + ", instanceId=" + deregisterRequest.getInstanceId());
+                                        + ", namespace="
+                                        + deregisterRequest.getNamespace()
+                                        + ", instanceId="
+                                        + deregisterRequest.getInstanceId());
             }
             this.running = false;
             this.heartbeatSubscription = null;
@@ -119,15 +120,18 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle
             return;
         }
         String serviceName = StellfluxServiceNameResolver.resolve(this.environment);
-        if (!StringUtils.hasText(serviceName) || this.webServerPort == null || this.webServerPort <= 0) {
+        if (!StringUtils.hasText(serviceName)
+                || this.webServerPort == null
+                || this.webServerPort <= 0) {
             return;
         }
-        int port = this.webServerPort;
+        int port = resolveAdvertisedPort();
         this.registerRequest =
                 StellfluxStellMapRegistrationSupport.buildHttpRegisterRequest(
                         serviceName,
                         port,
-                        this.environment.getProperty("server.servlet.context-path"),
+                        resolveAdvertisedProtocol(),
+                        resolveAdvertisedPath(),
                         this.properties.getRegistration(),
                         this.defaultNamespace,
                         this.environment);
@@ -138,8 +142,31 @@ public class StellfluxHttpServerStellMapRegistrationLifecycle
                 () ->
                         "Registered HTTP service to StellMap serviceId="
                                 + this.registerRequest.getService()
-                                + ", namespace=" + this.registerRequest.getNamespace()
-                                + ", port=" + port
-                                + ", instanceId=" + this.registerRequest.getInstanceId());
+                                + ", namespace="
+                                + this.registerRequest.getNamespace()
+                                + ", listeningPort="
+                                + this.webServerPort
+                                + ", port="
+                                + port
+                                + ", instanceId="
+                                + this.registerRequest.getInstanceId());
+    }
+
+    private int resolveAdvertisedPort() {
+        Integer advertisedPort = this.properties.getEndpoint().getAdvertisedPort();
+        return advertisedPort != null && advertisedPort > 0 ? advertisedPort : this.webServerPort;
+    }
+
+    private String resolveAdvertisedProtocol() {
+        String protocol = this.properties.getEndpoint().getProtocol();
+        return StringUtils.hasText(protocol) ? protocol.trim() : "http";
+    }
+
+    private String resolveAdvertisedPath() {
+        String path = this.properties.getEndpoint().getPath();
+        if (StringUtils.hasText(path)) {
+            return path.trim();
+        }
+        return this.environment.getProperty("server.servlet.context-path");
     }
 }

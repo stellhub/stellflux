@@ -1,8 +1,8 @@
 package io.github.stellflux.stellmap.registration;
 
+import io.github.stellflux.grpc.server.StellfluxGrpcServerProperties;
 import io.github.stellflux.grpc.server.StellfluxGrpcServiceRegistration;
 import io.github.stellflux.grpc.server.StellfluxGrpcServiceRegistry;
-import io.github.stellflux.grpc.server.StellfluxGrpcServerProperties;
 import io.github.stellmap.HeartbeatSubscription;
 import io.github.stellmap.StellMapClient;
 import io.github.stellmap.model.DeregisterRequest;
@@ -57,7 +57,8 @@ public class StellfluxGrpcServiceStellMapRegistrationLifecycle implements SmartL
         if (grouped.isEmpty()) {
             return;
         }
-        int port = this.server.getPort();
+        int listeningPort = this.server.getPort();
+        int port = resolveAdvertisedPort(listeningPort);
         try {
             for (Map.Entry<String, List<StellfluxGrpcServiceRegistration>> entry : grouped.entrySet()) {
                 RegisterRequest registerRequest =
@@ -75,12 +76,16 @@ public class StellfluxGrpcServiceStellMapRegistrationLifecycle implements SmartL
                         () ->
                                 "Registered gRPC service to StellMap serviceId="
                                         + registerRequest.getService()
-                                        + ", namespace=" + registerRequest.getNamespace()
-                                        + ", port=" + port
-                                        + ", instanceId=" + registerRequest.getInstanceId()
+                                        + ", namespace="
+                                        + registerRequest.getNamespace()
+                                        + ", listeningPort="
+                                        + listeningPort
+                                        + ", port="
+                                        + port
+                                        + ", instanceId="
+                                        + registerRequest.getInstanceId()
                                         + ", grpcServices="
-                                        + StellfluxStellMapRegistrationSupport.summarizeGrpcServices(
-                                                entry.getValue()));
+                                        + StellfluxStellMapRegistrationSupport.summarizeGrpcServices(entry.getValue()));
             }
             this.running = true;
         } catch (RuntimeException exception) {
@@ -91,8 +96,7 @@ public class StellfluxGrpcServiceStellMapRegistrationLifecycle implements SmartL
 
     @Override
     public synchronized void stop() {
-        stop(() -> {
-        });
+        stop(() -> {});
     }
 
     @Override
@@ -119,8 +123,10 @@ public class StellfluxGrpcServiceStellMapRegistrationLifecycle implements SmartL
                         () ->
                                 "Deregistered gRPC service from StellMap serviceId="
                                         + deregisterRequest.getService()
-                                        + ", namespace=" + deregisterRequest.getNamespace()
-                                        + ", instanceId=" + deregisterRequest.getInstanceId());
+                                        + ", namespace="
+                                        + deregisterRequest.getNamespace()
+                                        + ", instanceId="
+                                        + deregisterRequest.getInstanceId());
             } catch (RuntimeException exception) {
                 LOGGER.log(Level.WARNING, "Failed to deregister gRPC service from StellMap", exception);
             }
@@ -141,6 +147,11 @@ public class StellfluxGrpcServiceStellMapRegistrationLifecycle implements SmartL
     @Override
     public int getPhase() {
         return 1100;
+    }
+
+    private int resolveAdvertisedPort(int listeningPort) {
+        Integer advertisedPort = this.properties.getAdvertisedPort();
+        return advertisedPort != null && advertisedPort > 0 ? advertisedPort : listeningPort;
     }
 
     private record RegisteredHandle(

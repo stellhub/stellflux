@@ -61,8 +61,10 @@ public class StellfluxGrpcServerAutoConfiguration {
     @Bean
     @ConditionalOnBean(BindableService.class)
     @ConditionalOnMissingBean
-    public StellfluxGrpcServiceRegistry stellfluxGrpcServiceRegistry(ListableBeanFactory beanFactory) {
-        Map<String, BindableService> bindableServices = beanFactory.getBeansOfType(BindableService.class);
+    public StellfluxGrpcServiceRegistry stellfluxGrpcServiceRegistry(
+            ListableBeanFactory beanFactory) {
+        Map<String, BindableService> bindableServices =
+                beanFactory.getBeansOfType(BindableService.class);
         return StellfluxGrpcServiceRegistry.from(bindableServices);
     }
 
@@ -81,7 +83,8 @@ public class StellfluxGrpcServerAutoConfiguration {
             NettyServerBuilder builder,
             StellfluxGrpcServiceRegistry serviceRegistry,
             ObjectProvider<ServerInterceptor> interceptors) {
-        serviceRegistry.getRegistrations()
+        serviceRegistry
+                .getRegistrations()
                 .forEach(registration -> builder.addService(registration.serviceDefinition()));
         interceptors.orderedStream().forEach(builder::intercept);
         return builder.build();
@@ -118,22 +121,28 @@ public class StellfluxGrpcServerAutoConfiguration {
             ObjectProvider<StellfluxGrpcServiceRegistry> serviceRegistryProvider,
             ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
         StellfluxGrpcServiceRegistry serviceRegistry = serviceRegistryProvider.getIfAvailable();
-        return () ->
-                {
-                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
-                    if (moduleInfoMeter != null) {
-                        moduleInfoMeter.registerModule(
-                                "stellflux-grpc-server", StellfluxGrpcServerFactory.class);
-                    }
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-grpc-server started successfully"
-                                            + ", configuredPort=" + properties.getPort()
-                                            + ", shutdownTimeout=" + properties.getShutdownTimeout()
-                                            + ", discoveredServices="
-                                            + (serviceRegistry != null
-                                                    ? serviceRegistry.getRegistrations().size()
-                                                    : 0));
-                };
+        return () -> {
+            StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+            if (moduleInfoMeter != null) {
+                moduleInfoMeter.registerModule("stellflux-grpc-server", StellfluxGrpcServerFactory.class);
+            }
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-grpc-server started successfully"
+                                    + ", bindAddress="
+                                    + (properties.getBindAddress() == null || properties.getBindAddress().isBlank()
+                                            ? "<default>"
+                                            : properties.getBindAddress())
+                                    + ", configuredPort="
+                                    + properties.getPort()
+                                    + ", advertisedPort="
+                                    + (properties.getAdvertisedPort() != null && properties.getAdvertisedPort() > 0
+                                            ? properties.getAdvertisedPort()
+                                            : properties.getPort())
+                                    + ", shutdownTimeout="
+                                    + properties.getShutdownTimeout()
+                                    + ", discoveredServices="
+                                    + (serviceRegistry != null ? serviceRegistry.getRegistrations().size() : 0));
+        };
     }
 }

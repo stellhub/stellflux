@@ -1,7 +1,7 @@
 package io.github.stellflux.grpc.server;
 
-import io.grpc.Server;
 import io.github.stellflux.stellmap.registration.StellfluxRegistrationProperties;
+import io.grpc.Server;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -28,9 +28,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
     private volatile Integer listeningPort;
     private volatile Thread awaitThread;
 
-    /**
-     * 启动 gRPC Server。
-     */
+    /** 启动 gRPC Server。 */
     @Override
     public synchronized void start() {
         if (this.running) {
@@ -48,10 +46,16 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
             startAwaitThread();
             LOGGER.info(
                     () ->
-                            "Started StellfluxGrpcServer listeningPort=" + this.listeningPort
-                                    + ", configuredPort=" + this.properties.getPort()
-                                    + ", config=" + summarizeConfig()
-                                    + ", exposedServices=" + this.serviceRegistry.getRegistrations().size()
+                            "Started StellfluxGrpcServer listeningPort="
+                                    + this.listeningPort
+                                    + ", configuredPort="
+                                    + this.properties.getPort()
+                                    + ", advertisedPort="
+                                    + resolveAdvertisedPort()
+                                    + ", config="
+                                    + summarizeConfig()
+                                    + ", exposedServices="
+                                    + this.serviceRegistry.getRegistrations().size()
                                     + ", services="
                                     + this.serviceRegistry.summarizeRegistrations()
                                     + ", skippedServices="
@@ -73,13 +77,10 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
         }
     }
 
-    /**
-     * 停止 gRPC Server。
-     */
+    /** 停止 gRPC Server。 */
     @Override
     public synchronized void stop() {
-        stop(() -> {
-        });
+        stop(() -> {});
     }
 
     /**
@@ -95,8 +96,7 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
             }
             this.server.shutdown();
             Duration timeout = this.properties.getShutdownTimeout();
-            boolean terminated =
-                    this.server.awaitTermination(timeout.toMillis(), TimeUnit.MILLISECONDS);
+            boolean terminated = this.server.awaitTermination(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!terminated) {
                 LOGGER.warning(
                         () ->
@@ -109,8 +109,10 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
             clearAwaitThread();
             LOGGER.info(
                     () ->
-                            "Stopped StellfluxGrpcServer listeningPort=" + safeListeningPort()
-                                    + ", shutdownTimeout=" + timeout);
+                            "Stopped StellfluxGrpcServer listeningPort="
+                                    + safeListeningPort()
+                                    + ", shutdownTimeout="
+                                    + timeout);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             this.server.shutdownNow();
@@ -175,27 +177,84 @@ class StellfluxGrpcServerLifecycle implements SmartLifecycle {
 
     private String summarizeConfig() {
         StellfluxRegistrationProperties registration = this.properties.getRegistration();
-        return "{port=" + this.properties.getPort()
-                + ", shutdownTimeout=" + this.properties.getShutdownTimeout()
-                + ", registration={enabled=" + registration.isEnabled()
-                + ", namespace=" + safeText(registration.getNamespace())
-                + ", host=" + safeText(registration.getHost())
-                + ", instanceId=" + safeText(registration.getInstanceId())
-                + ", organization=" + safeText(registration.getOrganization())
-                + ", businessDomain=" + safeText(registration.getBusinessDomain())
-                + ", capabilityDomain=" + safeText(registration.getCapabilityDomain())
-                + ", application=" + safeText(registration.getApplication())
-                + ", role=" + safeText(registration.getRole())
-                + ", zone=" + safeText(registration.getZone())
-                + ", leaseTtlSeconds=" + registration.getLeaseTtlSeconds()
-                + ", weight=" + registration.getWeight()
-                + ", labels=" + formatAttributes(registration.getLabels())
-                + ", metadata=" + formatAttributes(registration.getMetadata())
+        return "{port="
+                + this.properties.getPort()
+                + ", bindAddress="
+                + safeText(this.properties.getBindAddress())
+                + ", advertisedPort="
+                + resolveAdvertisedPort()
+                + ", shutdownTimeout="
+                + this.properties.getShutdownTimeout()
+                + ", maxInboundMessageSize="
+                + safeNumber(this.properties.getMaxInboundMessageSize())
+                + ", maxInboundMetadataSize="
+                + safeNumber(this.properties.getMaxInboundMetadataSize())
+                + ", flowControlWindow="
+                + safeNumber(this.properties.getFlowControlWindow())
+                + ", maxConcurrentCallsPerConnection="
+                + safeNumber(this.properties.getMaxConcurrentCallsPerConnection())
+                + ", keepAliveTime="
+                + safeDuration(this.properties.getKeepAliveTime())
+                + ", keepAliveTimeout="
+                + safeDuration(this.properties.getKeepAliveTimeout())
+                + ", maxConnectionIdle="
+                + safeDuration(this.properties.getMaxConnectionIdle())
+                + ", maxConnectionAge="
+                + safeDuration(this.properties.getMaxConnectionAge())
+                + ", maxConnectionAgeGrace="
+                + safeDuration(this.properties.getMaxConnectionAgeGrace())
+                + ", permitKeepAliveTime="
+                + safeDuration(this.properties.getPermitKeepAliveTime())
+                + ", permitKeepAliveWithoutCalls="
+                + this.properties.isPermitKeepAliveWithoutCalls()
+                + ", registration={enabled="
+                + registration.isEnabled()
+                + ", namespace="
+                + safeText(registration.getNamespace())
+                + ", host="
+                + safeText(registration.getHost())
+                + ", instanceId="
+                + safeText(registration.getInstanceId())
+                + ", organization="
+                + safeText(registration.getOrganization())
+                + ", businessDomain="
+                + safeText(registration.getBusinessDomain())
+                + ", capabilityDomain="
+                + safeText(registration.getCapabilityDomain())
+                + ", application="
+                + safeText(registration.getApplication())
+                + ", role="
+                + safeText(registration.getRole())
+                + ", zone="
+                + safeText(registration.getZone())
+                + ", leaseTtlSeconds="
+                + registration.getLeaseTtlSeconds()
+                + ", weight="
+                + registration.getWeight()
+                + ", labels="
+                + formatAttributes(registration.getLabels())
+                + ", metadata="
+                + formatAttributes(registration.getMetadata())
                 + "}}";
+    }
+
+    private int resolveAdvertisedPort() {
+        Integer advertisedPort = this.properties.getAdvertisedPort();
+        return advertisedPort != null && advertisedPort > 0
+                ? advertisedPort
+                : this.properties.getPort();
     }
 
     private String safeText(String value) {
         return value == null || value.isBlank() ? "<none>" : value;
+    }
+
+    private String safeNumber(Integer value) {
+        return value != null && value > 0 ? String.valueOf(value) : "<default>";
+    }
+
+    private String safeDuration(Duration value) {
+        return value != null && !value.isNegative() && !value.isZero() ? value.toString() : "<default>";
     }
 
     private String formatAttributes(Map<String, String> attributes) {

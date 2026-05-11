@@ -27,6 +27,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Enumeration;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /** HTTP 服务端 telemetry filter。 */
@@ -66,6 +67,8 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
                 }
             };
 
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     private final OpenTelemetry openTelemetry;
 
     private final Tracer tracer;
@@ -78,10 +81,23 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
 
     private final StellfluxAccessLogEmitter accessLogEmitter;
 
+    private final StellfluxHttpServerProperties.TelemetryProperties telemetryProperties;
+
     public StellfluxHttpServerTelemetryFilter(
             OpenTelemetry openTelemetry, StellfluxHttpRouteTemplateResolver routeTemplateResolver) {
+        this(
+                openTelemetry,
+                routeTemplateResolver,
+                new StellfluxHttpServerProperties.TelemetryProperties());
+    }
+
+    public StellfluxHttpServerTelemetryFilter(
+            OpenTelemetry openTelemetry,
+            StellfluxHttpRouteTemplateResolver routeTemplateResolver,
+            StellfluxHttpServerProperties.TelemetryProperties telemetryProperties) {
         this.openTelemetry = openTelemetry;
         this.routeTemplateResolver = routeTemplateResolver;
+        this.telemetryProperties = telemetryProperties;
         this.tracer =
                 StellfluxTelemetryScopeFactory.createTracer(
                         openTelemetry,
@@ -107,6 +123,21 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
         this.durationHistogram =
                 METER_FACTORY.createHistogram(
                         meter, StellfluxMetricNames.HTTP_SERVER_DURATION, "ms", "HTTP server request duration");
+    }
+
+    /**
+     * 判断当前请求是否跳过 telemetry 采集。
+     *
+     * @param request HTTP 请求
+     * @return 是否跳过
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = resolveRequestPath(request);
+        return this.telemetryProperties.getExcludedPaths().stream()
+                .filter(pattern -> pattern != null && !pattern.isBlank())
+                .map(String::trim)
+                .anyMatch(pattern -> PATH_MATCHER.match(pattern, path));
     }
 
     /**
@@ -139,7 +170,9 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
         Throwable throwable = null;
 
         populateRequestAttributes(span, request);
-        W3CTraceContextPropagator.getInstance().inject(context, response, RESPONSE_SETTER);
+        if (this.telemetryProperties.isResponseTraceHeaderEnabled()) {
+            W3CTraceContextPropagator.getInstance().inject(context, response, RESPONSE_SETTER);
+        }
 
         try (Scope ignored = context.makeCurrent()) {
             filterChain.doFilter(request, response);
@@ -227,5 +260,15 @@ public class StellfluxHttpServerTelemetryFilter extends OncePerRequestFilter {
                                 AttributeKey.stringKey("error.type"), throwable.getClass().getName());
                     }
                 });
+    }
+
+    private String resolveRequestPath(HttpServletRequest request) {
+        String contextPath = request.getContextPath();
+        String requestUri = request.getRequestURI();
+        if (contextPath == null || contextPath.isBlank() || !requestUri.startsWith(contextPath)) {
+            return requestUri;
+        }
+        String path = requestUri.substring(contextPath.length());
+        return path.isBlank() ? "/" : path;
     }
 }

@@ -20,6 +20,7 @@
   - HTTP 服务端能力
   - 基于 Spring MVC / Servlet 自动装配
   - 不提供 `stellflux.http.server.enabled`
+  - HTTP telemetry 配置指南见 [HTTP Server Telemetry 配置指南](./http-server-telemetry-guide.md)
 - `stellflux-spring-boot-starter-http`
   - HTTP 聚合 starter
   - 同时引入 client 和 server

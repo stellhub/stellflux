@@ -23,7 +23,8 @@ public final class StellfluxStellMapRegistrationSupport {
      *
      * @param serviceId 服务标识
      * @param port 监听端口
-     * @param contextPath 上下文路径
+     * @param protocol 对外暴露协议
+     * @param contextPath 对外暴露路径
      * @param registration 注册配置
      * @param defaultNamespace 默认命名空间
      * @param environment Spring 环境
@@ -32,6 +33,7 @@ public final class StellfluxStellMapRegistrationSupport {
     public static RegisterRequest buildHttpRegisterRequest(
             String serviceId,
             int port,
+            String protocol,
             String contextPath,
             StellfluxRegistrationProperties registration,
             String defaultNamespace,
@@ -54,7 +56,7 @@ public final class StellfluxStellMapRegistrationSupport {
         Endpoint endpoint =
                 Endpoint.builder()
                         .name("http")
-                        .protocol("http")
+                        .protocol(normalizeProtocol(protocol))
                         .host(host)
                         .port(port)
                         .path(normalizeHttpPath(contextPath))
@@ -242,9 +244,7 @@ public final class StellfluxStellMapRegistrationSupport {
     }
 
     private static String resolveOrganization(
-            String serviceId,
-            String application,
-            StellfluxRegistrationProperties registration) {
+            String serviceId, String application, StellfluxRegistrationProperties registration) {
         List<String> serviceIdSegments = splitServiceId(serviceId);
         return firstNonBlank(
                 trimToNull(registration.getOrganization()),
@@ -254,9 +254,7 @@ public final class StellfluxStellMapRegistrationSupport {
     }
 
     private static String resolveBusinessDomain(
-            String serviceId,
-            String application,
-            StellfluxRegistrationProperties registration) {
+            String serviceId, String application, StellfluxRegistrationProperties registration) {
         List<String> serviceIdSegments = splitServiceId(serviceId);
         return firstNonBlank(
                 trimToNull(registration.getBusinessDomain()),
@@ -267,9 +265,7 @@ public final class StellfluxStellMapRegistrationSupport {
     }
 
     private static String resolveCapabilityDomain(
-            String serviceId,
-            String application,
-            StellfluxRegistrationProperties registration) {
+            String serviceId, String application, StellfluxRegistrationProperties registration) {
         List<String> serviceIdSegments = splitServiceId(serviceId);
         return firstNonBlank(
                 trimToNull(registration.getCapabilityDomain()),
@@ -304,6 +300,10 @@ public final class StellfluxStellMapRegistrationSupport {
         }
         String path = contextPath.trim();
         return path.startsWith("/") ? path : "/" + path;
+    }
+
+    private static String normalizeProtocol(String protocol) {
+        return StringUtils.hasText(protocol) ? protocol.trim() : "http";
     }
 
     private static String trimToNull(String value) {

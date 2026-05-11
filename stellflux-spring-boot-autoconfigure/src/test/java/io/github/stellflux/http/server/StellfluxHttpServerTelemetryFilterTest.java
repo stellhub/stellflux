@@ -8,6 +8,7 @@ import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetrySdk;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse;
@@ -34,12 +35,21 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.HandlerMapping;
 
 class StellfluxHttpServerTelemetryFilterTest {
+
+    private ExposedTelemetryFilter exposedTelemetryFilter;
+
+    @BeforeEach
+    void setUp() {
+        this.exposedTelemetryFilter =
+                new ExposedTelemetryFilter(OpenTelemetry.noop(), new StellfluxHttpRouteTemplateResolver());
+    }
 
     @Test
     void shouldCreateRootSpanAndReturnTraceparentWhenInboundTraceIsMissing() throws Exception {
@@ -98,6 +108,35 @@ class StellfluxHttpServerTelemetryFilterTest {
             collectorServer.shutdownNow();
             collectorServer.awaitTermination(5, TimeUnit.SECONDS);
         }
+    }
+
+    @Test
+    void shouldNotWriteTraceparentHeaderWhenResponseHeaderDisabled() throws Exception {
+        StellfluxHttpServerProperties.TelemetryProperties telemetryProperties =
+                new StellfluxHttpServerProperties.TelemetryProperties();
+        telemetryProperties.setResponseTraceHeaderEnabled(false);
+        StellfluxHttpServerTelemetryFilter filter =
+                new StellfluxHttpServerTelemetryFilter(
+                        OpenTelemetry.noop(), new StellfluxHttpRouteTemplateResolver(), telemetryProperties);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/orders/123");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new RouteTemplateFilterChain());
+
+        assertThat(response.getHeader("traceparent")).isNull();
+    }
+
+    @Test
+    void shouldSkipConfiguredExcludedPath() {
+        StellfluxHttpServerProperties.TelemetryProperties telemetryProperties =
+                new StellfluxHttpServerProperties.TelemetryProperties();
+        telemetryProperties.getExcludedPaths().add("/actuator/**");
+        ExposedTelemetryFilter filter =
+                new ExposedTelemetryFilter(
+                        OpenTelemetry.noop(), new StellfluxHttpRouteTemplateResolver(), telemetryProperties);
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/actuator/health");
+
+        assertThat(filter.shouldSkip(request)).isTrue();
     }
 
     private io.opentelemetry.proto.trace.v1.Span extractSingleSpan(
@@ -209,6 +248,25 @@ class StellfluxHttpServerTelemetryFilterTest {
             ExportLogsServiceRequest request = requests.poll(10, TimeUnit.SECONDS);
             assertThat(request).isNotNull();
             return request;
+        }
+    }
+
+    static final class ExposedTelemetryFilter extends StellfluxHttpServerTelemetryFilter {
+
+        ExposedTelemetryFilter(
+                OpenTelemetry openTelemetry, StellfluxHttpRouteTemplateResolver routeTemplateResolver) {
+            super(openTelemetry, routeTemplateResolver);
+        }
+
+        ExposedTelemetryFilter(
+                OpenTelemetry openTelemetry,
+                StellfluxHttpRouteTemplateResolver routeTemplateResolver,
+                StellfluxHttpServerProperties.TelemetryProperties telemetryProperties) {
+            super(openTelemetry, routeTemplateResolver, telemetryProperties);
+        }
+
+        boolean shouldSkip(HttpServletRequest request) {
+            return shouldNotFilter(request);
         }
     }
 }

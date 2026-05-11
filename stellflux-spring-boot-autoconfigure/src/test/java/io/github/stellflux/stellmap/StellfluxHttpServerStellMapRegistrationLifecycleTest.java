@@ -25,7 +25,8 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
         RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
         new WebApplicationContextRunner(
                         org.springframework.boot.web.servlet.context
-                                .AnnotationConfigServletWebServerApplicationContext::new)
+                                        .AnnotationConfigServletWebServerApplicationContext
+                                ::new)
                 .withConfiguration(
                         AutoConfigurations.of(
                                 StellfluxHttpServerAutoConfiguration.class,
@@ -41,8 +42,7 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
                         context -> {
                             assertThat(stellMapClient.registerRequests).hasSize(1);
                             RegisterRequest request = stellMapClient.registerRequests.getFirst();
-                            assertThat(request.getService())
-                                    .isEqualTo("edge.gateway.http.edge-gateway.provider");
+                            assertThat(request.getService()).isEqualTo("edge.gateway.http.edge-gateway.provider");
                             assertThat(request.getOrganization()).isEqualTo("edge");
                             assertThat(request.getBusinessDomain()).isEqualTo("gateway");
                             assertThat(request.getCapabilityDomain()).isEqualTo("http");
@@ -63,7 +63,8 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
         RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
         new WebApplicationContextRunner(
                         org.springframework.boot.web.servlet.context
-                                .AnnotationConfigServletWebServerApplicationContext::new)
+                                        .AnnotationConfigServletWebServerApplicationContext
+                                ::new)
                 .withConfiguration(
                         AutoConfigurations.of(
                                 StellfluxHttpServerAutoConfiguration.class,
@@ -88,7 +89,8 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
         RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
         new WebApplicationContextRunner(
                         org.springframework.boot.web.servlet.context
-                                .AnnotationConfigServletWebServerApplicationContext::new)
+                                        .AnnotationConfigServletWebServerApplicationContext
+                                ::new)
                 .withConfiguration(
                         AutoConfigurations.of(
                                 StellfluxHttpServerAutoConfiguration.class,
@@ -105,8 +107,36 @@ class StellfluxHttpServerStellMapRegistrationLifecycleTest {
                             assertThat(request.getService())
                                     .isEqualTo(
                                             "stellhub.examples.stellmap-simple.stellhub.examples.stellmap-simple.provider");
-                            assertThat(request.getApplication())
-                                    .isEqualTo("stellhub.examples.stellmap-simple");
+                            assertThat(request.getApplication()).isEqualTo("stellhub.examples.stellmap-simple");
+                        });
+    }
+
+    @Test
+    void shouldUseAdvertisedHttpEndpointWhenConfigured() {
+        RecordingStellMapClient stellMapClient = new RecordingStellMapClient();
+        new WebApplicationContextRunner(
+                        org.springframework.boot.web.servlet.context
+                                        .AnnotationConfigServletWebServerApplicationContext
+                                ::new)
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                StellfluxHttpServerAutoConfiguration.class,
+                                StellfluxStellMapAutoConfiguration.class))
+                .withBean(StellMapClient.class, () -> stellMapClient)
+                .withBean(ServletWebServerFactory.class, FakeServletWebServerFactory::new)
+                .withPropertyValues(
+                        "spring.application.name=edge-gateway",
+                        "stellflux.opentelemetry.resource.service-name=edge.gateway.http",
+                        "stellflux.http.server.endpoint.protocol=https",
+                        "stellflux.http.server.endpoint.advertised-port=8443",
+                        "stellflux.http.server.endpoint.path=/edge",
+                        "stellflux.stellmap.base-url=http://127.0.0.1:8080")
+                .run(
+                        context -> {
+                            RegisterRequest request = stellMapClient.registerRequests.getFirst();
+                            assertThat(request.getEndpoints().getFirst().getProtocol()).isEqualTo("https");
+                            assertThat(request.getEndpoints().getFirst().getPort()).isEqualTo(8443);
+                            assertThat(request.getEndpoints().getFirst().getPath()).isEqualTo("/edge");
                         });
     }
 

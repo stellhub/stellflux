@@ -9,11 +9,11 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
 import org.springframework.web.servlet.DispatcherServlet;
 
 /** HTTP server auto configuration. */
@@ -46,9 +46,17 @@ public class StellfluxHttpServerAutoConfiguration {
     @Bean
     @ConditionalOnBean(OpenTelemetry.class)
     @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+            prefix = "stellflux.http.server.telemetry",
+            name = "enabled",
+            havingValue = "true",
+            matchIfMissing = true)
     public StellfluxHttpServerTelemetryFilter stellfluxHttpServerTelemetryFilter(
-            OpenTelemetry openTelemetry, StellfluxHttpRouteTemplateResolver routeTemplateResolver) {
-        return new StellfluxHttpServerTelemetryFilter(openTelemetry, routeTemplateResolver);
+            OpenTelemetry openTelemetry,
+            StellfluxHttpRouteTemplateResolver routeTemplateResolver,
+            StellfluxHttpServerProperties properties) {
+        return new StellfluxHttpServerTelemetryFilter(
+                openTelemetry, routeTemplateResolver, properties.getTelemetry());
     }
 
     @Bean
@@ -56,12 +64,13 @@ public class StellfluxHttpServerAutoConfiguration {
     @ConditionalOnMissingBean(name = "stellfluxHttpServerTelemetryFilterRegistration")
     public FilterRegistrationBean<StellfluxHttpServerTelemetryFilter>
             stellfluxHttpServerTelemetryFilterRegistration(
-                    StellfluxHttpServerTelemetryFilter telemetryFilter) {
+                    StellfluxHttpServerTelemetryFilter telemetryFilter,
+                    StellfluxHttpServerProperties properties) {
         FilterRegistrationBean<StellfluxHttpServerTelemetryFilter> registration =
                 new FilterRegistrationBean<>();
         registration.setFilter(telemetryFilter);
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
-        registration.addUrlPatterns("/*");
+        registration.setOrder(properties.getTelemetry().getFilterOrder());
+        registration.addUrlPatterns(properties.getTelemetry().getUrlPatterns().toArray(String[]::new));
         return registration;
     }
 
@@ -77,20 +86,22 @@ public class StellfluxHttpServerAutoConfiguration {
             StellfluxHttpServerProperties properties,
             ObjectProvider<StellfluxHttpServerTelemetryFilter> telemetryFilterProvider,
             ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
-        return () ->
-                {
-                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
-                    if (moduleInfoMeter != null) {
-                        moduleInfoMeter.registerModule(
-                                "stellflux-spring-boot-autoconfigure",
-                                StellfluxHttpServerAutoConfiguration.class);
-                    }
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-http-server started successfully"
-                                            + ", servletType=SERVLET"
-                                            + ", telemetryFilterEnabled="
-                                            + (telemetryFilterProvider.getIfAvailable() != null));
-                };
+        return () -> {
+            StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+            if (moduleInfoMeter != null) {
+                moduleInfoMeter.registerModule(
+                        "stellflux-spring-boot-autoconfigure", StellfluxHttpServerAutoConfiguration.class);
+            }
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-http-server started successfully"
+                                    + ", servletType=SERVLET"
+                                    + ", telemetryFilterEnabled="
+                                    + (telemetryFilterProvider.getIfAvailable() != null)
+                                    + ", telemetryUrlPatterns="
+                                    + properties.getTelemetry().getUrlPatterns()
+                                    + ", telemetryExcludedPaths="
+                                    + properties.getTelemetry().getExcludedPaths());
+        };
     }
 }
