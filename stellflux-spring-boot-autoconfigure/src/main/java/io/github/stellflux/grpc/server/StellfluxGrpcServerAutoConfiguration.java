@@ -15,14 +15,15 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 
 /** gRPC server auto configuration. */
 @AutoConfiguration
+@Import(StellfluxGrpcRpcServiceBeanRegistrar.class)
 @ConditionalOnClass({NettyServerBuilder.class, StellfluxGrpcServerFactory.class})
 @EnableConfigurationProperties(StellfluxGrpcServerProperties.class)
 public class StellfluxGrpcServerAutoConfiguration {
@@ -66,12 +67,14 @@ public class StellfluxGrpcServerAutoConfiguration {
      * @return 服务注册表
      */
     @Bean
-    @ConditionalOnBean(BindableService.class)
     @ConditionalOnMissingBean
     public StellfluxGrpcServiceRegistry stellfluxGrpcServiceRegistry(
             ListableBeanFactory beanFactory) {
         Map<String, BindableService> bindableServices =
                 beanFactory.getBeansOfType(BindableService.class);
+        if (bindableServices.isEmpty()) {
+            return null;
+        }
         return StellfluxGrpcServiceRegistry.from(bindableServices);
     }
 
@@ -84,10 +87,14 @@ public class StellfluxGrpcServerAutoConfiguration {
      * @return gRPC Server
      */
     @Bean(destroyMethod = "")
-    @ConditionalOnBean(StellfluxGrpcServiceRegistry.class)
     @ConditionalOnMissingBean(Server.class)
     public Server stellfluxGrpcServer(
-            NettyServerBuilder builder, StellfluxGrpcServiceRegistry serviceRegistry) {
+            NettyServerBuilder builder,
+            ObjectProvider<StellfluxGrpcServiceRegistry> serviceRegistryProvider) {
+        StellfluxGrpcServiceRegistry serviceRegistry = serviceRegistryProvider.getIfAvailable();
+        if (serviceRegistry == null) {
+            return null;
+        }
         serviceRegistry
                 .getRegistrations()
                 .forEach(registration -> builder.addService(registration.serviceDefinition()));
@@ -103,12 +110,16 @@ public class StellfluxGrpcServerAutoConfiguration {
      * @return 生命周期管理器
      */
     @Bean("stellfluxGrpcServerLifecycle")
-    @ConditionalOnBean(Server.class)
     @ConditionalOnMissingBean(name = "stellfluxGrpcServerLifecycle")
     public StellfluxGrpcServerLifecycle stellfluxGrpcServerLifecycle(
-            Server server,
+            ObjectProvider<Server> serverProvider,
             StellfluxGrpcServerProperties properties,
-            StellfluxGrpcServiceRegistry serviceRegistry) {
+            ObjectProvider<StellfluxGrpcServiceRegistry> serviceRegistryProvider) {
+        Server server = serverProvider.getIfAvailable();
+        StellfluxGrpcServiceRegistry serviceRegistry = serviceRegistryProvider.getIfAvailable();
+        if (server == null || serviceRegistry == null) {
+            return null;
+        }
         return new StellfluxGrpcServerLifecycle(server, properties, serviceRegistry);
     }
 

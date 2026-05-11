@@ -6,17 +6,14 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.springframework.core.Ordered;
-import org.springframework.stereotype.Service;
 
 /**
  * 标记 gRPC 服务实现 Bean。
  *
- * <p>该注解同时具备 Spring {@link Service} 语义，业务实现类只需声明一个注解即可被容器发现。
+ * <p>该注解仅描述 gRPC 服务暴露元数据，Spring 场景下的 Bean 注册由 starter 自动完成。
  */
 @Documented
 @Inherited
-@Service
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RpcService {
@@ -42,5 +39,5 @@ public @interface RpcService {
      *
      * @return 顺序值
      */
-    int order() default Ordered.LOWEST_PRECEDENCE;
+    int order() default Integer.MAX_VALUE;
 }

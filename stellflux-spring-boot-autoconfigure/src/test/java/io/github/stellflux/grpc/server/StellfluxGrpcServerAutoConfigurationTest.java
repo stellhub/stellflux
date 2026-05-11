@@ -39,13 +39,13 @@ class StellfluxGrpcServerAutoConfigurationTest {
                     .withBean(OpenTelemetry.class, OpenTelemetry::noop);
 
     @Test
-    void shouldNotCreateServerWhenNoBindableServiceBeanExists() {
+    void shouldCreateEmptyServiceRegistryWithoutLifecycleWhenNoBindableServiceBeanExists() {
         this.contextRunner.run(
                 context -> {
                     assertThat(context).hasSingleBean(StellfluxGrpcServerFactory.class);
                     assertThat(context).hasSingleBean(NettyServerBuilder.class);
-                    assertThat(context).doesNotHaveBean(Server.class);
-                    assertThat(context).doesNotHaveBean(StellfluxGrpcServiceRegistry.class);
+                    assertThat(context).hasSingleBean(Server.class);
+                    assertThat(context).hasSingleBean(StellfluxGrpcServiceRegistry.class);
                 });
     }
 

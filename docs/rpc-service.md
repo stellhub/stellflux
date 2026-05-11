@@ -2,12 +2,12 @@
 
 `@RpcService` 用于标记一个需要对外暴露的 gRPC 服务实现类。
 
-它同时具备两层语义：
+它具备两层协作语义：
 
-- Spring Bean stereotype
-- gRPC 服务暴露元数据
+- `stellflux-grpc-server` 模块中的纯 gRPC 服务暴露元数据
+- `stellflux-spring-boot-starter-grpc-server` 提供的 Spring Boot 自动扫描注册能力
 
-这意味着业务实现类通常只需要一个注解即可完成 Bean 注册与服务暴露。
+这意味着业务实现类通常仍然只需要一个注解即可完成 Bean 注册与服务暴露，但 Spring 依赖只存在于 starter / autoconfigure 模块中。
 
 ## 最小用法
 
@@ -49,6 +49,7 @@ stellflux:
 
 ## 默认行为
 
+- 在 Spring Boot 自动配置包下自动扫描 `@RpcService`
 - 自动发现 Spring 容器中的 `BindableService` Bean
 - 自动收集 `@RpcService` 元数据
 - 自动 `addService(...)`
