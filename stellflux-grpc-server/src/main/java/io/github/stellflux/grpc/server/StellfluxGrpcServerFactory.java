@@ -1,23 +1,31 @@
 package io.github.stellflux.grpc.server;
 
-import io.github.stellflux.grpc.server.internal.StellfluxGrpcServerTelemetryInterceptor;
+import io.github.stellflux.grpc.server.internal.StellfluxGrpcServerTelemetryInterceptorAdapter;
+import io.grpc.ServerInterceptor;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.opentelemetry.api.OpenTelemetry;
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** Factory for building gRPC server builders. */
 public class StellfluxGrpcServerFactory {
 
-    private final OpenTelemetry openTelemetry;
+    private final List<StellfluxGrpcServerInterceptor> interceptors;
 
     public StellfluxGrpcServerFactory() {
-        this(null);
+        this(null, List.of());
     }
 
     public StellfluxGrpcServerFactory(OpenTelemetry openTelemetry) {
-        this.openTelemetry = openTelemetry;
+        this(openTelemetry, List.of());
+    }
+
+    public StellfluxGrpcServerFactory(
+            OpenTelemetry openTelemetry, List<StellfluxGrpcServerInterceptor> interceptors) {
+        this.interceptors = initializeInterceptors(openTelemetry, interceptors);
     }
 
     /**
@@ -29,11 +37,22 @@ public class StellfluxGrpcServerFactory {
     public NettyServerBuilder create(StellfluxGrpcServerOptions options) {
         NettyServerBuilder builder = createBuilder(options);
         applyTransportOptions(builder, options);
-        if (this.openTelemetry != null) {
-            builder.intercept(
-                    new StellfluxGrpcServerTelemetryInterceptor(this.openTelemetry, options.getPort()));
-        }
+        resolveInterceptors(options).forEach(builder::intercept);
         return builder;
+    }
+
+    /**
+     * 解析当前服务端配置对应的原生拦截器列表。
+     *
+     * @param options 服务端配置
+     * @return 原生拦截器列表
+     */
+    List<ServerInterceptor> resolveInterceptors(StellfluxGrpcServerOptions options) {
+        StellfluxGrpcServerInterceptorContext context = createInterceptorContext(options);
+        return this.interceptors.stream()
+                .filter(interceptor -> interceptor.supports(context))
+                .map(interceptor -> interceptor.createInterceptor(context))
+                .toList();
     }
 
     /**
@@ -74,6 +93,10 @@ public class StellfluxGrpcServerFactory {
         }
     }
 
+    StellfluxGrpcServerInterceptorContext createInterceptorContext(StellfluxGrpcServerOptions options) {
+        return StellfluxGrpcServerInterceptorContext.from(options);
+    }
+
     private void applyPositive(Integer value, java.util.function.IntConsumer consumer) {
         if (value != null && value > 0) {
             consumer.accept(value);
@@ -88,6 +111,20 @@ public class StellfluxGrpcServerFactory {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private List<StellfluxGrpcServerInterceptor> initializeInterceptors(
+            OpenTelemetry openTelemetry, List<StellfluxGrpcServerInterceptor> interceptors) {
+        List<StellfluxGrpcServerInterceptor> configured =
+                interceptors == null ? List.of() : interceptors;
+        java.util.ArrayList<StellfluxGrpcServerInterceptor> resolved =
+                new java.util.ArrayList<>(configured.size() + (openTelemetry == null ? 0 : 1));
+        if (openTelemetry != null) {
+            resolved.add(new StellfluxGrpcServerTelemetryInterceptorAdapter(openTelemetry));
+        }
+        resolved.addAll(configured);
+        resolved.sort(Comparator.comparingInt(StellfluxGrpcServerInterceptor::getOrder));
+        return List.copyOf(resolved);
     }
 
     @FunctionalInterface

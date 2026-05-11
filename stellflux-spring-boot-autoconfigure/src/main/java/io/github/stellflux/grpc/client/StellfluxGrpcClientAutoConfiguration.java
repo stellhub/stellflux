@@ -1,8 +1,12 @@
 package io.github.stellflux.grpc.client;
 
+import io.grpc.ClientInterceptor;
 import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.grpc.ManagedChannel;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
@@ -30,8 +34,12 @@ public class StellfluxGrpcClientAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public StellfluxGrpcChannelFactory stellfluxGrpcChannelFactory(OpenTelemetry openTelemetry) {
-        return new StellfluxGrpcChannelFactory(openTelemetry);
+    public StellfluxGrpcChannelFactory stellfluxGrpcChannelFactory(
+            OpenTelemetry openTelemetry,
+            ObjectProvider<StellfluxGrpcClientInterceptor> interceptors,
+            ObjectProvider<ClientInterceptor> nativeInterceptors) {
+        return new StellfluxGrpcChannelFactory(
+                openTelemetry, mergeInterceptors(interceptors, nativeInterceptors));
     }
 
     /**
@@ -95,5 +103,48 @@ public class StellfluxGrpcClientAutoConfiguration {
 
     private String safeText(String value) {
         return value == null || value.isBlank() ? "<default>" : value;
+    }
+
+    private List<StellfluxGrpcClientInterceptor> mergeInterceptors(
+            ObjectProvider<StellfluxGrpcClientInterceptor> interceptors,
+            ObjectProvider<ClientInterceptor> nativeInterceptors) {
+        List<StellfluxGrpcClientInterceptor> merged = new ArrayList<>();
+        merged.addAll(interceptors.orderedStream().toList());
+        nativeInterceptors.orderedStream()
+                .map(interceptor -> new NativeGrpcClientInterceptorAdapter(interceptor, resolveOrder(interceptor)))
+                .forEach(merged::add);
+        merged.sort(Comparator.comparingInt(StellfluxGrpcClientInterceptor::getOrder));
+        return List.copyOf(merged);
+    }
+
+    private int resolveOrder(Object bean) {
+        if (bean instanceof org.springframework.core.Ordered ordered) {
+            return ordered.getOrder();
+        }
+        Integer order = org.springframework.core.annotation.OrderUtils.getOrder(bean.getClass());
+        return order == null ? StellfluxGrpcClientInterceptorOrder.USER : order;
+    }
+
+    /** 原生 gRPC ClientInterceptor 适配器。 */
+    static final class NativeGrpcClientInterceptorAdapter implements StellfluxGrpcClientInterceptor {
+
+        private final ClientInterceptor delegate;
+
+        private final int order;
+
+        NativeGrpcClientInterceptorAdapter(ClientInterceptor delegate, int order) {
+            this.delegate = delegate;
+            this.order = order;
+        }
+
+        @Override
+        public int getOrder() {
+            return this.order;
+        }
+
+        @Override
+        public ClientInterceptor createInterceptor(StellfluxGrpcClientInterceptorContext context) {
+            return this.delegate;
+        }
     }
 }

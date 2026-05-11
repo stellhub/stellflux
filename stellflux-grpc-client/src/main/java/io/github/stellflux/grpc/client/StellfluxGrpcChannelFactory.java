@@ -1,11 +1,13 @@
 package io.github.stellflux.grpc.client;
 
-import io.github.stellflux.grpc.client.internal.StellfluxGrpcClientTelemetryInterceptor;
+import io.github.stellflux.grpc.client.internal.StellfluxGrpcClientTelemetryInterceptorAdapter;
 import io.github.stellflux.loadbalancer.StellfluxLoadBalancerRequest;
 import io.github.stellflux.loadbalancer.StellfluxServiceInstance;
+import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -15,14 +17,19 @@ public class StellfluxGrpcChannelFactory {
 
     private static final Logger LOGGER = Logger.getLogger(StellfluxGrpcChannelFactory.class.getName());
 
-    private final OpenTelemetry openTelemetry;
+    private final List<StellfluxGrpcClientInterceptor> interceptors;
 
     public StellfluxGrpcChannelFactory() {
-        this(null);
+        this(null, List.of());
     }
 
     public StellfluxGrpcChannelFactory(OpenTelemetry openTelemetry) {
-        this.openTelemetry = openTelemetry;
+        this(openTelemetry, List.of());
+    }
+
+    public StellfluxGrpcChannelFactory(
+            OpenTelemetry openTelemetry, List<StellfluxGrpcClientInterceptor> interceptors) {
+        this.interceptors = initializeInterceptors(openTelemetry, interceptors);
     }
 
     /**
@@ -38,14 +45,27 @@ public class StellfluxGrpcChannelFactory {
         if (options.isPlaintext()) {
             builder.usePlaintext();
         }
-        if (this.openTelemetry != null) {
-            builder.intercept(
-                    new StellfluxGrpcClientTelemetryInterceptor(
-                            this.openTelemetry, target.host(), target.port()));
-        }
+        resolveInterceptors(options, target).forEach(builder::intercept);
         ManagedChannel channel = builder.build();
         LOGGER.info(() -> buildInitializationLog(options, target));
         return channel;
+    }
+
+    /**
+     * 解析当前客户端配置对应的原生拦截器列表。
+     *
+     * @param options gRPC 客户端配置
+     * @param target 已解析的目标地址
+     * @return 原生拦截器列表
+     */
+    List<ClientInterceptor> resolveInterceptors(
+            StellfluxGrpcClientOptions options, ResolvedGrpcTarget target) {
+        StellfluxGrpcClientInterceptorContext context =
+                createInterceptorContext(options, target);
+        return this.interceptors.stream()
+                .filter(interceptor -> interceptor.supports(context))
+                .map(interceptor -> interceptor.createInterceptor(context))
+                .toList();
     }
 
     /**
@@ -89,6 +109,12 @@ public class StellfluxGrpcChannelFactory {
         return new ResolvedGrpcTarget(selected.getHost(), selected.getPort());
     }
 
+    StellfluxGrpcClientInterceptorContext createInterceptorContext(
+            StellfluxGrpcClientOptions options, ResolvedGrpcTarget target) {
+        return StellfluxGrpcClientInterceptorContext.from(
+                options, target.host(), target.port(), !isDirectMode(options));
+    }
+
     private boolean isDirectMode(StellfluxGrpcClientOptions options) {
         return options.getHost() != null && !options.getHost().isBlank() && options.getPort() > 0;
     }
@@ -112,7 +138,7 @@ public class StellfluxGrpcChannelFactory {
                 + ", supplier=" + resolveSupplier(options)
                 + ", requestHashKey=" + safeText(defaultRequest.getHashKey())
                 + ", requestAttributes=" + formatAttributes(defaultRequest.getAttributes())
-                + ", telemetryEnabled=" + (this.openTelemetry != null);
+                + ", interceptors=" + this.interceptors.size();
     }
 
     private String resolveLoadBalancer(StellfluxGrpcClientOptions options) {
@@ -135,6 +161,20 @@ public class StellfluxGrpcChannelFactory {
 
     private String formatAttributes(Map<String, String> attributes) {
         return attributes == null || attributes.isEmpty() ? "{}" : attributes.toString();
+    }
+
+    private List<StellfluxGrpcClientInterceptor> initializeInterceptors(
+            OpenTelemetry openTelemetry, List<StellfluxGrpcClientInterceptor> interceptors) {
+        List<StellfluxGrpcClientInterceptor> configured =
+                interceptors == null ? List.of() : interceptors;
+        java.util.ArrayList<StellfluxGrpcClientInterceptor> resolved =
+                new java.util.ArrayList<>(configured.size() + (openTelemetry == null ? 0 : 1));
+        if (openTelemetry != null) {
+            resolved.add(new StellfluxGrpcClientTelemetryInterceptorAdapter(openTelemetry));
+        }
+        resolved.addAll(configured);
+        resolved.sort(Comparator.comparingInt(StellfluxGrpcClientInterceptor::getOrder));
+        return List.copyOf(resolved);
     }
 
     record ResolvedGrpcTarget(String host, int port) {}

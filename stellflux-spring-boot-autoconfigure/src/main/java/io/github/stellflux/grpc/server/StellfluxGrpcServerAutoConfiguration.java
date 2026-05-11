@@ -6,6 +6,9 @@ import io.grpc.Server;
 import io.grpc.ServerInterceptor;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -34,8 +37,12 @@ public class StellfluxGrpcServerAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public StellfluxGrpcServerFactory stellfluxGrpcServerFactory(OpenTelemetry openTelemetry) {
-        return new StellfluxGrpcServerFactory(openTelemetry);
+    public StellfluxGrpcServerFactory stellfluxGrpcServerFactory(
+            OpenTelemetry openTelemetry,
+            ObjectProvider<StellfluxGrpcServerInterceptor> interceptors,
+            ObjectProvider<ServerInterceptor> nativeInterceptors) {
+        return new StellfluxGrpcServerFactory(
+                openTelemetry, mergeInterceptors(interceptors, nativeInterceptors));
     }
 
     /**
@@ -80,13 +87,10 @@ public class StellfluxGrpcServerAutoConfiguration {
     @ConditionalOnBean(StellfluxGrpcServiceRegistry.class)
     @ConditionalOnMissingBean(Server.class)
     public Server stellfluxGrpcServer(
-            NettyServerBuilder builder,
-            StellfluxGrpcServiceRegistry serviceRegistry,
-            ObjectProvider<ServerInterceptor> interceptors) {
+            NettyServerBuilder builder, StellfluxGrpcServiceRegistry serviceRegistry) {
         serviceRegistry
                 .getRegistrations()
                 .forEach(registration -> builder.addService(registration.serviceDefinition()));
-        interceptors.orderedStream().forEach(builder::intercept);
         return builder.build();
     }
 
@@ -144,5 +148,48 @@ public class StellfluxGrpcServerAutoConfiguration {
                                     + ", discoveredServices="
                                     + (serviceRegistry != null ? serviceRegistry.getRegistrations().size() : 0));
         };
+    }
+
+    private List<StellfluxGrpcServerInterceptor> mergeInterceptors(
+            ObjectProvider<StellfluxGrpcServerInterceptor> interceptors,
+            ObjectProvider<ServerInterceptor> nativeInterceptors) {
+        List<StellfluxGrpcServerInterceptor> merged = new ArrayList<>();
+        merged.addAll(interceptors.orderedStream().toList());
+        nativeInterceptors.orderedStream()
+                .map(interceptor -> new NativeGrpcServerInterceptorAdapter(interceptor, resolveOrder(interceptor)))
+                .forEach(merged::add);
+        merged.sort(Comparator.comparingInt(StellfluxGrpcServerInterceptor::getOrder));
+        return List.copyOf(merged);
+    }
+
+    private int resolveOrder(Object bean) {
+        if (bean instanceof org.springframework.core.Ordered ordered) {
+            return ordered.getOrder();
+        }
+        Integer order = org.springframework.core.annotation.OrderUtils.getOrder(bean.getClass());
+        return order == null ? StellfluxGrpcServerInterceptorOrder.USER : order;
+    }
+
+    /** 原生 gRPC ServerInterceptor 适配器。 */
+    static final class NativeGrpcServerInterceptorAdapter implements StellfluxGrpcServerInterceptor {
+
+        private final ServerInterceptor delegate;
+
+        private final int order;
+
+        NativeGrpcServerInterceptorAdapter(ServerInterceptor delegate, int order) {
+            this.delegate = delegate;
+            this.order = order;
+        }
+
+        @Override
+        public int getOrder() {
+            return this.order;
+        }
+
+        @Override
+        public ServerInterceptor createInterceptor(StellfluxGrpcServerInterceptorContext context) {
+            return this.delegate;
+        }
     }
 }

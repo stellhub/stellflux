@@ -1,12 +1,19 @@
 package io.github.stellflux.grpc.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.google.protobuf.StringValue;
 import io.github.stellflux.grpc.server.annotation.RpcService;
+import io.github.stellflux.grpc.server.internal.StellfluxGrpcServerTelemetryInterceptor;
 import io.grpc.BindableService;
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
+import io.grpc.Metadata;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.ServerMethodDefinition;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
@@ -22,6 +29,7 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 class StellfluxGrpcServerAutoConfigurationTest {
 
@@ -69,6 +77,35 @@ class StellfluxGrpcServerAutoConfigurationTest {
                             assertThat(registry.getRegistrations()).hasSize(1);
                             assertThat(registry.getRegistrations().getFirst().serviceId())
                                     .isEqualTo("trade.order.rpc");
+                        });
+    }
+
+    @Test
+    void shouldMergeCustomAndNativeServerInterceptorsByOrder() {
+        this.contextRunner
+                .withUserConfiguration(ServerInterceptorConfiguration.class)
+                .run(
+                        context -> {
+                            StellfluxGrpcServerFactory factory =
+                                    context.getBean(StellfluxGrpcServerFactory.class);
+                            StellfluxGrpcServerOptions options = new StellfluxGrpcServerOptions();
+                            options.setPort(9090);
+
+                            java.util.List<ServerInterceptor> interceptors =
+                                    factory.resolveInterceptors(options);
+
+                            assertEquals(3, interceptors.size());
+                            assertInstanceOf(
+                                    StellfluxGrpcServerTelemetryInterceptor.class,
+                                    interceptors.get(0));
+                            assertEquals(
+                                    "native",
+                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(1))
+                                            .name());
+                            assertEquals(
+                                    "custom",
+                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(2))
+                                            .name());
                         });
     }
 
@@ -168,6 +205,32 @@ class StellfluxGrpcServerAutoConfigurationTest {
         @Bean
         DisabledEchoService disabledEchoService() {
             return new DisabledEchoService();
+        }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class ServerInterceptorConfiguration {
+
+        @Bean
+        StellfluxGrpcServerInterceptor customServerInterceptor() {
+            return new StellfluxGrpcServerInterceptor() {
+                @Override
+                public int getOrder() {
+                    return 20;
+                }
+
+                @Override
+                public ServerInterceptor createInterceptor(
+                        StellfluxGrpcServerInterceptorContext context) {
+                    return new NamedServerInterceptor("custom");
+                }
+            };
+        }
+
+        @Bean
+        @Order(10)
+        ServerInterceptor nativeServerInterceptor() {
+            return new NamedServerInterceptor("native");
         }
     }
 
@@ -320,6 +383,27 @@ class StellfluxGrpcServerAutoConfigurationTest {
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    static final class NamedServerInterceptor implements ServerInterceptor {
+
+        private final String name;
+
+        NamedServerInterceptor(String name) {
+            this.name = name;
+        }
+
+        String name() {
+            return this.name;
+        }
+
+        @Override
+        public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
+                ServerCall<ReqT, RespT> call,
+                Metadata headers,
+                ServerCallHandler<ReqT, RespT> next) {
+            return next.startCall(call, headers);
         }
     }
 }
