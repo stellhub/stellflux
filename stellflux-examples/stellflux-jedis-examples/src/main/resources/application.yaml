@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: stellflux-jedis-examples
+  main:
+    web-application-type: none
+
+example:
+  jedis:
+    host: 127.0.0.1
+    port: 6379
+    invoke-on-startup: false
+
+stellflux:
+  opentelemetry:
+    resource:
+      service-name: stellflux-jedis-examples
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

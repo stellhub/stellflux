@@ -65,6 +65,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-grpc-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -131,6 +136,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-http-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-jedis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

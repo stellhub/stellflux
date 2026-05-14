@@ -28,5 +28,6 @@
         <module>stellflux-spring-boot-starter-traces</module>
         <module>stellflux-spring-boot-starter-stellmap</module>
         <module>stellflux-spring-boot-starter-http-client</module>
+        <module>stellflux-spring-boot-starter-jedis</module>
     </modules>
 </project>
