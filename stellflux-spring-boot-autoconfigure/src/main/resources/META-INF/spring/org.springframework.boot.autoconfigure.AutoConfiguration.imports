@@ -6,3 +6,5 @@ io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration
 io.github.stellflux.jedis.StellfluxJedisAutoConfiguration
 io.github.stellflux.stellmap.StellfluxStellMapAutoConfiguration
 io.github.stellflux.log.StellfluxLogAutoConfiguration
+io.github.stellflux.stellflow.producer.StellfluxStellflowProducerAutoConfiguration
+io.github.stellflux.stellflow.consumer.StellfluxStellflowConsumerAutoConfiguration

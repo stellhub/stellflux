@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: stellflux-stellflow-example
+
+server:
+  port: 18082
+
+stellflux:
+  opentelemetry:
+    resource:
+      service-name: stellflux-stellflow-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false
+  stellflow:
+    producer:
+      bootstrap-servers: ${STELLFLOW_BOOTSTRAP_SERVERS:127.0.0.1:9092}
+      client-id: ${spring.application.name}-producer
+      request-timeout: 5s
+      retry:
+        max-attempts: 3
+        backoff: 100ms
+      producer:
+        acks: 1
+        timeout-ms: 5000
+        max-batch-records: 16
+        partitioner: default
+    consumer:
+      bootstrap-servers: ${STELLFLOW_BOOTSTRAP_SERVERS:127.0.0.1:9092}
+      client-id: ${spring.application.name}-consumer
+      request-timeout: 5s
+      retry:
+        max-attempts: 3
+        backoff: 100ms
+      consumer:
+        group-id: stellflux-order-worker
+        session-timeout-ms: 10000
+        heartbeat-interval: 3s
+        fetch-max-bytes: 1048576
+        offset-commit-metadata: stellflux-stellflow-example
+
+example:
+  stellflow:
+    topic: orders.created
+    invoke-on-startup: false
+    request-timeout: 5s
+    poll-timeout: 3s

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.stellhub</groupId>
+        <artifactId>stellflux</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>stellflux-stellflow</artifactId>
+    <packaging>pom</packaging>
+
+    <name>stellflux-stellflow</name>
+    <description>Parent project for stellflux Stellflow integrations</description>
+
+    <modules>
+        <module>stellflux-stellflow-producer</module>
+        <module>stellflux-stellflow-consumer</module>
+    </modules>
+</project>

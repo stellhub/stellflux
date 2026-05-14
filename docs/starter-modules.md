@@ -45,6 +45,15 @@
 - `stellflux-spring-boot-starter-traces`
 - `stellflux-spring-boot-starter-log`
 - `stellflux-spring-boot-starter-stellmap`
+- `stellflux-spring-boot-starter-stellflow`
+  - Stellflow 聚合 starter
+  - 同时引入 producer 和 consumer
+- `stellflux-spring-boot-starter-stellflow-producer`
+  - Stellflow 生产者能力
+  - 包含 `stellflux-stellflow-producer` 与对应自动装配
+- `stellflux-spring-boot-starter-stellflow-consumer`
+  - Stellflow 消费者能力
+  - 包含 `stellflux-stellflow-consumer` 与对应自动装配
 
 ## 推荐用法
 
@@ -54,3 +63,6 @@
 - 只做 gRPC 调用方：引入 `stellflux-spring-boot-starter-grpc-client`
 - 只做 gRPC 服务提供方：引入 `stellflux-spring-boot-starter-grpc-server`
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
+- 只发送 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow-producer`
+- 只消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow-consumer`
+- 同时发送和消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow`

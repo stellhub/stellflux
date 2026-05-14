@@ -71,6 +71,16 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellflow-producer</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellflow-consumer</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-api</artifactId>
         </dependency>

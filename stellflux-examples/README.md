@@ -1,6 +1,6 @@
 # stellflux-examples
 
-`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Jedis 等能力的最小接入方式。
+`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellflow、Jedis 等能力的最小接入方式。
 
 ## 模块列表
 
@@ -12,6 +12,7 @@
 | `stellflux-grpc-server-example` | `io.github.stellflux.examples.grpcserver` | `19090` | 演示最小 gRPC Server 接入方式 |
 | `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | 无 | 演示最小 OpenTelemetry 接入方式 |
 | `stellflux-stellmap-example` | `io.github.stellflux.examples.stellmap` | `18081` | 演示最小 StellMap 集成方式 |
+| `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
 | `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | 无 | 演示最小 Jedis 接入方式 |
 
 说明：
@@ -27,7 +28,7 @@
 在仓库根目录执行：
 
 ```bash
-mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-jedis-examples" -am compile
+mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples" -am compile
 ```
 
 如果只想编译整个 examples 聚合模块对应的子模块，推荐仍然从根工程执行 reactor 构建，这样可以自动带上本仓库里的 starter 依赖模块。
@@ -180,7 +181,60 @@ mvn -pl stellflux-examples/stellflux-stellmap-example -am spring-boot:run
 mvn -pl stellflux-examples/stellflux-stellmap-example -am spring-boot:run -Dspring-boot.run.arguments=--stellflux.stellmap.base-url=http://127.0.0.1:8080
 ```
 
-### 7. `stellflux-jedis-examples`
+### 7. `stellflux-stellflow-example`
+
+- 根包：`io.github.stellflux.examples.stellflow`
+- 启动类：`io.github.stellflux.examples.stellflow.StellfluxStellflowExampleApplication`
+- 默认端口：`18082`
+- 用途：演示 `stellflux-spring-boot-starter-stellflow` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过 HTTP 接口触发生产者和消费者
+
+启动命令：
+
+```bash
+mvn -pl stellflux-spring-boot-starter-parent/stellflux-spring-boot-starter-stellflow,stellflux-examples/stellflux-stellflow-example -am install -DskipTests
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
+```
+
+默认行为：
+
+- 启动后准备 `StellflowProducer` 和 `StellflowConsumer`
+- 默认连接地址为 `127.0.0.1:9092`
+- 默认主题为 `orders.created`
+- 默认不主动发送或消费消息，便于本地直接启动并通过接口手动触发
+
+示例接口：
+
+- `GET http://127.0.0.1:18082/api/stellflow/status`
+- `POST http://127.0.0.1:18082/api/stellflow/producer/orders`
+- `POST http://127.0.0.1:18082/api/stellflow/consumer/subscriptions`
+- `GET http://127.0.0.1:18082/api/stellflow/consumer/records?timeout=3s`
+- `POST http://127.0.0.1:18082/api/stellflow/consumer/offsets/commit`
+- `POST http://127.0.0.1:18082/api/stellflow/workflows/orders`
+
+发送订单事件请求体示例：
+
+```json
+{
+  "orderId": "order-10001",
+  "userId": "user-10001",
+  "amount": 129.90,
+  "currency": "CNY"
+}
+```
+
+如需启动时模拟真实订单事件发送和消费：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.stellflow.invoke-on-startup=true
+```
+
+如需指定 Stellflow broker 地址：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--example.stellflow.invoke-on-startup=true --stellflux.stellflow.producer.bootstrap-servers=127.0.0.1:9092 --stellflux.stellflow.consumer.bootstrap-servers=127.0.0.1:9092"
+```
+
+### 8. `stellflux-jedis-examples`
 
 - 根包：`io.github.stellflux.examples.jedis`
 - 启动类：`io.github.stellflux.examples.jedis.StellfluxJedisExampleApplication`
@@ -216,4 +270,5 @@ mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run -Dspring
 - 想验证 gRPC client 到 gRPC server：先启动 `stellflux-grpc-server-example`，再启动 `stellflux-grpc-client-example`
 - 想单独观察 TraceId / Span 创建：启动 `stellflux-opentelemetry-example`
 - 想验证服务注册或后续接入服务发现：启动 `stellflux-stellmap-example`
+- 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
 - 想验证 Jedis telemetry 配置装配：启动 `stellflux-jedis-examples`
