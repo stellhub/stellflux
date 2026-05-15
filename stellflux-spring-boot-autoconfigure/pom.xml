@@ -67,6 +67,11 @@
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-thread-pool</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
             <artifactId>stellflux-datasource</artifactId>
             <optional>true</optional>
         </dependency>

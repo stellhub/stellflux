@@ -1,6 +1,6 @@
 # stellflux-examples
 
-`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellflow、Jedis、Caffeine、DataSource 等能力的最小接入方式。
+`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellflow、Jedis、Caffeine、ThreadPool、DataSource 等能力的最小接入方式。
 
 ## 模块列表
 
@@ -15,6 +15,7 @@
 | `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
 | `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | `18084` | 演示 Jedis CRUD 和 OpenTelemetry metrics 验证方式 |
 | `stellflux-caffeine-examples` | `io.github.stellflux.examples.caffeine` | `18086` | 演示 Caffeine 本地缓存 CRUD 和 OpenTelemetry logs/traces/metrics 验证方式 |
+| `stellflux-thread-pool-example` | `io.github.stellflux.examples.threadpool` | `18087` | 演示线程池 CRUD 和 OpenTelemetry metrics 验证方式 |
 | `stellflux-datasource-example` | `io.github.stellflux.examples.datasource` | `18085` | 演示 MySQL DataSource 自动装配和一次性 SQL telemetry 验证方式 |
 
 说明：
@@ -30,7 +31,7 @@
 在仓库根目录执行：
 
 ```bash
-mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-datasource-example" -am compile
+mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-thread-pool-example,stellflux-examples/stellflux-datasource-example" -am compile
 ```
 
 如果只想编译整个 examples 聚合模块对应的子模块，推荐仍然从根工程执行 reactor 构建，这样可以自动带上本仓库里的 starter 依赖模块。
@@ -382,7 +383,82 @@ mvn -f stellflux-examples/stellflux-caffeine-examples/pom.xml org.springframewor
 - 调用 `/workflows/basic` 可一次性执行 put/get/delete，并在响应里看到操作后的 Caffeine stats
 - 控制台会输出对应的 OTel structured log，trace 和 metrics 由 `stellflux-caffeine` 核心封装统一发射
 
-### 10. `stellflux-datasource-example`
+### 10. `stellflux-thread-pool-example`
+
+- 根包：`io.github.stellflux.examples.threadpool`
+- 启动类：`io.github.stellflux.examples.threadpool.StellfluxThreadPoolExampleApplication`
+- 默认端口：`18087`
+- 用途：演示 `stellflux-spring-boot-starter-thread-pool` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过 HTTP 接口管理线程池并观察 OpenTelemetry metrics
+
+启动命令：
+
+```bash
+mvn -pl stellflux-examples/stellflux-thread-pool-example -am install -DskipTests
+mvn -f stellflux-examples/stellflux-thread-pool-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
+```
+
+默认行为：
+
+- 启动后创建一个 `example-worker` 线程池
+- 默认线程池配置为 `corePoolSize=2`、`maximumPoolSize=4`、`queueCapacity=32`
+- 默认不主动提交任务，便于本地直接启动并通过 HTTP 手动触发
+- 当前配置开启 metrics，关闭 logs 和 traces
+- OTel metrics 会记录 active threads、pool size、core/max threads、queue size、remaining capacity、task count 和 completed task count
+
+如需启动时提交一批示例任务：
+
+```bash
+mvn -f stellflux-examples/stellflux-thread-pool-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.thread-pool.invoke-on-startup=true
+```
+
+示例接口：
+
+- `GET http://127.0.0.1:18087/api/thread-pool/status`
+- `GET http://127.0.0.1:18087/api/thread-pool/metrics`
+- `POST http://127.0.0.1:18087/api/thread-pool/pools`
+- `GET http://127.0.0.1:18087/api/thread-pool/pools/example-worker`
+- `PUT http://127.0.0.1:18087/api/thread-pool/pools/example-worker`
+- `DELETE http://127.0.0.1:18087/api/thread-pool/pools/example-worker`
+- `POST http://127.0.0.1:18087/api/thread-pool/pools/example-worker/tasks`
+
+创建线程池请求体示例：
+
+```json
+{
+  "poolName": "order-worker",
+  "corePoolSize": 2,
+  "maximumPoolSize": 6,
+  "queueCapacity": 64,
+  "keepAliveSeconds": 30
+}
+```
+
+更新线程池请求体示例：
+
+```json
+{
+  "corePoolSize": 3,
+  "maximumPoolSize": 8
+}
+```
+
+提交任务请求体示例：
+
+```json
+{
+  "taskCount": 12,
+  "workMillis": 3000
+}
+```
+
+验证方式：
+
+- 调用 `/pools` 创建线程池后，响应会返回该线程池的当前指标快照
+- 调用 `/tasks` 后，立刻调用 `/metrics` 可以看到 `activeCount`、`queueSize`、`taskCount` 变化
+- 任务执行完成后，再调用 `/metrics` 可以看到 `completedTaskCount` 增长
+- 不接 Collector 时，接口里的本地快照也可以验证指标采集对象已经被 `StellfluxThreadPoolTelemetry` 监控
+
+### 11. `stellflux-datasource-example`
 
 - 根包：`io.github.stellflux.examples.datasource`
 - 启动类：`io.github.stellflux.examples.datasource.StellfluxDataSourceExampleApplication`
@@ -436,4 +512,5 @@ mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframewo
 - 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
 - 想验证 Jedis CRUD 与 OpenTelemetry metrics：启动 `stellflux-jedis-examples`
 - 想验证 Caffeine 本地缓存 CRUD 与 OpenTelemetry logs/traces/metrics：启动 `stellflux-caffeine-examples`
+- 想验证线程池 CRUD 与 OpenTelemetry metrics：启动 `stellflux-thread-pool-example`
 - 想验证 MySQL DataSource 连接与 SQL telemetry：启动 `stellflux-datasource-example`，并显式打开 `example.datasource.invoke-on-startup`

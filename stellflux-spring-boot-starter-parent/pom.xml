@@ -30,6 +30,7 @@
         <module>stellflux-spring-boot-starter-http-client</module>
         <module>stellflux-spring-boot-starter-jedis</module>
         <module>stellflux-spring-boot-starter-caffeine</module>
+        <module>stellflux-spring-boot-starter-thread-pool</module>
         <module>stellflux-spring-boot-starter-datasource</module>
         <module>stellflux-spring-boot-starter-stellflow</module>
     </modules>

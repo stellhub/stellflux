@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: stellflux-thread-pool-example
+
+server:
+  port: 18087
+
+example:
+  thread-pool:
+    invoke-on-startup: false
+    default-pool-name: example-worker
+    core-pool-size: 2
+    maximum-pool-size: 4
+    queue-capacity: 32
+    keep-alive-seconds: 30
+
+stellflux:
+  thread-pool:
+    auto-register-executor-beans: true
+  opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
+    resource:
+      service-name: stellflux-thread-pool-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: true
+    traces:
+      enabled: false
