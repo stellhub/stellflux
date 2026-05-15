@@ -11,6 +11,32 @@
 
     <name>stellflux</name>
     <description>Self-developed framework based on Spring Boot</description>
+    <url>https://github.com/stellhub/stellflux</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>stellhub</id>
+            <name>StellHub</name>
+            <url>https://github.com/stellhub</url>
+            <organization>StellHub</organization>
+            <organizationUrl>https://github.com/stellhub</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/stellhub/stellflux.git</connection>
+        <developerConnection>scm:git:https://github.com/stellhub/stellflux.git</developerConnection>
+        <url>https://github.com/stellhub/stellflux</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>stellflux-bom</module>
@@ -46,7 +72,13 @@
         <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
         <stellflow-java-sdk.version>0.0.2</stellflow-java-sdk.version>
         <lombok.version>1.18.46</lombok.version>
-        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+        <gpg.keyname>9A870D0CDDB6C964F6467C19D6CC5A07420EBBBE</gpg.keyname>
     </properties>
 
     <dependencyManagement>
@@ -283,6 +315,14 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -323,4 +363,93 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <source>${java.version}</source>
+                            <encoding>${project.build.sourceEncoding}</encoding>
+                            <doclint>none</doclint>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <bestPractices>true</bestPractices>
+                            <keyname>${gpg.keyname}</keyname>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <deploymentName>${project.artifactId}-${project.version}</deploymentName>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <excludeArtifacts>
+                                <excludeArtifact>stellflux-examples</excludeArtifact>
+                                <excludeArtifact>stellflux-http-server-example</excludeArtifact>
+                                <excludeArtifact>stellflux-http-client-example</excludeArtifact>
+                                <excludeArtifact>stellflux-grpc-client-example</excludeArtifact>
+                                <excludeArtifact>stellflux-grpc-server-example</excludeArtifact>
+                                <excludeArtifact>stellflux-opentelemetry-example</excludeArtifact>
+                                <excludeArtifact>stellflux-stellmap-example</excludeArtifact>
+                                <excludeArtifact>stellflux-stellflow-example</excludeArtifact>
+                                <excludeArtifact>stellflux-jedis-examples</excludeArtifact>
+                                <excludeArtifact>stellflux-caffeine-examples</excludeArtifact>
+                                <excludeArtifact>stellflux-thread-pool-example</excludeArtifact>
+                                <excludeArtifact>stellflux-datasource-example</excludeArtifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
