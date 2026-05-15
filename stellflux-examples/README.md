@@ -13,7 +13,7 @@
 | `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | `18083` | 演示 OpenTelemetry trace、log、metrics 的 HTTP 验证方式 |
 | `stellflux-stellmap-example` | `io.github.stellflux.examples.stellmap` | `18081` | 演示最小 StellMap 集成方式 |
 | `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
-| `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | 无 | 演示最小 Jedis 接入方式 |
+| `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | `18084` | 演示 Jedis CRUD 和 OpenTelemetry metrics 验证方式 |
 
 说明：
 
@@ -274,31 +274,59 @@ mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:
 
 - 根包：`io.github.stellflux.examples.jedis`
 - 启动类：`io.github.stellflux.examples.jedis.StellfluxJedisExampleApplication`
-- 默认端口：无
-- 用途：演示 `stellflux-spring-boot-starter-jedis` 自动装配带 OpenTelemetry 的 `DefaultJedisClientConfig`
+- 默认端口：`18084`
+- 用途：演示 `stellflux-spring-boot-starter-jedis` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过 HTTP 接口执行 Redis CRUD 并观察 OpenTelemetry metrics
 
 启动命令：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run
+mvn -pl stellflux-examples/stellflux-jedis-examples -am install -DskipTests
+mvn -f stellflux-examples/stellflux-jedis-examples/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
 ```
 
 默认行为：
 
 - 启动后输出自动装配的 `DefaultJedisClientConfig` telemetry 状态
-- 默认不主动连接 Redis，便于本地直接启动
+- 默认不主动连接 Redis，便于本地直接启动并通过 HTTP 手动触发
+- 当前配置开启 traces、logs 和 metrics
+- OTel metrics 会记录 Redis 操作次数、错误次数和操作耗时，同时接口会返回本地指标快照，便于不接 Collector 时快速验证
 
 如需启动时访问本地 Redis：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run -Dspring-boot.run.arguments=--example.jedis.invoke-on-startup=true
+mvn -f stellflux-examples/stellflux-jedis-examples/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.jedis.invoke-on-startup=true
 ```
 
 如需指定 Redis 地址：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run -Dspring-boot.run.arguments="--example.jedis.invoke-on-startup=true --example.jedis.host=127.0.0.1 --example.jedis.port=6379"
+mvn -f stellflux-examples/stellflux-jedis-examples/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--example.jedis.invoke-on-startup=true --example.jedis.host=127.0.0.1 --example.jedis.port=6379"
 ```
+
+示例接口：
+
+- `GET http://127.0.0.1:18084/api/jedis/status`
+- `POST http://127.0.0.1:18084/api/jedis/keys`
+- `GET http://127.0.0.1:18084/api/jedis/keys/stellflux:jedis:example:manual`
+- `DELETE http://127.0.0.1:18084/api/jedis/keys/stellflux:jedis:example:manual`
+- `POST http://127.0.0.1:18084/api/jedis/workflows/basic?scenario=checkout`
+
+写入请求体示例：
+
+```json
+{
+  "key": "stellflux:jedis:example:manual",
+  "value": "hello-stellflux-jedis",
+  "ttlSeconds": 60
+}
+```
+
+验证方式：
+
+- 调用 `/keys` 后，响应会返回当前 Redis 操作的 `traceId`、`spanId` 和 `metrics.totalOperations`
+- 调用 `/workflows/basic` 可一次性执行 set/get/delete，并在响应里看到三次操作各自的 traceId
+- Redis 可用时，`metrics.totalErrors` 保持不变，`metrics.totalMetricRecords` 会随操作递增
+- Redis 不可用时，接口会返回 `success=false` 和错误信息，同时 `metrics.totalErrors` 会递增
 
 ## 模块关系建议
 
@@ -307,4 +335,4 @@ mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run -Dspring
 - 想单独观察 TraceId / Log / Metrics：启动 `stellflux-opentelemetry-example`
 - 想验证服务注册或后续接入服务发现：启动 `stellflux-stellmap-example`
 - 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
-- 想验证 Jedis telemetry 配置装配：启动 `stellflux-jedis-examples`
+- 想验证 Jedis CRUD 与 OpenTelemetry metrics：启动 `stellflux-jedis-examples`

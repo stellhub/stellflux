@@ -1,8 +1,9 @@
 spring:
   application:
     name: stellflux-jedis-examples
-  main:
-    web-application-type: none
+
+server:
+  port: 18084
 
 example:
   jedis:
@@ -12,11 +13,14 @@ example:
 
 stellflux:
   opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
     resource:
       service-name: stellflux-jedis-examples
     logs:
-      enabled: false
+      enabled: true
     metrics:
-      enabled: false
+      enabled: true
     traces:
-      enabled: false
+      enabled: true
