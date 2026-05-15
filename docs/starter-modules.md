@@ -45,6 +45,10 @@
 - `stellflux-spring-boot-starter-traces`
 - `stellflux-spring-boot-starter-log`
 - `stellflux-spring-boot-starter-stellmap`
+- `stellflux-spring-boot-starter-caffeine`
+  - Caffeine 本地缓存能力
+  - 包含 `stellflux-caffeine` 与统一自动装配
+  - 通过 `StellfluxCaffeineCacheFactory` 创建的缓存会自动发射 logs、traces 和 metrics
 - `stellflux-spring-boot-starter-datasource`
   - MySQL DataSource 能力
   - 包含 `stellflux-datasource`、`spring-boot-starter-jdbc` 与统一自动装配
@@ -62,6 +66,7 @@
 - 只做 gRPC 调用方：引入 `stellflux-spring-boot-starter-grpc-client`
 - 只做 gRPC 服务提供方：引入 `stellflux-spring-boot-starter-grpc-server`
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
+- 接入 Caffeine 本地缓存 telemetry：引入 `stellflux-spring-boot-starter-caffeine`
 - 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
 - 发送或消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow`
 

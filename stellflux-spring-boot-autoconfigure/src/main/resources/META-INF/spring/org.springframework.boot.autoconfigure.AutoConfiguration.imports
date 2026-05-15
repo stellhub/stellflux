@@ -4,6 +4,7 @@ io.github.stellflux.grpc.server.StellfluxGrpcServerAutoConfiguration
 io.github.stellflux.grpc.client.StellfluxGrpcClientAutoConfiguration
 io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration
 io.github.stellflux.jedis.StellfluxJedisAutoConfiguration
+io.github.stellflux.caffeine.StellfluxCaffeineAutoConfiguration
 io.github.stellflux.datasource.StellfluxDataSourceAutoConfiguration
 io.github.stellflux.stellmap.StellfluxStellMapAutoConfiguration
 io.github.stellflux.log.StellfluxLogAutoConfiguration

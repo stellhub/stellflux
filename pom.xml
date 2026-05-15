@@ -19,6 +19,7 @@
         <module>stellflux-log</module>
         <module>stellflux-metrics</module>
         <module>stellflux-traces</module>
+        <module>stellflux-caffeine</module>
         <module>stellflux-jedis</module>
         <module>stellflux-datasource</module>
         <module>stellflux-http-client</module>
@@ -39,6 +40,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>3.5.14</spring-boot.version>
         <protobuf.version>3.25.5</protobuf.version>
+        <caffeine.version>3.2.3</caffeine.version>
         <jedis.version>6.0.0-stellhub-otel.1</jedis.version>
         <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
         <stellflow-java-sdk.version>0.0.2</stellflow-java-sdk.version>
@@ -86,6 +88,12 @@
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>jedis</artifactId>
                 <version>${jedis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
             </dependency>
 
             <dependency>
@@ -141,6 +149,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-caffeine</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -221,6 +234,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-caffeine</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

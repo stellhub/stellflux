@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: stellflux-caffeine-examples
+
+server:
+  port: 18086
+
+example:
+  caffeine:
+    maximum-size: 1000
+    expire-after-write: 10m
+    invoke-on-startup: false
+
+stellflux:
+  opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
+    resource:
+      service-name: stellflux-caffeine-examples
+    logs:
+      enabled: true
+    metrics:
+      enabled: true
+    traces:
+      enabled: true
