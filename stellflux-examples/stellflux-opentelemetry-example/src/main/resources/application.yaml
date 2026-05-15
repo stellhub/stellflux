@@ -1,16 +1,20 @@
 spring:
   application:
     name: stellflux-opentelemetry-example
-  main:
-    web-application-type: none
+
+server:
+  port: 18083
 
 stellflux:
   opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
     resource:
       service-name: stellflux-opentelemetry-example
     logs:
-      enabled: false
+      enabled: true
     metrics:
-      enabled: false
+      enabled: true
     traces:
       enabled: true

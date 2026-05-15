@@ -1,10 +1,5 @@
 package io.github.stellflux.examples.opentelemetry;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Scope;
-import java.util.logging.Logger;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -13,32 +8,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class OpenTelemetryExampleRunner implements ApplicationRunner {
 
-    private static final Logger LOGGER = Logger.getLogger(OpenTelemetryExampleRunner.class.getName());
+    private final OpenTelemetryObservationService observationService;
 
-    private final OpenTelemetry openTelemetry;
-
-    public OpenTelemetryExampleRunner(OpenTelemetry openTelemetry) {
-        this.openTelemetry = openTelemetry;
+    public OpenTelemetryExampleRunner(OpenTelemetryObservationService observationService) {
+        this.observationService = observationService;
     }
 
     /**
-     * 启动后创建一个演示 span。
+     * 启动后创建一次演示观测事件。
      *
      * @param args 启动参数
      */
     @Override
     public void run(ApplicationArguments args) {
-        Tracer tracer = openTelemetry.getTracer("stellflux-opentelemetry-example");
-        Span span = tracer.spanBuilder("startup-demo-span").startSpan();
-        try (Scope ignored = span.makeCurrent()) {
-            LOGGER.info(
-                    () ->
-                            "Created demo span traceId="
-                                    + span.getSpanContext().getTraceId()
-                                    + ", spanId="
-                                    + span.getSpanContext().getSpanId());
-        } finally {
-            span.end();
-        }
+        observationService.verify("startup");
     }
 }

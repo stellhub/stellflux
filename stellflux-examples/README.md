@@ -10,7 +10,7 @@
 | `stellflux-http-client-example` | `io.github.stellflux.examples.httpclient` | 无 | 演示最小 HTTP Client 接入方式 |
 | `stellflux-grpc-client-example` | `io.github.stellflux.examples.grpcclient` | 无 | 演示最小 gRPC Client 接入方式 |
 | `stellflux-grpc-server-example` | `io.github.stellflux.examples.grpcserver` | `19090` | 演示最小 gRPC Server 接入方式 |
-| `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | 无 | 演示最小 OpenTelemetry 接入方式 |
+| `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | `18083` | 演示 OpenTelemetry trace、log、metrics 的 HTTP 验证方式 |
 | `stellflux-stellmap-example` | `io.github.stellflux.examples.stellmap` | `18081` | 演示最小 StellMap 集成方式 |
 | `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
 | `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | 无 | 演示最小 Jedis 接入方式 |
@@ -139,19 +139,55 @@ mvn -pl stellflux-examples/stellflux-grpc-server-example -am spring-boot:run
 
 - 根包：`io.github.stellflux.examples.opentelemetry`
 - 启动类：`io.github.stellflux.examples.opentelemetry.StellfluxOpenTelemetryExampleApplication`
-- 默认端口：无
-- 用途：演示最小 OpenTelemetry 运行时装配和 span 创建
+- 默认端口：`18083`
+- 用途：演示 `stellflux-spring-boot-starter-opentelemetry` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过 HTTP 接口触发 trace、log 和 metrics
 
 启动命令：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-opentelemetry-example -am spring-boot:run
+mvn -pl stellflux-examples/stellflux-opentelemetry-example -am install -DskipTests
+mvn -f stellflux-examples/stellflux-opentelemetry-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
 ```
 
 默认行为：
 
-- 启动后创建一个名为 `startup-demo-span` 的示例 span
-- 当前配置只开启 traces，关闭 logs 和 metrics
+- 启动后创建一次 `startup` 场景的综合观测事件
+- 当前配置开启 traces、logs 和 metrics
+- OTel 日志使用 console json 输出，便于本地直接在控制台查看
+- OTel metrics 会记录到 SDK Meter，同时接口会返回本地指标快照，便于不接 Collector 时快速验证
+
+示例接口：
+
+- `GET http://127.0.0.1:18083/api/opentelemetry/status`
+- `GET http://127.0.0.1:18083/api/opentelemetry/trace?operation=checkout`
+- `POST http://127.0.0.1:18083/api/opentelemetry/logs`
+- `POST http://127.0.0.1:18083/api/opentelemetry/metrics`
+- `POST http://127.0.0.1:18083/api/opentelemetry/verify?scenario=checkout`
+
+日志请求体示例：
+
+```json
+{
+  "message": "order checkout log observation",
+  "level": "INFO"
+}
+```
+
+指标请求体示例：
+
+```json
+{
+  "name": "checkout",
+  "value": 42.5
+}
+```
+
+验证方式：
+
+- 调用 `/trace` 后，响应会返回 `traceId` 和 `spanId`
+- 调用 `/logs` 后，响应会返回同一次请求的 `traceId`，控制台会输出对应 OTel log
+- 调用 `/metrics` 后，响应里的 `snapshot.totalMetrics` 会递增
+- 调用 `/verify` 可一次性触发 trace、log、metrics，并在响应里看到同一次观测的 traceId 和指标快照
 
 ### 6. `stellflux-stellmap-example`
 
@@ -268,7 +304,7 @@ mvn -pl stellflux-examples/stellflux-jedis-examples -am spring-boot:run -Dspring
 
 - 想验证 HTTP client 到 HTTP server：先启动 `stellflux-http-server-example`，再启动 `stellflux-http-client-example`
 - 想验证 gRPC client 到 gRPC server：先启动 `stellflux-grpc-server-example`，再启动 `stellflux-grpc-client-example`
-- 想单独观察 TraceId / Span 创建：启动 `stellflux-opentelemetry-example`
+- 想单独观察 TraceId / Log / Metrics：启动 `stellflux-opentelemetry-example`
 - 想验证服务注册或后续接入服务发现：启动 `stellflux-stellmap-example`
 - 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
 - 想验证 Jedis telemetry 配置装配：启动 `stellflux-jedis-examples`
