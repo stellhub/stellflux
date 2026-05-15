@@ -23,6 +23,21 @@
 - `stellflux-spring-boot-starter-datasource`
 - `stellflux-spring-boot-starter-stellflow`
 
+## 示例
+
+示例应用统一放在 `stellflux-examples` 聚合模块下。DataSource 示例位于 `stellflux-examples/stellflux-datasource-example`，默认只创建带 OpenTelemetry 的 MySQL `DataSource` 状态页，不主动连接 MySQL；只有显式开启 `example.datasource.invoke-on-startup=true` 时才会在启动后执行一次 SQL。
+
+```bash
+mvn -pl stellflux-examples/stellflux-datasource-example -am install -DskipTests
+mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
+```
+
+如需启动时执行一次 SQL：
+
+```bash
+mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.datasource.invoke-on-startup=true
+```
+
 ## 构建
 
 ```bash

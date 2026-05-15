@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: stellflux-datasource-example
+
+server:
+  port: 18085
+
+example:
+  datasource:
+    invoke-on-startup: false
+    verification-sql: SELECT 1
+
+stellflux:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/stellflux_example
+    username: root
+    password:
+    login-timeout-seconds: 2
+  opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
+    resource:
+      service-name: stellflux-datasource-example
+    logs:
+      enabled: true
+    metrics:
+      enabled: true
+    traces:
+      enabled: true

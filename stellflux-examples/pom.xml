@@ -34,6 +34,7 @@
         <module>stellflux-stellmap-example</module>
         <module>stellflux-stellflow-example</module>
         <module>stellflux-jedis-examples</module>
+        <module>stellflux-datasource-example</module>
     </modules>
 
     <build>

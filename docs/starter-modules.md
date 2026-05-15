@@ -45,6 +45,11 @@
 - `stellflux-spring-boot-starter-traces`
 - `stellflux-spring-boot-starter-log`
 - `stellflux-spring-boot-starter-stellmap`
+- `stellflux-spring-boot-starter-datasource`
+  - MySQL DataSource 能力
+  - 包含 `stellflux-datasource`、`spring-boot-starter-jdbc` 与统一自动装配
+  - 配置 `stellflux.datasource.url` 后才会创建默认 `DataSource`
+  - 默认创建 `DataSource` 不等于主动连接数据库，连接与 SQL 执行发生在业务代码调用 `getConnection()` 之后
 - `stellflux-spring-boot-starter-stellflow`
   - Stellflow 生产者与消费者能力
   - 包含 `stellflux-stellflow` 与统一自动装配
@@ -57,4 +62,22 @@
 - 只做 gRPC 调用方：引入 `stellflux-spring-boot-starter-grpc-client`
 - 只做 gRPC 服务提供方：引入 `stellflux-spring-boot-starter-grpc-server`
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
+- 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
 - 发送或消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow`
+
+## DataSource 示例
+
+`stellflux-examples/stellflux-datasource-example` 演示 datasource starter 的最小接入方式。示例默认配置 MySQL 目标地址，但不会主动获取连接或执行 SQL；只有显式开启 `example.datasource.invoke-on-startup=true` 时，才会在启动后执行一次 `SELECT 1`。
+
+默认启动：
+
+```bash
+mvn -pl stellflux-examples/stellflux-datasource-example -am install -DskipTests
+mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run
+```
+
+启动时执行一次 SQL：
+
+```bash
+mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.datasource.invoke-on-startup=true
+```
