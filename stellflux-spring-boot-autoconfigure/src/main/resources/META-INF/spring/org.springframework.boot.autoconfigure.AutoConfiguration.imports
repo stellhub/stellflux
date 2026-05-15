@@ -7,5 +7,4 @@ io.github.stellflux.jedis.StellfluxJedisAutoConfiguration
 io.github.stellflux.datasource.StellfluxDataSourceAutoConfiguration
 io.github.stellflux.stellmap.StellfluxStellMapAutoConfiguration
 io.github.stellflux.log.StellfluxLogAutoConfiguration
-io.github.stellflux.stellflow.producer.StellfluxStellflowProducerAutoConfiguration
-io.github.stellflux.stellflow.consumer.StellfluxStellflowConsumerAutoConfiguration
+io.github.stellflux.stellflow.StellfluxStellflowAutoConfiguration

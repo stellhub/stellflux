@@ -122,17 +122,6 @@
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-stellflow</artifactId>
                 <version>${project.version}</version>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stellhub</groupId>
-                <artifactId>stellflux-stellflow-producer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stellhub</groupId>
-                <artifactId>stellflux-stellflow-consumer</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
@@ -242,16 +231,6 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-stellflow</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stellhub</groupId>
-                <artifactId>stellflux-spring-boot-starter-stellflow-producer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stellhub</groupId>
-                <artifactId>stellflux-spring-boot-starter-stellflow-consumer</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

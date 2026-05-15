@@ -5,7 +5,7 @@ import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
-/** Aggregate Stellflow starter auto configuration. */
+/** Stellflow starter auto configuration. */
 @AutoConfiguration
 public class StellfluxStellflowStarterAutoConfiguration {
 
@@ -22,8 +22,6 @@ public class StellfluxStellflowStarterAutoConfiguration {
         return () ->
                 LOGGER.info(
                         () ->
-                                "Starter stellflux-spring-boot-starter-stellflow started successfully"
-                                        + ", aggregates=[stellflux-spring-boot-starter-stellflow-producer,"
-                                        + " stellflux-spring-boot-starter-stellflow-consumer]");
+                                "Starter stellflux-spring-boot-starter-stellflow started successfully");
     }
 }

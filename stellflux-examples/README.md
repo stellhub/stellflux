@@ -231,7 +231,7 @@ mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:
 如需指定 Stellflow broker 地址：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--example.stellflow.invoke-on-startup=true --stellflux.stellflow.producer.bootstrap-servers=127.0.0.1:9092 --stellflux.stellflow.consumer.bootstrap-servers=127.0.0.1:9092"
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--example.stellflow.invoke-on-startup=true --stellflux.stellflow.bootstrap-servers=127.0.0.1:9092"
 ```
 
 ### 8. `stellflux-jedis-examples`

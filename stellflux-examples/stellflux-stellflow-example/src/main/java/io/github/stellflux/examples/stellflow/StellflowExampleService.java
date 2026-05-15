@@ -155,18 +155,15 @@ public class StellflowExampleService {
     }
 
     private String producerBootstrapServers() {
-        return environment.getProperty(
-                "stellflux.stellflow.producer.bootstrap-servers", "127.0.0.1:9092");
+        return environment.getProperty("stellflux.stellflow.bootstrap-servers", "127.0.0.1:9092");
     }
 
     private String consumerBootstrapServers() {
-        return environment.getProperty(
-                "stellflux.stellflow.consumer.bootstrap-servers", "127.0.0.1:9092");
+        return environment.getProperty("stellflux.stellflow.bootstrap-servers", "127.0.0.1:9092");
     }
 
     private String consumerGroupId() {
-        return environment.getProperty(
-                "stellflux.stellflow.consumer.consumer.group-id", "stellflux-order-worker");
+        return environment.getProperty("stellflux.stellflow.consumer.group-id", "stellflux-order-worker");
     }
 
     private String decode(byte[] bytes) {

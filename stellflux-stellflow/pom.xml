@@ -11,13 +11,19 @@
     </parent>
 
     <artifactId>stellflux-stellflow</artifactId>
-    <packaging>pom</packaging>
 
     <name>stellflux-stellflow</name>
-    <description>Parent project for stellflux Stellflow integrations</description>
+    <description>Stellflow support for stellflux</description>
 
-    <modules>
-        <module>stellflux-stellflow-producer</module>
-        <module>stellflux-stellflow-consumer</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflow-java-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 </project>
