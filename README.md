@@ -10,6 +10,7 @@
 - `stellflux-stellflow`
 - `stellflux-stellflow-producer`
 - `stellflux-stellflow-consumer`
+- `stellflux-datasource`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
 - `stellflux-spring-boot-autoconfigure`
@@ -21,6 +22,7 @@
 - `stellflux-spring-boot-starter-grpc-server`
 - `stellflux-spring-boot-starter-grpc`
 - `stellflux-spring-boot-starter-stellmap`
+- `stellflux-spring-boot-starter-datasource`
 - `stellflux-spring-boot-starter-stellflow`
 - `stellflux-spring-boot-starter-stellflow-producer`
 - `stellflux-spring-boot-starter-stellflow-consumer`

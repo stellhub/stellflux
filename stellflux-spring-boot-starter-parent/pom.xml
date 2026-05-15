@@ -29,6 +29,7 @@
         <module>stellflux-spring-boot-starter-stellmap</module>
         <module>stellflux-spring-boot-starter-http-client</module>
         <module>stellflux-spring-boot-starter-jedis</module>
+        <module>stellflux-spring-boot-starter-datasource</module>
         <module>stellflux-spring-boot-starter-stellflow</module>
         <module>stellflux-spring-boot-starter-stellflow-producer</module>
         <module>stellflux-spring-boot-starter-stellflow-consumer</module>

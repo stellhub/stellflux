@@ -20,6 +20,7 @@
         <module>stellflux-metrics</module>
         <module>stellflux-traces</module>
         <module>stellflux-jedis</module>
+        <module>stellflux-datasource</module>
         <module>stellflux-http-client</module>
         <module>stellflux-loadbalancer</module>
         <module>stellflux-loadbalancer-stellmap</module>
@@ -155,6 +156,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-datasource</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-grpc-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -226,6 +232,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-datasource</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

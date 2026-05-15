@@ -21,5 +21,14 @@ public final class StellfluxMetricNames {
 
     public static final String GRPC_SERVER_DURATION = "stellflux_grpc_server_duration";
 
+    public static final String DATASOURCE_CONNECTIONS = "stellflux_datasource_connections";
+
+    public static final String DATASOURCE_CONNECTION_DURATION =
+            "stellflux_datasource_connection_duration";
+
+    public static final String DATASOURCE_SQL_EXECUTIONS = "stellflux_datasource_sql_executions";
+
+    public static final String DATASOURCE_SQL_DURATION = "stellflux_datasource_sql_duration";
+
     private StellfluxMetricNames() {}
 }
