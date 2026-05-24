@@ -23,20 +23,22 @@ stellflux:
       max-attempts: 3
       backoff: 100ms
     producer:
+      topic-configs:
+        "[orders.created]":
+          auto-create-topics: true
+          auto-create-topic-partition-count: 1
       acks: 1
       timeout-ms: 5000
       max-batch-records: 16
+      auto-create-topics: true
+      auto-create-topic-partition-count: 1
       partitioner: default
     consumer:
-      group-id: stellflux-order-worker
+      topic-configs:
+        "[orders.created]":
+          group-id: stellflux-order-listener
+          poll-timeout: 3s
       session-timeout-ms: 10000
       heartbeat-interval: 3s
       fetch-max-bytes: 1048576
       offset-commit-metadata: stellflux-stellflow-example
-
-example:
-  stellflow:
-    topic: orders.created
-    invoke-on-startup: false
-    request-timeout: 5s
-    poll-timeout: 3s

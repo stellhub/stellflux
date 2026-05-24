@@ -225,7 +225,7 @@ mvn -pl stellflux-examples/stellflux-stellmap-example -am spring-boot:run -Dspri
 - 根包：`io.github.stellflux.examples.stellflow`
 - 启动类：`io.github.stellflux.examples.stellflow.StellfluxStellflowExampleApplication`
 - 默认端口：`18082`
-- 用途：演示 `stellflux-spring-boot-starter-stellflow` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过 HTTP 接口触发生产者和消费者
+- 用途：演示 `stellflux-spring-boot-starter-stellflow` 和 `stellflux-spring-boot-starter-http` 共同装配后，通过一个 HTTP 接口发送消息，并由 `@StellflowListener` 自动消费
 
 启动命令：
 
@@ -236,19 +236,17 @@ mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:
 
 默认行为：
 
-- 启动后准备 `StellflowProducer` 和 `StellflowConsumer`
+- 启动后准备 `StellflowProducerOperations` 和 `@StellflowListener` 监听容器
+- 自动收集 `StellflowProducerInterceptor` 和 `StellflowConsumerInterceptor` Bean
+- 示例内置 `@StellflowListener`，默认订阅 `stellflux.stellflow.consumer.topic-configs` 中启用的 topic，并从 topic 级配置解析消费组
 - 默认连接地址为 `127.0.0.1:9092`
-- 默认主题为 `orders.created`
-- 默认不主动发送或消费消息，便于本地直接启动并通过接口手动触发
+- 默认生产和监听主题均为 `orders.created`
+- 默认开启 producer 自动创建主题，分区数为 `1`
+- 默认不主动发送消息，便于本地直接启动并通过接口手动触发
 
 示例接口：
 
-- `GET http://127.0.0.1:18082/api/stellflow/status`
-- `POST http://127.0.0.1:18082/api/stellflow/producer/orders`
-- `POST http://127.0.0.1:18082/api/stellflow/consumer/subscriptions`
-- `GET http://127.0.0.1:18082/api/stellflow/consumer/records?timeout=3s`
-- `POST http://127.0.0.1:18082/api/stellflow/consumer/offsets/commit`
-- `POST http://127.0.0.1:18082/api/stellflow/workflows/orders`
+- `POST http://127.0.0.1:18082/api/stellflow/orders`
 
 发送订单事件请求体示例：
 
@@ -261,16 +259,72 @@ mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:
 }
 ```
 
-如需启动时模拟真实订单事件发送和消费：
+接口测试顺序：
+
+1. 启动 Stellflow broker，并保持服务端控制台可见，用于观察 broker 收到 Produce / Fetch / OffsetCommit 请求。
+
+2. 启动 `stellflux-stellflow-example`：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments=--example.stellflow.invoke-on-startup=true
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--stellflux.stellflow.bootstrap-servers=127.0.0.1:9092"
 ```
+
+3. 发送一条订单创建消息：
+
+```bash
+curl.exe -X POST "http://127.0.0.1:18082/api/stellflow/orders" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"orderId\":\"order-10001\",\"userId\":\"user-10001\",\"amount\":129.90,\"currency\":\"CNY\"}"
+```
+
+example 控制台会输出类似日志：
+
+```text
+Stellflow producer interceptor beforeSend topic=orders.created, key=order-10001
+Stellflow producer interceptor afterSend topic=orders.created, partition=0, offset=0
+Stellflow producer sent order event topic=orders.created, partition=0, offset=0, key=order-10001, value={...}
+Stellflow consumer interceptor beforeConsume groupId=stellflux-order-listener, topic=orders.created, key=order-10001
+Stellflow listener received order event groupId=stellflux-order-listener, topic=orders.created, partition=0, offset=0, key=order-10001, value={...}
+Stellflow consumer interceptor afterConsume groupId=stellflux-order-listener, topic=orders.created, offset=0
+```
+
+此时可以切到 Stellflow broker 控制台，按 `orders.created`、`order-10001`、`offset` 等关键字观察服务端收到写入请求、日志追加结果、监听器拉取请求和 offset 提交请求。完整链路是：HTTP 接口触发 producer 发送消息，Stellflow broker 接收并存储消息，example 内置监听器自动拉取消息内容并提交 offset。
+
+默认 topic 配置位于 `stellflux-examples/stellflux-stellflow-example/src/main/resources/application.yaml`：
+
+```yaml
+stellflux:
+  stellflow:
+    producer:
+      topic-configs:
+        "[orders.created]":
+          auto-create-topics: true
+          auto-create-topic-partition-count: 1
+      auto-create-topics: true
+      auto-create-topic-partition-count: 1
+    consumer:
+      topic-configs:
+        "[orders.created]":
+          group-id: stellflux-order-listener
+          poll-timeout: 3s
+```
+
+业务接入方式：
+
+```java
+@StellflowListener(groupId = "order-worker")
+public void onOrderCreated(String payload, StellflowListenerContext context) {
+    // handle order event
+}
+```
+
+生产者侧可以注入 `StellflowProducerOperations` 或 `StellflowTemplate` 发送消息；发送前后会经过所有
+`StellflowProducerInterceptor`。消费者侧的 `@StellflowListener` 未显式声明 topic 时会订阅 `stellflux.stellflow.consumer.topic-configs` 中启用的多个 topic，并经过所有 `StellflowConsumerInterceptor`，业务可以在拦截器里做消息过滤、审计日志、租户校验或失败告警。
 
 如需指定 Stellflow broker 地址：
 
 ```bash
-mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--example.stellflow.invoke-on-startup=true --stellflux.stellflow.bootstrap-servers=127.0.0.1:9092"
+mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--stellflux.stellflow.bootstrap-servers=127.0.0.1:9092"
 ```
 
 ### 8. `stellflux-jedis-examples`

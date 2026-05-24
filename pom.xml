@@ -70,7 +70,7 @@
         <caffeine.version>3.2.3</caffeine.version>
         <jedis.version>6.0.0-stellhub-otel.1</jedis.version>
         <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
-        <stellflow-java-sdk.version>0.0.2</stellflow-java-sdk.version>
+        <stellflow-java-sdk.version>0.0.4</stellflow-java-sdk.version>
         <lombok.version>1.18.46</lombok.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>

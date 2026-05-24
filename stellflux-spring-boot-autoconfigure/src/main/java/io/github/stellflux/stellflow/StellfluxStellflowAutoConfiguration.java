@@ -2,8 +2,17 @@ package io.github.stellflux.stellflow;
 
 import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
+import io.github.stellflux.stellflow.consumer.DefaultStellflowConsumerOperations;
+import io.github.stellflux.stellflow.consumer.StellflowConsumerInterceptor;
+import io.github.stellflux.stellflow.consumer.StellflowConsumerOperations;
 import io.github.stellflux.stellflow.consumer.StellfluxStellflowConsumerFactory;
+import io.github.stellflux.stellflow.listener.StellflowListener;
+import io.github.stellflux.stellflow.listener.StellfluxStellflowListenerContainerManager;
+import io.github.stellflux.stellflow.producer.StellflowProducerInterceptor;
+import io.github.stellflux.stellflow.producer.StellflowProducerOperations;
+import io.github.stellflux.stellflow.producer.StellflowProducerTopicOptions;
 import io.github.stellflux.stellflow.producer.StellfluxStellflowProducerFactory;
+import io.github.stellhub.stellflow.sdk.admin.StellflowAdminClient;
 import io.github.stellhub.stellflow.sdk.client.RetryPolicy;
 import io.github.stellhub.stellflow.sdk.client.StellflowClientFactory;
 import io.github.stellhub.stellflow.sdk.client.StellflowClientOptions;
@@ -15,17 +24,29 @@ import io.github.stellhub.stellflow.sdk.producer.ProducerPartitioner;
 import io.github.stellhub.stellflow.sdk.producer.RoundRobinProducerPartitioner;
 import io.github.stellhub.stellflow.sdk.producer.StellflowProducer;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionMessage;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.StringUtils;
 
 /** Stellflow 自动装配。 */
@@ -35,7 +56,8 @@ import org.springframework.util.StringUtils;
     StellflowConsumer.class,
     StellflowClientFactory.class,
     StellfluxStellflowProducerFactory.class,
-    StellfluxStellflowConsumerFactory.class
+    StellfluxStellflowConsumerFactory.class,
+    StellflowListener.class
 })
 @EnableConfigurationProperties(StellfluxStellflowProperties.class)
 public class StellfluxStellflowAutoConfiguration {
@@ -83,6 +105,12 @@ public class StellfluxStellflowAutoConfiguration {
         builder.producerAcks(properties.getProducer().getAcks());
         builder.producerTimeoutMs(properties.getProducer().getTimeoutMs());
         builder.producerMaxBatchRecords(properties.getProducer().getMaxBatchRecords());
+        builder.producerAutoCreateTopics(
+                properties.getProducer().hasTopicConfigs()
+                        ? false
+                        : properties.getProducer().isAutoCreateTopics());
+        builder.producerAutoCreateTopicPartitionCount(
+                properties.getProducer().getAutoCreateTopicPartitionCount());
         builder.producerPartitioner(resolvePartitioner(properties, applicationContext));
         if (StringUtils.hasText(properties.getConsumer().getGroupId())) {
             builder.consumerOptions(buildConsumerOptions(properties.getConsumer()));
@@ -104,9 +132,21 @@ public class StellfluxStellflowAutoConfiguration {
     @Bean(value = "stellfluxStellflowClientFactory", destroyMethod = "close")
     @ConditionalOnBean(name = "stellfluxStellflowClientOptions")
     @ConditionalOnMissingBean(name = "stellfluxStellflowClientFactory")
-    public StellflowClientFactory stellfluxStellflowClientFactory(
-            StellflowClientOptions options) {
+    public StellflowClientFactory stellfluxStellflowClientFactory(StellflowClientOptions options) {
         return StellflowClientFactory.create(options);
+    }
+
+    /**
+     * 注册 Stellflow 管理客户端。
+     *
+     * @param clientFactory Stellflow SDK 客户端工厂
+     * @return Stellflow 管理客户端
+     */
+    @Bean(destroyMethod = "close")
+    @ConditionalOnBean(name = "stellfluxStellflowClientFactory")
+    @ConditionalOnMissingBean
+    public StellflowAdminClient stellflowAdminClient(StellflowClientFactory clientFactory) {
+        return clientFactory.createAdminClient();
     }
 
     /**
@@ -118,11 +158,7 @@ public class StellfluxStellflowAutoConfiguration {
     @Bean
     @ConditionalOnBean(name = "stellfluxStellflowClientFactory")
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-            prefix = "stellflux.stellflow.producer",
-            name = "enabled",
-            havingValue = "true",
-            matchIfMissing = true)
+    @Conditional(ProducerTopicsConfiguredCondition.class)
     public StellfluxStellflowProducerFactory stellfluxStellflowProducerFactory(
             StellflowClientFactory clientFactory) {
         return new StellfluxStellflowProducerFactory(clientFactory);
@@ -150,12 +186,7 @@ public class StellfluxStellflowAutoConfiguration {
     @Bean
     @ConditionalOnBean(name = "stellfluxStellflowClientFactory")
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(
-            prefix = "stellflux.stellflow.consumer",
-            name = "enabled",
-            havingValue = "true",
-            matchIfMissing = true)
-    @ConditionalOnProperty(prefix = "stellflux.stellflow.consumer", name = "group-id")
+    @Conditional(ConsumerTopicsConfiguredCondition.class)
     public StellfluxStellflowConsumerFactory stellfluxStellflowConsumerFactory(
             StellflowClientFactory clientFactory) {
         return new StellfluxStellflowConsumerFactory(clientFactory);
@@ -170,8 +201,83 @@ public class StellfluxStellflowAutoConfiguration {
     @Bean(destroyMethod = "close")
     @ConditionalOnBean(StellfluxStellflowConsumerFactory.class)
     @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "stellflux.stellflow.consumer", name = "group-id")
     public StellflowConsumer stellflowConsumer(StellfluxStellflowConsumerFactory factory) {
         return factory.createConsumer();
+    }
+
+    /**
+     * 注册 Stellflow 生产者操作模板。
+     *
+     * @param producer Stellflow 生产者
+     * @param interceptors 生产者拦截器
+     * @return 生产者操作模板
+     */
+    @Bean
+    @ConditionalOnBean(StellflowProducer.class)
+    @ConditionalOnMissingBean
+    public StellflowProducerOperations stellflowProducerOperations(
+            StellflowProducer producer,
+            StellfluxStellflowProperties properties,
+            ObjectProvider<StellflowAdminClient> adminClientProvider,
+            ObjectProvider<StellflowProducerInterceptor> interceptors) {
+        StellflowAdminClient adminClient =
+                properties.getProducer().hasTopicConfigs()
+                        ? adminClientProvider.getIfAvailable()
+                        : null;
+        return new StellflowTemplate(
+                producer,
+                adminClient,
+                topic -> resolveProducerTopicOptions(properties.getProducer(), topic),
+                interceptors.orderedStream().toList());
+    }
+
+    /**
+     * 注册 Stellflow 消费者操作模板。
+     *
+     * @param consumer Stellflow 消费者
+     * @param properties Stellflow 配置属性
+     * @param interceptors 消费者拦截器
+     * @return 消费者操作模板
+     */
+    @Bean
+    @ConditionalOnBean(StellflowConsumer.class)
+    @ConditionalOnMissingBean
+    public StellflowConsumerOperations stellflowConsumerOperations(
+            StellflowConsumer consumer,
+            StellfluxStellflowProperties properties,
+            ObjectProvider<StellflowConsumerInterceptor> interceptors) {
+        return new DefaultStellflowConsumerOperations(
+                consumer,
+                buildConsumerOptions(properties.getConsumer()),
+                interceptors.orderedStream().toList());
+    }
+
+    /**
+     * 注册 Stellflow 监听容器管理器。
+     *
+     * @param applicationContext Spring 上下文
+     * @param consumerFactory 消费者工厂
+     * @param properties Stellflow 配置属性
+     * @param interceptors 消费者拦截器
+     * @return 监听容器管理器
+     */
+    @Bean
+    @ConditionalOnBean(StellfluxStellflowConsumerFactory.class)
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+            prefix = "stellflux.stellflow.consumer",
+            name = "listener-enabled",
+            havingValue = "true",
+            matchIfMissing = true)
+    public StellfluxStellflowListenerContainerManager stellflowListenerContainerManager(
+            ApplicationContext applicationContext,
+            StellfluxStellflowConsumerFactory consumerFactory,
+            StellfluxStellflowProperties properties,
+            ObjectProvider<StellflowConsumerInterceptor> interceptors) {
+        List<StellflowConsumerInterceptor> interceptorList = interceptors.orderedStream().toList();
+        return new StellfluxStellflowListenerContainerManager(
+                applicationContext, consumerFactory, properties, interceptorList);
     }
 
     /**
@@ -198,12 +304,14 @@ public class StellfluxStellflowAutoConfiguration {
                                     + safeText(properties.getBootstrapServers())
                                     + ", clientId="
                                     + safeText(properties.getClientId())
-                                    + ", producerEnabled="
-                                    + properties.getProducer().isEnabled()
-                                    + ", consumerEnabled="
-                                    + properties.getConsumer().isEnabled()
                                     + ", consumerGroupId="
-                                    + safeText(properties.getConsumer().getGroupId()));
+                                    + safeText(properties.getConsumer().getGroupId())
+                                    + ", producerTopics="
+                                    + safeTopics(properties.getProducer().effectiveTopics())
+                                    + ", consumerTopics="
+                                    + safeTopics(properties.getConsumer().effectiveTopics())
+                                    + ", consumerListenerEnabled="
+                                    + properties.getConsumer().isListenerEnabled());
         };
     }
 
@@ -231,7 +339,78 @@ public class StellfluxStellflowAutoConfiguration {
                 properties.getOffsetCommitMetadata());
     }
 
+    private StellflowProducerTopicOptions resolveProducerTopicOptions(
+            StellfluxStellflowProperties.ProducerProperties properties, String topic) {
+        return new StellflowProducerTopicOptions(
+                properties.resolveAutoCreateTopics(topic),
+                properties.resolveAutoCreateTopicPartitionCount(topic));
+    }
+
     private String safeText(String value) {
         return value == null || value.isBlank() ? "<default>" : value;
+    }
+
+    private String safeTopics(Collection<String> topics) {
+        if (topics == null || topics.isEmpty()) {
+            return "[]";
+        }
+        return topics.toString();
+    }
+
+    static class ProducerTopicsConfiguredCondition extends SpringBootCondition {
+
+        @Override
+        public ConditionOutcome getMatchOutcome(
+                ConditionContext context, AnnotatedTypeMetadata metadata) {
+            List<String> topics =
+                    enabledTopicNames(context, "stellflux.stellflow.producer.topic-configs");
+            if (!topics.isEmpty()) {
+                return ConditionOutcome.match(
+                        ConditionMessage.forCondition("Stellflow producer topics")
+                                .found("enabled topic config")
+                                .items(topics));
+            }
+            return ConditionOutcome.noMatch(
+                    ConditionMessage.forCondition("Stellflow producer topics")
+                            .didNotFind("enabled topic config")
+                            .atAll());
+        }
+    }
+
+    static class ConsumerTopicsConfiguredCondition extends SpringBootCondition {
+
+        @Override
+        public ConditionOutcome getMatchOutcome(
+                ConditionContext context, AnnotatedTypeMetadata metadata) {
+            List<String> topics =
+                    enabledTopicNames(context, "stellflux.stellflow.consumer.topic-configs");
+            if (!topics.isEmpty()) {
+                return ConditionOutcome.match(
+                        ConditionMessage.forCondition("Stellflow consumer topics")
+                                .found("enabled topic config")
+                                .items(topics));
+            }
+            return ConditionOutcome.noMatch(
+                    ConditionMessage.forCondition("Stellflow consumer topics")
+                            .didNotFind("enabled topic config")
+                            .atAll());
+        }
+    }
+
+    private static List<String> enabledTopicNames(ConditionContext context, String prefix) {
+        Binder binder = Binder.get(context.getEnvironment());
+        Map<String, Object> configs =
+                binder.bind(prefix, Bindable.mapOf(String.class, Object.class)).orElse(Map.of());
+        List<String> topics = new ArrayList<>();
+        configs.keySet().stream()
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .filter(topic -> isTopicEnabled(binder, prefix, topic))
+                .forEach(topics::add);
+        return List.copyOf(topics);
+    }
+
+    private static boolean isTopicEnabled(Binder binder, String prefix, String topic) {
+        return binder.bind(prefix + "[" + topic + "].enabled", Boolean.class).orElse(true);
     }
 }
