@@ -35,6 +35,7 @@
         <module>stellflux-stellmap-example</module>
         <module>stellflux-stellflow-example</module>
         <module>stellflux-jedis-examples</module>
+        <module>stellflux-elaticsearch-examples</module>
         <module>stellflux-caffeine-examples</module>
         <module>stellflux-thread-pool-example</module>
         <module>stellflux-datasource-example</module>

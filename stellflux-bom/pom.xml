@@ -75,6 +75,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-elaticsearch</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-caffeine</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -161,6 +166,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-elaticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

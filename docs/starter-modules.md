@@ -54,6 +54,10 @@
   - 包含 `stellflux-datasource`、`spring-boot-starter-jdbc` 与统一自动装配
   - 配置 `stellflux.datasource.url` 后才会创建默认 `DataSource`
   - 默认创建 `DataSource` 不等于主动连接数据库，连接与 SQL 执行发生在业务代码调用 `getConnection()` 之后
+- `stellflux-spring-boot-starter-elaticsearch`
+  - Elaticsearch 8.x 客户端能力
+  - 包含 `stellflux-elaticsearch` 与统一自动装配
+  - 支持官方同步/异步客户端、Search API、EQL Search API，以及 Stellflux logs、traces 和 metrics
 - `stellflux-spring-boot-starter-stellflow`
   - Stellflow 生产者与消费者能力
   - 包含 `stellflux-stellflow` 与统一自动装配
@@ -68,6 +72,7 @@
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
 - 接入 Caffeine 本地缓存 telemetry：引入 `stellflux-spring-boot-starter-caffeine`
 - 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
+- 接入 Elaticsearch 8.x 客户端 telemetry：引入 `stellflux-spring-boot-starter-elaticsearch`，并配置 `stellflux.elaticsearch.endpoints`
 - 发送或消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow`
 
 ## DataSource 示例

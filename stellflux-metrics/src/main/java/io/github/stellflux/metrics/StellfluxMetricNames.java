@@ -30,5 +30,9 @@ public final class StellfluxMetricNames {
 
     public static final String DATASOURCE_SQL_DURATION = "stellflux_datasource_sql_duration";
 
+    public static final String ELATICSEARCH_REQUESTS = "stellflux_elaticsearch_requests";
+
+    public static final String ELATICSEARCH_DURATION = "stellflux_elaticsearch_duration";
+
     private StellfluxMetricNames() {}
 }

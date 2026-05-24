@@ -1,0 +1,11 @@
+stellflux:
+  stellflow:
+    bootstrap-servers: 127.0.0.1:9092
+    producer:
+      topic-configs:
+        "[orders.created]":
+          auto-create-topics: true
+    consumer:
+      topic-configs:
+        "[orders.created]":
+          group-id: orders-created-service

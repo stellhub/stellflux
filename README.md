@@ -10,6 +10,7 @@
 - `stellflux-stellflow`
 - `stellflux-caffeine`
 - `stellflux-datasource`
+- `stellflux-elaticsearch`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
 - `stellflux-spring-boot-autoconfigure`
@@ -23,11 +24,12 @@
 - `stellflux-spring-boot-starter-stellmap`
 - `stellflux-spring-boot-starter-caffeine`
 - `stellflux-spring-boot-starter-datasource`
+- `stellflux-spring-boot-starter-elaticsearch`
 - `stellflux-spring-boot-starter-stellflow`
 
 ## 示例
 
-示例应用统一放在 `stellflux-examples` 聚合模块下。DataSource 示例位于 `stellflux-examples/stellflux-datasource-example`，默认只创建带 OpenTelemetry 的 MySQL `DataSource` 状态页，不主动连接 MySQL；只有显式开启 `example.datasource.invoke-on-startup=true` 时才会在启动后执行一次 SQL。
+示例应用统一放在 `stellflux-examples` 聚合模块下。DataSource 示例位于 `stellflux-examples/stellflux-datasource-example`，默认只创建带 OpenTelemetry 的 MySQL `DataSource` 状态页，不主动连接 MySQL；Elaticsearch 示例位于 `stellflux-examples/stellflux-elaticsearch-examples`，默认只初始化客户端并提供 HTTP CRUD 触发入口。
 
 ```bash
 mvn -pl stellflux-examples/stellflux-datasource-example -am install -DskipTests

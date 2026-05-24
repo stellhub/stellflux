@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: stellflux-elaticsearch-examples
+
+server:
+  port: 18088
+
+example:
+  elaticsearch:
+    index: stellflux-elaticsearch-example
+    invoke-on-startup: false
+
+stellflux:
+  elaticsearch:
+    endpoints:
+      - http://192.168.1.14:9200
+    connect-timeout-millis: 1000
+    socket-timeout-millis: 30000
+  opentelemetry:
+    logs-output: console
+    logs-format: json
+    metric-export-interval: 10s
+    resource:
+      service-name: stellflux-elaticsearch-examples
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false
