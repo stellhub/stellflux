@@ -58,6 +58,10 @@
   - Elaticsearch 8.x 客户端能力
   - 包含 `stellflux-elaticsearch` 与统一自动装配
   - 支持官方同步/异步客户端、Search API、EQL Search API，以及 Stellflux logs、traces 和 metrics
+- `stellflux-spring-boot-starter-lock-jedis`
+  - 基于 Jedis 的 Redis 分布式锁能力
+  - 包含 `stellflux-lock-jedis`、`stellflux-spring-boot-starter-jedis` 与统一自动装配
+  - 默认注册 `StellfluxJedisLock`，支持 token 校验释放和 TTL 续租
 - `stellflux-spring-boot-starter-stellflow`
   - Stellflow 生产者与消费者能力
   - 包含 `stellflux-stellflow` 与统一自动装配
@@ -73,6 +77,7 @@
 - 接入 Caffeine 本地缓存 telemetry：引入 `stellflux-spring-boot-starter-caffeine`
 - 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
 - 接入 Elaticsearch 8.x 客户端 telemetry：引入 `stellflux-spring-boot-starter-elaticsearch`，并配置 `stellflux.elaticsearch.endpoints`
+- 使用 Redis 分布式锁：引入 `stellflux-spring-boot-starter-lock-jedis`，并按需配置 `stellflux.lock.jedis.host`、`stellflux.lock.jedis.port`
 - 发送或消费 Stellflow 消息：引入 `stellflux-spring-boot-starter-stellflow`
 
 ## DataSource 示例

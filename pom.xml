@@ -48,6 +48,7 @@
         <module>stellflux-caffeine</module>
         <module>stellflux-thread-pool</module>
         <module>stellflux-jedis</module>
+        <module>stellflux-lock-jedis</module>
         <module>stellflux-elaticsearch</module>
         <module>stellflux-datasource</module>
         <module>stellflux-http-client</module>
@@ -200,6 +201,11 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-lock-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-elaticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -291,6 +297,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-jedis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-lock-jedis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

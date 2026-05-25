@@ -10,13 +10,13 @@ stellflux:
     resource:
       service-name: stellflux-stellflow-example
     logs:
-      enabled: false
+      enabled: true
     metrics:
-      enabled: false
+      enabled: true
     traces:
-      enabled: false
+      enabled: true
   stellflow:
-    bootstrap-servers: ${STELLFLOW_BOOTSTRAP_SERVERS:127.0.0.1:9092}
+    bootstrap-servers: ${STELLFLOW_BOOTSTRAP_SERVERS:192.168.1.14:9092}
     client-id: ${spring.application.name}
     request-timeout: 5s
     retry:

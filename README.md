@@ -11,6 +11,7 @@
 - `stellflux-caffeine`
 - `stellflux-datasource`
 - `stellflux-elaticsearch`
+- `stellflux-lock-jedis`
 - `stellflux-grpc-server`
 - `stellflux-grpc-client`
 - `stellflux-spring-boot-autoconfigure`
@@ -25,6 +26,7 @@
 - `stellflux-spring-boot-starter-caffeine`
 - `stellflux-spring-boot-starter-datasource`
 - `stellflux-spring-boot-starter-elaticsearch`
+- `stellflux-spring-boot-starter-lock-jedis`
 - `stellflux-spring-boot-starter-stellflow`
 
 ## 示例
