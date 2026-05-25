@@ -65,6 +65,17 @@ public class JedisObservationController {
     }
 
     /**
+     * 执行 Jedis 分布式锁获取、续租和释放示例。
+     *
+     * @param request 分布式锁请求
+     * @return 分布式锁执行结果
+     */
+    @PostMapping("/locks")
+    public Map<String, Object> lock(@RequestBody(required = false) JedisLockRequest request) {
+        return observationService.lock(request);
+    }
+
+    /**
      * 一次性执行 set/get/delete 并返回指标快照。
      *
      * @param scenario 验证场景

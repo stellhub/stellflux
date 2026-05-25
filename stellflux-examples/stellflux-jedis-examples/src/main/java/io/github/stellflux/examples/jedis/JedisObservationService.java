@@ -1,5 +1,7 @@
 package io.github.stellflux.examples.jedis;
 
+import io.github.stellflux.lock.jedis.StellfluxJedisLock;
+import io.github.stellflux.lock.jedis.StellfluxJedisLockLease;
 import io.github.stellflux.metrics.StellfluxMeterFactory;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetryRuntime;
 import io.github.stellflux.traces.StellfluxTracerFactory;
@@ -15,9 +17,11 @@ import io.opentelemetry.context.Scope;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,7 @@ public class JedisObservationService {
     private static final Logger LOGGER = Logger.getLogger(JedisObservationService.class.getName());
 
     private final DefaultJedisClientConfig jedisClientConfig;
+    private final StellfluxJedisLock jedisLock;
     private final Environment environment;
     private final StellfluxOpenTelemetryRuntime runtime;
     private final Tracer tracer;
@@ -50,10 +55,12 @@ public class JedisObservationService {
 
     public JedisObservationService(
             DefaultJedisClientConfig jedisClientConfig,
+            StellfluxJedisLock jedisLock,
             Environment environment,
             OpenTelemetry openTelemetry,
             StellfluxOpenTelemetryRuntime runtime) {
         this.jedisClientConfig = jedisClientConfig;
+        this.jedisLock = jedisLock;
         this.environment = environment;
         this.runtime = runtime;
         this.tracer =
@@ -106,6 +113,7 @@ public class JedisObservationService {
                         "set", "POST /api/jedis/keys",
                         "get", "GET /api/jedis/keys/{key}",
                         "delete", "DELETE /api/jedis/keys/{key}",
+                        "lock", "POST /api/jedis/locks",
                         "verify", "POST /api/jedis/workflows/basic"));
         return status;
     }
@@ -182,6 +190,48 @@ public class JedisObservationService {
     }
 
     /**
+     * 执行 Jedis 分布式锁验证。
+     *
+     * @param request 分布式锁请求
+     * @return 分布式锁执行结果
+     */
+    public Map<String, Object> lock(JedisLockRequest request) {
+        JedisLockRequest effectiveRequest =
+                request == null ? new JedisLockRequest(null, null, null) : request;
+        String lockName = effectiveRequest.effectiveName();
+        return observeLock(
+                "lock",
+                lockName,
+                () -> {
+                    Duration ttl = Duration.ofSeconds(effectiveRequest.effectiveTtlSeconds());
+                    Duration renewTtl = Duration.ofSeconds(effectiveRequest.effectiveRenewTtlSeconds());
+                    Optional<StellfluxJedisLockLease> lease = jedisLock.tryLock(lockName, ttl);
+                    Map<String, Object> response = new LinkedHashMap<>();
+                    response.put("name", lockName);
+                    response.put("key", jedisLock.lockKey(lockName));
+                    response.put("ttlSeconds", ttl.toSeconds());
+                    response.put("renewTtlSeconds", renewTtl.toSeconds());
+                    response.put("acquired", lease.isPresent());
+                    if (lease.isEmpty()) {
+                        response.put("renewed", false);
+                        response.put("unlocked", false);
+                        return response;
+                    }
+
+                    StellfluxJedisLockLease activeLease = lease.get();
+                    response.put("expiresAt", activeLease.getExpiresAt().toString());
+                    Optional<StellfluxJedisLockLease> renewedLease = jedisLock.renew(activeLease, renewTtl);
+                    response.put("renewed", renewedLease.isPresent());
+                    if (renewedLease.isPresent()) {
+                        activeLease = renewedLease.get();
+                        response.put("renewedExpiresAt", activeLease.getExpiresAt().toString());
+                    }
+                    response.put("unlocked", jedisLock.unlock(activeLease));
+                    return response;
+                });
+    }
+
+    /**
      * 执行完整 Redis CRUD 验证。
      *
      * @param scenario 验证场景
@@ -195,6 +245,7 @@ public class JedisObservationService {
         response.put("scenario", normalizedScenario);
         response.put("set", set(new JedisCrudRequest(key, value, 60L)));
         response.put("get", get(key));
+        response.put("lock", lock(new JedisLockRequest("workflow:" + normalizedScenario, 30L, 45L)));
         response.put("delete", delete(key));
         response.put("metrics", metricSnapshot());
         return response;
@@ -242,6 +293,46 @@ public class JedisObservationService {
                                     + key
                                     + ", error="
                                     + ex.getMessage());
+            return payload;
+        } finally {
+            span.end();
+        }
+    }
+
+    private Map<String, Object> observeLock(
+            String operation, String name, Supplier<Map<String, Object>> callback) {
+        long startedAt = System.nanoTime();
+        Span span =
+                tracer
+                        .spanBuilder("jedis-example-" + operation)
+                        .setAttribute(OPERATION_ATTRIBUTE, operation)
+                        .setAttribute("redis.lock.name", name)
+                        .startSpan();
+        try (Scope ignored = span.makeCurrent()) {
+            Map<String, Object> payload = new LinkedHashMap<>(callback.get());
+            recordMetrics(operation, "success", startedAt);
+            payload.put("success", true);
+            payload.put("operation", operation);
+            payload.put("traceId", span.getSpanContext().getTraceId());
+            payload.put("spanId", span.getSpanContext().getSpanId());
+            payload.put("metrics", metricSnapshot());
+            LOGGER.info(() -> "Jedis lock workflow completed name=" + name);
+            return payload;
+        } catch (RuntimeException ex) {
+            span.recordException(ex);
+            span.setAttribute("error", true);
+            recordMetrics(operation, "error", startedAt);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("success", false);
+            payload.put("operation", operation);
+            payload.put("name", name);
+            payload.put("errorType", ex.getClass().getName());
+            payload.put("errorMessage", ex.getMessage());
+            payload.put("traceId", span.getSpanContext().getTraceId());
+            payload.put("spanId", span.getSpanContext().getSpanId());
+            payload.put("metrics", metricSnapshot());
+            LOGGER.warning(
+                    () -> "Jedis lock workflow failed name=" + name + ", error=" + ex.getMessage());
             return payload;
         } finally {
             span.end();

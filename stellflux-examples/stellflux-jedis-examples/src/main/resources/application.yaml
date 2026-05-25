@@ -12,6 +12,12 @@ example:
     invoke-on-startup: false
 
 stellflux:
+  lock:
+    jedis:
+      host: 127.0.0.1
+      port: 6379
+      key-prefix: "stellflux:lock:example:"
+      default-ttl: 30s
   opentelemetry:
     logs-output: console
     logs-format: json
