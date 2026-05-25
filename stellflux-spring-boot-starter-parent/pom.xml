@@ -27,6 +27,7 @@
         <module>stellflux-spring-boot-starter-metrics</module>
         <module>stellflux-spring-boot-starter-traces</module>
         <module>stellflux-spring-boot-starter-stellmap</module>
+        <module>stellflux-spring-boot-starter-scheduler-stellmap</module>
         <module>stellflux-spring-boot-starter-http-client</module>
         <module>stellflux-spring-boot-starter-jedis</module>
         <module>stellflux-spring-boot-starter-lock-jedis</module>

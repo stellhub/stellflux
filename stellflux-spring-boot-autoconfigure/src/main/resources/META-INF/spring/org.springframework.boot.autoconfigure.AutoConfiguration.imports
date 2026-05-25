@@ -10,5 +10,6 @@ io.github.stellflux.caffeine.StellfluxCaffeineAutoConfiguration
 io.github.stellflux.threadpool.StellfluxThreadPoolAutoConfiguration
 io.github.stellflux.datasource.StellfluxDataSourceAutoConfiguration
 io.github.stellflux.stellmap.StellfluxStellMapAutoConfiguration
+io.github.stellflux.scheduler.StellfluxStellMapSchedulerAutoConfiguration
 io.github.stellflux.log.StellfluxLogAutoConfiguration
 io.github.stellflux.stellflow.StellfluxStellflowAutoConfiguration

@@ -7,6 +7,7 @@
 - `stellflux-loadbalancer`
 - `stellflux-loadbalancer-stellmap`
 - `stellflux-stellmap`
+- `stellflux-scheduler-stellmap`
 - `stellflux-stellflow`
 - `stellflux-caffeine`
 - `stellflux-datasource`
@@ -23,6 +24,7 @@
 - `stellflux-spring-boot-starter-grpc-server`
 - `stellflux-spring-boot-starter-grpc`
 - `stellflux-spring-boot-starter-stellmap`
+- `stellflux-spring-boot-starter-scheduler-stellmap`
 - `stellflux-spring-boot-starter-caffeine`
 - `stellflux-spring-boot-starter-datasource`
 - `stellflux-spring-boot-starter-elaticsearch`
