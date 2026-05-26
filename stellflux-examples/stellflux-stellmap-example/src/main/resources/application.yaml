@@ -6,8 +6,17 @@ server:
   port: 18081
 
 stellflux:
+  http:
+    server:
+      registration:
+        instance-id: stellflux-stellmap-example-18081
   stellmap:
     base-url: http://192.168.1.14:8080
+  scheduler:
+    stellmap:
+      namespace: default
+      service-id: stellhub.examples.http
+      current-instance-id: stellflux-stellmap-example-18081
   opentelemetry:
     resource:
       service-name: stellhub.examples.http

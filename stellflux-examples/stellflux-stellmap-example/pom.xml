@@ -22,6 +22,10 @@
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-spring-boot-starter-scheduler-stellmap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
             <artifactId>stellflux-spring-boot-starter-http-server</artifactId>
         </dependency>
         <dependency>

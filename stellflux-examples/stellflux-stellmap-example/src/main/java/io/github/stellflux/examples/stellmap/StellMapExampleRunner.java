@@ -1,5 +1,6 @@
 package io.github.stellflux.examples.stellmap;
 
+import io.github.stellflux.scheduler.stellmap.StellfluxStellMapScheduler;
 import io.github.stellmap.StellMapClient;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.ObjectProvider;
@@ -15,11 +16,15 @@ public class StellMapExampleRunner implements ApplicationRunner {
     private static final Logger LOGGER = Logger.getLogger(StellMapExampleRunner.class.getName());
 
     private final ObjectProvider<StellMapClient> stellMapClientProvider;
+    private final ObjectProvider<StellfluxStellMapScheduler> schedulerProvider;
     private final Environment environment;
 
     public StellMapExampleRunner(
-            ObjectProvider<StellMapClient> stellMapClientProvider, Environment environment) {
+            ObjectProvider<StellMapClient> stellMapClientProvider,
+            ObjectProvider<StellfluxStellMapScheduler> schedulerProvider,
+            Environment environment) {
         this.stellMapClientProvider = stellMapClientProvider;
+        this.schedulerProvider = schedulerProvider;
         this.environment = environment;
     }
 
@@ -33,11 +38,21 @@ public class StellMapExampleRunner implements ApplicationRunner {
         StellMapClient stellMapClient = stellMapClientProvider.getIfAvailable();
         if (stellMapClient == null) {
             LOGGER.info(
-                    "StellMap client is not initialized. Configure stellflux.stellmap.base-url to enable it.");
+                    "StellMap client is not initialized. Configure stellflux.stellmap.base-url to enable"
+                            + " it.");
             return;
         }
 
         String baseUrl = environment.getProperty("stellflux.stellmap.base-url", "<unset>");
         LOGGER.info(() -> "StellMap client initialized with baseUrl=" + baseUrl);
+        if (schedulerProvider.getIfAvailable() != null) {
+            LOGGER.info(
+                    () ->
+                            "StellMap scheduler initialized serviceId="
+                                    + environment.getProperty("stellflux.scheduler.stellmap.service-id", "<unset>")
+                                    + ", currentInstanceId="
+                                    + environment.getProperty(
+                                            "stellflux.scheduler.stellmap.current-instance-id", "<unset>"));
+        }
     }
 }
