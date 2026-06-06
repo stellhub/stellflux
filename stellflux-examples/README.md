@@ -1,6 +1,6 @@
 # stellflux-examples
 
-`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellflow、Jedis、Elaticsearch、Caffeine、ThreadPool、DataSource 等能力的最小接入方式。
+`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellnula、Stellflow、Jedis、Elaticsearch、Caffeine、ThreadPool、DataSource 等能力的最小接入方式。
 
 ## 模块列表
 
@@ -12,6 +12,7 @@
 | `stellflux-grpc-server-example` | `io.github.stellflux.examples.grpcserver` | `19090` | 演示最小 gRPC Server 接入方式 |
 | `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | `18083` | 演示 OpenTelemetry trace、log、metrics 的 HTTP 验证方式 |
 | `stellflux-stellmap-example` | `io.github.stellflux.examples.stellmap` | `18081` | 演示最小 StellMap 集成方式 |
+| `stellflux-stellnula-example` | `io.github.stellflux.examples.stellnula` | `18089` | 演示 Stellnula 配置中心动态 @Value 刷新方式 |
 | `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
 | `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | `18084` | 演示 Jedis CRUD 和 OpenTelemetry metrics 验证方式 |
 | `stellflux-elaticsearch-examples` | `io.github.stellflux.examples.elaticsearch` | `18088` | 演示 Elaticsearch 文档 CRUD 和 OpenTelemetry telemetry 验证方式 |
@@ -32,7 +33,7 @@
 在仓库根目录执行：
 
 ```bash
-mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-elaticsearch-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-thread-pool-example,stellflux-examples/stellflux-datasource-example" -am compile
+mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellnula-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-elaticsearch-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-thread-pool-example,stellflux-examples/stellflux-datasource-example" -am compile
 ```
 
 如果只想编译整个 examples 聚合模块对应的子模块，推荐仍然从根工程执行 reactor 构建，这样可以自动带上本仓库里的 starter 依赖模块。
@@ -221,7 +222,36 @@ mvn -pl stellflux-examples/stellflux-stellmap-example -am spring-boot:run
 mvn -pl stellflux-examples/stellflux-stellmap-example -am spring-boot:run -Dspring-boot.run.arguments=--stellflux.stellmap.base-url=http://127.0.0.1:8080
 ```
 
-### 7. `stellflux-stellflow-example`
+### 7. `stellflux-stellnula-example`
+
+- 根包：`io.github.stellflux.examples.stellnula`
+- 启动类：`io.github.stellflux.examples.stellnula.StellfluxStellnulaExampleApplication`
+- 默认端口：`18089`
+- 用途：演示 `stellflux-spring-boot-starter-stellnula` 和 Spring 标准 `@Value` 的动态配置刷新方式
+
+启动命令：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellnula-example -am spring-boot:run
+```
+
+示例接口：
+
+- `GET http://127.0.0.1:18089/api/stellnula/config`
+
+默认行为：
+
+- 默认配置 `stellflux.stellnula.enabled=false`，因此本地直接启动不依赖真实 Stellnula 服务端
+- `StellnulaDynamicConfigValues` 使用 `@Value` 注入 String 和 Java 基本数据类型
+- `StellnulaDynamicValueRefreshTest` 使用内存 `PropertySource` 模拟配置中心推送，验证 String、byte、short、int、long、float、double、boolean、char 都可以在事件触发后动态刷新
+
+如需连接真实 Stellnula 配置中心，可以在启动时覆盖配置：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellnula-example -am spring-boot:run -Dspring-boot.run.arguments="--stellflux.stellnula.enabled=true --stellflux.stellnula.endpoint=http://127.0.0.1:8080"
+```
+
+### 8. `stellflux-stellflow-example`
 
 - 根包：`io.github.stellflux.examples.stellflow`
 - 启动类：`io.github.stellflux.examples.stellflow.StellfluxStellflowExampleApplication`
@@ -328,7 +358,7 @@ public void onOrderCreated(String payload, StellflowListenerContext context) {
 mvn -pl stellflux-examples/stellflux-stellflow-example org.springframework.boot:spring-boot-maven-plugin:3.5.14:run -Dspring-boot.run.arguments="--stellflux.stellflow.bootstrap-servers=127.0.0.1:9092"
 ```
 
-### 8. `stellflux-jedis-examples`
+### 9. `stellflux-jedis-examples`
 
 - 根包：`io.github.stellflux.examples.jedis`
 - 启动类：`io.github.stellflux.examples.jedis.StellfluxJedisExampleApplication`
@@ -386,7 +416,7 @@ mvn -f stellflux-examples/stellflux-jedis-examples/pom.xml org.springframework.b
 - Redis 可用时，`metrics.totalErrors` 保持不变，`metrics.totalMetricRecords` 会随操作递增
 - Redis 不可用时，接口会返回 `success=false` 和错误信息，同时 `metrics.totalErrors` 会递增
 
-### 9. `stellflux-elaticsearch-examples`
+### 10. `stellflux-elaticsearch-examples`
 
 - 根包：`io.github.stellflux.examples.elaticsearch`
 - 启动类：`io.github.stellflux.examples.elaticsearch.StellfluxElaticsearchExampleApplication`
@@ -450,7 +480,7 @@ mvn -f stellflux-examples/stellflux-elaticsearch-examples/pom.xml org.springfram
 - Elaticsearch 可用时，响应里的 `success=true`
 - Elaticsearch 不可用时，接口会返回 `success=false` 和错误信息，应用仍然可以用于观察失败 telemetry
 
-### 10. `stellflux-caffeine-examples`
+### 11. `stellflux-caffeine-examples`
 
 - 根包：`io.github.stellflux.examples.caffeine`
 - 启动类：`io.github.stellflux.examples.caffeine.StellfluxCaffeineExampleApplication`
@@ -502,7 +532,7 @@ mvn -f stellflux-examples/stellflux-caffeine-examples/pom.xml org.springframewor
 - 调用 `/workflows/basic` 可一次性执行 put/get/delete，并在响应里看到操作后的 Caffeine stats
 - 控制台会输出对应的 OTel structured log，trace 和 metrics 由 `stellflux-caffeine` 核心封装统一发射
 
-### 11. `stellflux-thread-pool-example`
+### 12. `stellflux-thread-pool-example`
 
 - 根包：`io.github.stellflux.examples.threadpool`
 - 启动类：`io.github.stellflux.examples.threadpool.StellfluxThreadPoolExampleApplication`
@@ -577,7 +607,7 @@ mvn -f stellflux-examples/stellflux-thread-pool-example/pom.xml org.springframew
 - 任务执行完成后，再调用 `/metrics` 可以看到 `completedTaskCount` 增长
 - 不接 Collector 时，接口里的本地快照也可以验证指标采集对象已经被 `StellfluxThreadPoolTelemetry` 监控
 
-### 12. `stellflux-datasource-example`
+### 13. `stellflux-datasource-example`
 
 - 根包：`io.github.stellflux.examples.datasource`
 - 启动类：`io.github.stellflux.examples.datasource.StellfluxDataSourceExampleApplication`
@@ -628,6 +658,7 @@ mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframewo
 - 想验证 gRPC client 到 gRPC server：先启动 `stellflux-grpc-server-example`，再启动 `stellflux-grpc-client-example`
 - 想单独观察 TraceId / Log / Metrics：启动 `stellflux-opentelemetry-example`
 - 想验证服务注册或后续接入服务发现：启动 `stellflux-stellmap-example`
+- 想验证 Stellnula 配置中心动态刷新：启动 `stellflux-stellnula-example`
 - 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
 - 想验证 Jedis CRUD 与 OpenTelemetry metrics：启动 `stellflux-jedis-examples`
 - 想验证 Elaticsearch 文档 CRUD 与 OpenTelemetry telemetry：启动 `stellflux-elaticsearch-examples`

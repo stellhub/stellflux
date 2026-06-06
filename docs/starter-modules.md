@@ -49,6 +49,11 @@
   - 基于 StellMap 注册中心的分布式定时任务执行权判断能力
   - 包含 `stellflux-scheduler-stellmap`、`stellflux-spring-boot-starter-stellmap` 与统一自动装配
   - 通过 `stellflux.scheduler.stellmap.service-id` 和 `current-instance-id` 识别参与调度的服务与当前实例
+- `stellflux-spring-boot-starter-stellnula`
+  - Stellnula 配置中心能力
+  - 包含 `stellflux-stellnula` 与统一自动装配
+  - 配置 `stellflux.stellnula.endpoint` 后会启动配置中心客户端，并把远端快照注入 Spring Environment
+  - 支持 Spring 标准 `@Value` 在配置变更后动态重新解析
 - `stellflux-spring-boot-starter-caffeine`
   - Caffeine 本地缓存能力
   - 包含 `stellflux-caffeine` 与统一自动装配
@@ -79,6 +84,7 @@
 - 只做 gRPC 服务提供方：引入 `stellflux-spring-boot-starter-grpc-server`
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
 - 使用 StellMap 分布式定时任务执行权判断：引入 `stellflux-spring-boot-starter-scheduler-stellmap`
+- 接入 Stellnula 配置中心：引入 `stellflux-spring-boot-starter-stellnula`，并配置 `stellflux.stellnula.endpoint`
 - 接入 Caffeine 本地缓存 telemetry：引入 `stellflux-spring-boot-starter-caffeine`
 - 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
 - 接入 Elaticsearch 8.x 客户端 telemetry：引入 `stellflux-spring-boot-starter-elaticsearch`，并配置 `stellflux.elaticsearch.endpoints`

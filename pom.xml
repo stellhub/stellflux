@@ -56,6 +56,7 @@
         <module>stellflux-loadbalancer-stellmap</module>
         <module>stellflux-stellmap</module>
         <module>stellflux-scheduler-stellmap</module>
+        <module>stellflux-stellnula</module>
         <module>stellflux-stellflow</module>
         <module>stellflux-grpc-server</module>
         <module>stellflux-grpc-client</module>
@@ -74,6 +75,7 @@
         <jedis.version>6.0.0-stellhub-otel.1</jedis.version>
         <elasticsearch.version>8.19.14</elasticsearch.version>
         <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
+        <stellnula-java-sdk.version>0.0.1</stellnula-java-sdk.version>
         <stellflow-java-sdk.version>0.0.4</stellflow-java-sdk.version>
         <lombok.version>1.18.46</lombok.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
@@ -107,6 +109,12 @@
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellmap-java-sdk</artifactId>
                 <version>${stellmap-java-sdk.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellnula-java-sdk</artifactId>
+                <version>${stellnula-java-sdk.version}</version>
             </dependency>
 
             <dependency>
@@ -178,6 +186,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-scheduler-stellmap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-stellnula</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -298,6 +311,11 @@
             <dependency>
                 <groupId>io.github.stellhub</groupId>
                 <artifactId>stellflux-spring-boot-starter-scheduler-stellmap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stellhub</groupId>
+                <artifactId>stellflux-spring-boot-starter-stellnula</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -486,6 +504,7 @@
                                 <excludeArtifact>stellflux-grpc-server-example</excludeArtifact>
                                 <excludeArtifact>stellflux-opentelemetry-example</excludeArtifact>
                                 <excludeArtifact>stellflux-stellmap-example</excludeArtifact>
+                                <excludeArtifact>stellflux-stellnula-example</excludeArtifact>
                                 <excludeArtifact>stellflux-stellflow-example</excludeArtifact>
                                 <excludeArtifact>stellflux-jedis-examples</excludeArtifact>
                                 <excludeArtifact>stellflux-elaticsearch-examples</excludeArtifact>

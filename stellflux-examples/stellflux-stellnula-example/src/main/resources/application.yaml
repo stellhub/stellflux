@@ -1,0 +1,24 @@
+server:
+  port: 18089
+
+spring:
+  application:
+    name: stellflux-stellnula-example
+
+example:
+  stellnula:
+    dynamic:
+      string-value: alpha
+      byte-value: 1
+      short-value: 2
+      int-value: 3
+      long-value: 4
+      float-value: 5.5
+      double-value: 6.5
+      boolean-value: true
+      char-value: A
+
+stellflux:
+  stellnula:
+    enabled: false
+    dynamic-value-refresh: true
