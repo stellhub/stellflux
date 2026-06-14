@@ -69,8 +69,10 @@ class StellfluxGrpcChannelFactoryLoadBalancerTest {
                         options, new StellfluxGrpcChannelFactory.ResolvedGrpcTarget("127.0.0.1", 9090));
 
         assertEquals(2, interceptors.size());
-        assertEquals("early", assertInstanceOf(NamedClientInterceptor.class, interceptors.get(0)).name());
-        assertEquals("late", assertInstanceOf(NamedClientInterceptor.class, interceptors.get(1)).name());
+        assertEquals(
+                "early", assertInstanceOf(NamedClientInterceptor.class, interceptors.get(0)).name());
+        assertEquals(
+                "late", assertInstanceOf(NamedClientInterceptor.class, interceptors.get(1)).name());
     }
 
     @Test
@@ -88,8 +90,7 @@ class StellfluxGrpcChannelFactoryLoadBalancerTest {
 
         StellfluxGrpcClientInterceptorContext context =
                 factory.createInterceptorContext(
-                        options,
-                        new StellfluxGrpcChannelFactory.ResolvedGrpcTarget("10.0.0.8", 9443));
+                        options, new StellfluxGrpcChannelFactory.ResolvedGrpcTarget("10.0.0.8", 9443));
 
         assertEquals("trade.order.rpc", context.serviceId());
         assertEquals("prod", context.namespace());

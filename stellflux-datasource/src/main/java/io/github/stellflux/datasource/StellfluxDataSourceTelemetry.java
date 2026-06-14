@@ -26,7 +26,8 @@ final class StellfluxDataSourceTelemetry {
     private static final String CONNECTION_ACCESS_LOG_SCOPE_NAME =
             "io.github.stellflux.datasource.connection.access";
 
-    private static final String SQL_ACCESS_LOG_SCOPE_NAME = "io.github.stellflux.datasource.sql.access";
+    private static final String SQL_ACCESS_LOG_SCOPE_NAME =
+            "io.github.stellflux.datasource.sql.access";
 
     private static final String CONNECTION_ACCESS_LOG_EVENT_NAME = "db.client.connection";
 
@@ -56,7 +57,10 @@ final class StellfluxDataSourceTelemetry {
         this.attributes = StellfluxDatabaseAttributes.from(options);
         this.tracer =
                 StellfluxTelemetryScopeFactory.createTracer(
-                        openTelemetry, INSTRUMENTATION_SCOPE_NAME, ARTIFACT_ID, StellfluxTelemetryDataSource.class);
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxTelemetryDataSource.class);
         this.connectionAccessLogEmitter =
                 new StellfluxAccessLogEmitter(
                         openTelemetry,
@@ -73,7 +77,10 @@ final class StellfluxDataSourceTelemetry {
                         StellfluxTelemetryDataSource.class);
         Meter meter =
                 METER_FACTORY.create(
-                        openTelemetry, INSTRUMENTATION_SCOPE_NAME, ARTIFACT_ID, StellfluxTelemetryDataSource.class);
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxTelemetryDataSource.class);
         this.connectionCounter =
                 METER_FACTORY.createCounter(
                         meter,

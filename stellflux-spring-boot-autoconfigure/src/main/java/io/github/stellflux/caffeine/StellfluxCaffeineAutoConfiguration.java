@@ -34,8 +34,7 @@ public class StellfluxCaffeineAutoConfiguration {
     @Bean(destroyMethod = "close")
     @ConditionalOnMissingBean
     public StellfluxCaffeineCacheFactory stellfluxCaffeineCacheFactory(
-            OpenTelemetry openTelemetry,
-            ObjectProvider<StellfluxOpenTelemetryRuntime> runtimeProvider) {
+            OpenTelemetry openTelemetry, ObjectProvider<StellfluxOpenTelemetryRuntime> runtimeProvider) {
         StellfluxOpenTelemetryRuntime runtime = runtimeProvider.getIfAvailable();
         StellfluxOpenTelemetryConfig config =
                 runtime == null ? StellfluxOpenTelemetryConfig.builder().build() : runtime.getConfig();
@@ -54,8 +53,7 @@ public class StellfluxCaffeineAutoConfiguration {
         return () -> {
             StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
             if (moduleInfoMeter != null) {
-                moduleInfoMeter.registerModule(
-                        "stellflux-caffeine", StellfluxCaffeineCacheFactory.class);
+                moduleInfoMeter.registerModule("stellflux-caffeine", StellfluxCaffeineCacheFactory.class);
             }
             LOGGER.info(
                     () ->

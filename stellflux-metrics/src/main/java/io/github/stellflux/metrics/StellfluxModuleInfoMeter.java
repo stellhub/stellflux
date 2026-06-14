@@ -30,7 +30,8 @@ public final class StellfluxModuleInfoMeter implements AutoCloseable {
                 StellfluxTelemetryScopeFactory.createMeter(
                         openTelemetry, INSTRUMENTATION_SCOPE_NAME, ARTIFACT_ID, StellfluxModuleInfoMeter.class);
         this.moduleInfoGauge =
-                meter.gaugeBuilder(StellfluxMetricNames.MODULE_INFO)
+                meter
+                        .gaugeBuilder(StellfluxMetricNames.MODULE_INFO)
                         .ofLongs()
                         .setDescription("Stellflux modules loaded by current application")
                         .buildWithCallback(

@@ -17,7 +17,8 @@ class StellfluxValueRefreshPostProcessorTest {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("demo.name", "alpha");
         GenericApplicationContext context = new GenericApplicationContext();
-        context.getEnvironment()
+        context
+                .getEnvironment()
                 .getPropertySources()
                 .addFirst(new MapPropertySource("stellnula-test", values));
         context.registerBean(StellfluxValueRefreshPostProcessor.class);
@@ -32,9 +33,30 @@ class StellfluxValueRefreshPostProcessorTest {
         context.close();
     }
 
+    @Test
+    void shouldRefreshValueAnnotatedFieldAfterPropertySourceIsRegisteredLate() {
+        Map<String, Object> values = new LinkedHashMap<>();
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean(StellfluxValueRefreshPostProcessor.class);
+        context.registerBean(ValueHolder.class);
+        context.refresh();
+
+        ValueHolder holder = context.getBean(ValueHolder.class);
+        assertThat(holder.getName()).isEqualTo("fallback");
+
+        values.put("demo.name", "alpha");
+        context.getEnvironment()
+                .getPropertySources()
+                .addFirst(new MapPropertySource("stellnula-test", values));
+        context.getBean(StellfluxValueRefreshPostProcessor.class).afterSingletonsInstantiated();
+
+        assertThat(holder.getName()).isEqualTo("alpha");
+        context.close();
+    }
+
     static class ValueHolder {
 
-        @Value("${demo.name}")
+        @Value("${demo.name:fallback}")
         private String name;
 
         String getName() {

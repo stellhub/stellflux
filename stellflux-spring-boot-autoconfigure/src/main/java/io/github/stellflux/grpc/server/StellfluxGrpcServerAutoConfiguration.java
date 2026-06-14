@@ -166,8 +166,11 @@ public class StellfluxGrpcServerAutoConfiguration {
             ObjectProvider<ServerInterceptor> nativeInterceptors) {
         List<StellfluxGrpcServerInterceptor> merged = new ArrayList<>();
         merged.addAll(interceptors.orderedStream().toList());
-        nativeInterceptors.orderedStream()
-                .map(interceptor -> new NativeGrpcServerInterceptorAdapter(interceptor, resolveOrder(interceptor)))
+        nativeInterceptors
+                .orderedStream()
+                .map(
+                        interceptor ->
+                                new NativeGrpcServerInterceptorAdapter(interceptor, resolveOrder(interceptor)))
                 .forEach(merged::add);
         merged.sort(Comparator.comparingInt(StellfluxGrpcServerInterceptor::getOrder));
         return List.copyOf(merged);

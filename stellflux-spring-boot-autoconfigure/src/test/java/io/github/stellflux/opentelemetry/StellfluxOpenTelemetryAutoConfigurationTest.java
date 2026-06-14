@@ -41,8 +41,7 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
     @Test
     void shouldFallbackToSpringApplicationNameWhenServiceNameMissing() {
         new ApplicationContextRunner()
-                .withConfiguration(
-                        AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
+                .withConfiguration(AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
                 .withPropertyValues(
                         "spring.application.name=invoice-service",
                         "stellflux.opentelemetry.metrics.enabled=false",
@@ -53,8 +52,7 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
                             Resource resource = context.getBean(Resource.class);
                             assertThat(
                                             resource.getAttribute(
-                                                    io.opentelemetry.api.common.AttributeKey.stringKey(
-                                                            "service.name")))
+                                                    io.opentelemetry.api.common.AttributeKey.stringKey("service.name")))
                                     .isEqualTo("invoice-service");
                         });
     }
@@ -62,8 +60,7 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
     @Test
     void shouldPreferConfigurationOverCommandLineAndEnvironment() {
         new ApplicationContextRunner()
-                .withConfiguration(
-                        AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
+                .withConfiguration(AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
                 .withPropertyValues(
                         "stellflux.opentelemetry.resource.service-name=config-service",
                         "stellflux.opentelemetry.endpoint=http://config-endpoint:4317",
@@ -72,7 +69,8 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
                         "stellflux.opentelemetry.logs.enabled=false")
                 .withInitializer(
                         context -> {
-                            context.getEnvironment()
+                            context
+                                    .getEnvironment()
                                     .getPropertySources()
                                     .addFirst(
                                             new MapPropertySource(
@@ -82,15 +80,15 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
                                                             "command-service",
                                                             "stellflux.opentelemetry.endpoint",
                                                             "http://command-endpoint:4317")));
-                            context.getEnvironment()
+                            context
+                                    .getEnvironment()
                                     .getPropertySources()
                                     .addLast(
                                             new MapPropertySource(
                                                     StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
                                                     java.util.Map.of(
                                                             "OTEL_SERVICE_NAME", "env-service",
-                                                            "OTEL_EXPORTER_OTLP_ENDPOINT",
-                                                                    "http://env-endpoint:4317")));
+                                                            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://env-endpoint:4317")));
                         })
                 .run(
                         context -> {
@@ -105,29 +103,27 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
     @Test
     void shouldPreferCommandLineOverEnvironmentWhenConfigurationMissing() {
         new ApplicationContextRunner()
-                .withConfiguration(
-                        AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
+                .withConfiguration(AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
                 .withInitializer(
                         context -> {
-                            context.getEnvironment()
+                            context
+                                    .getEnvironment()
                                     .getPropertySources()
                                     .addFirst(
                                             new MapPropertySource(
                                                     StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
                                                     java.util.Map.of(
-                                                            "stellflux.opentelemetry.resource.service-name",
-                                                                    "command-service",
-                                                            "stellflux.opentelemetry.endpoint",
-                                                                    "http://command-endpoint:4317")));
-                            context.getEnvironment()
+                                                            "stellflux.opentelemetry.resource.service-name", "command-service",
+                                                            "stellflux.opentelemetry.endpoint", "http://command-endpoint:4317")));
+                            context
+                                    .getEnvironment()
                                     .getPropertySources()
                                     .addLast(
                                             new MapPropertySource(
                                                     StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
                                                     java.util.Map.of(
                                                             "OTEL_SERVICE_NAME", "env-service",
-                                                            "OTEL_EXPORTER_OTLP_ENDPOINT",
-                                                                    "http://env-endpoint:4317")));
+                                                            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://env-endpoint:4317")));
                         })
                 .run(
                         context -> {
@@ -142,22 +138,17 @@ class StellfluxOpenTelemetryAutoConfigurationTest {
     @Test
     void shouldDisableAutoConfigurationWhenConfigurationSaysDisabled() {
         new ApplicationContextRunner()
-                .withConfiguration(
-                        AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
+                .withConfiguration(AutoConfigurations.of(StellfluxOpenTelemetryAutoConfiguration.class))
                 .withPropertyValues("stellflux.opentelemetry.enabled=false")
                 .withInitializer(
                         context ->
-                                context.getEnvironment()
+                                context
+                                        .getEnvironment()
                                         .getPropertySources()
                                         .addFirst(
                                                 new MapPropertySource(
-                                                        StandardEnvironment
-                                                                .SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
-                                                        java.util.Map.of(
-                                                                "stellflux.opentelemetry.enabled", "true"))))
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .doesNotHaveBean(StellfluxOpenTelemetryRuntime.class));
+                                                        StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+                                                        java.util.Map.of("stellflux.opentelemetry.enabled", "true"))))
+                .run(context -> assertThat(context).doesNotHaveBean(StellfluxOpenTelemetryRuntime.class));
     }
 }

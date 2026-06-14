@@ -68,7 +68,8 @@ public final class StellfluxElaticsearchClient implements AutoCloseable {
      * @throws IOException 请求异常
      */
     public <TDocument> IndexResponse index(IndexRequest<TDocument> request) throws IOException {
-        IndexRequest<TDocument> safeRequest = Objects.requireNonNull(request, "request must not be null");
+        IndexRequest<TDocument> safeRequest =
+                Objects.requireNonNull(request, "request must not be null");
         try {
             return telemetry.instrument(
                     "index", List.of(safeRequest.index()), null, () -> client.index(safeRequest));
@@ -158,10 +159,7 @@ public final class StellfluxElaticsearchClient implements AutoCloseable {
         SearchRequest safeRequest = Objects.requireNonNull(request, "request must not be null");
         try {
             return telemetry.instrument(
-                    "search",
-                    safeRequest.index(),
-                    null,
-                    () -> client.search(safeRequest, documentClass));
+                    "search", safeRequest.index(), null, () -> client.search(safeRequest, documentClass));
         } catch (IOException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -199,10 +197,7 @@ public final class StellfluxElaticsearchClient implements AutoCloseable {
             SearchRequest request, Class<TDocument> documentClass) {
         SearchRequest safeRequest = Objects.requireNonNull(request, "request must not be null");
         return telemetry.instrumentAsync(
-                "search",
-                safeRequest.index(),
-                null,
-                () -> asyncClient.search(safeRequest, documentClass));
+                "search", safeRequest.index(), null, () -> asyncClient.search(safeRequest, documentClass));
     }
 
     /**

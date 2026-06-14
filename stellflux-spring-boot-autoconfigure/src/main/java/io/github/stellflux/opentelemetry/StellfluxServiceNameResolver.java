@@ -4,10 +4,10 @@ import org.springframework.boot.convert.ApplicationConversionService;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.CommandLinePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
-import org.springframework.core.env.Environment;
 
 /** Stellflux 服务名解析器。 */
 public final class StellfluxServiceNameResolver {
@@ -61,9 +61,7 @@ public final class StellfluxServiceNameResolver {
                                     "OTEL_SERVICE_NAME",
                                     "STELLAR_APP_NAME"),
                             findString(
-                                    configurableEnvironment,
-                                    PropertySourceLayer.DEFAULT,
-                                    RESOURCE_SERVICE_NAME));
+                                    configurableEnvironment, PropertySourceLayer.DEFAULT, RESOURCE_SERVICE_NAME));
             return firstNonBlank(serviceName, "unknown-service");
         }
         return firstNonBlank(

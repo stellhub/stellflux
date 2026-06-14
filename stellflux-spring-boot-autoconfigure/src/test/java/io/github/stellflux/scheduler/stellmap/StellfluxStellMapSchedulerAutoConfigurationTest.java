@@ -2,6 +2,8 @@ package io.github.stellflux.scheduler.stellmap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.github.stellflux.scheduler.StellfluxStellMapSchedulerAutoConfiguration;
+import io.github.stellflux.scheduler.StellfluxStellMapSchedulerProperties;
 import io.github.stellflux.stellmap.StellfluxStellMapProperties;
 import io.github.stellmap.ServiceDirectory;
 import io.github.stellmap.ServiceDirectorySubscription;

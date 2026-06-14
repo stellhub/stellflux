@@ -43,7 +43,9 @@ public class StellfluxAnnotatedHttpClientFactoryBean
 
     private StellfluxHttpClientOptions resolveOptions() {
         StellfluxHttpClientProperties properties =
-                this.applicationContext.getBeanProvider(StellfluxHttpClientProperties.class).getIfAvailable();
+                this.applicationContext
+                        .getBeanProvider(StellfluxHttpClientProperties.class)
+                        .getIfAvailable();
         StellfluxHttpClientOptions resolved =
                 properties == null
                         ? copyOptions(this.options)

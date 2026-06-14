@@ -30,26 +30,24 @@ public class GrpcServerExampleInterceptor implements StellfluxGrpcServerIntercep
         return new ServerInterceptor() {
             @Override
             public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-                    ServerCall<ReqT, RespT> call,
-                    Metadata headers,
-                    ServerCallHandler<ReqT, RespT> next) {
+                    ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
                 String clientName = headers.get(GrpcServerExampleContext.CLIENT_NAME_HEADER);
                 String requestId = headers.get(GrpcServerExampleContext.REQUEST_ID_HEADER);
                 LOGGER.info(
                         () ->
                                 "Server interceptor received headers"
-                                        + ", method=" + call.getMethodDescriptor().getFullMethodName()
-                                        + ", clientName=" + safeText(clientName)
-                                        + ", requestId=" + safeText(requestId)
-                                        + ", listeningPort=" + context.port());
+                                        + ", method="
+                                        + call.getMethodDescriptor().getFullMethodName()
+                                        + ", clientName="
+                                        + safeText(clientName)
+                                        + ", requestId="
+                                        + safeText(requestId)
+                                        + ", listeningPort="
+                                        + context.port());
                 Context grpcContext =
                         Context.current()
-                                .withValue(
-                                        GrpcServerExampleContext.CLIENT_NAME_CONTEXT_KEY,
-                                        safeText(clientName))
-                                .withValue(
-                                        GrpcServerExampleContext.REQUEST_ID_CONTEXT_KEY,
-                                        safeText(requestId));
+                                .withValue(GrpcServerExampleContext.CLIENT_NAME_CONTEXT_KEY, safeText(clientName))
+                                .withValue(GrpcServerExampleContext.REQUEST_ID_CONTEXT_KEY, safeText(requestId));
                 return Contexts.interceptCall(grpcContext, call, headers, next);
             }
         };

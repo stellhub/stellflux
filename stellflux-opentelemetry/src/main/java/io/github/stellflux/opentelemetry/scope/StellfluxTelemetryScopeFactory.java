@@ -27,8 +27,7 @@ public final class StellfluxTelemetryScopeFactory {
         return openTelemetry
                 .getTracerProvider()
                 .tracerBuilder(instrumentationScopeName)
-                .setInstrumentationVersion(
-                        StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
+                .setInstrumentationVersion(StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
                 .build();
     }
 
@@ -49,8 +48,7 @@ public final class StellfluxTelemetryScopeFactory {
         return openTelemetry
                 .getMeterProvider()
                 .meterBuilder(instrumentationScopeName)
-                .setInstrumentationVersion(
-                        StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
+                .setInstrumentationVersion(StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
                 .build();
     }
 
@@ -71,8 +69,7 @@ public final class StellfluxTelemetryScopeFactory {
         return openTelemetry
                 .getLogsBridge()
                 .loggerBuilder(instrumentationScopeName)
-                .setInstrumentationVersion(
-                        StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
+                .setInstrumentationVersion(StellfluxModuleVersionResolver.resolve(artifactId, anchorClass))
                 .build();
     }
 }

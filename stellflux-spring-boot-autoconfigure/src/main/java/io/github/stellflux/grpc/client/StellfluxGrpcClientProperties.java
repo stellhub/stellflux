@@ -31,7 +31,8 @@ public class StellfluxGrpcClientProperties {
      * @param annotationOptions 注解生成的配置
      * @return 合并后的 gRPC 客户端配置
      */
-    public StellfluxGrpcClientOptions mergeAnnotatedOptions(StellfluxGrpcClientOptions annotationOptions) {
+    public StellfluxGrpcClientOptions mergeAnnotatedOptions(
+            StellfluxGrpcClientOptions annotationOptions) {
         StellfluxGrpcClientOptions merged = new StellfluxGrpcClientOptions();
         String serviceId = annotationOptions == null ? null : annotationOptions.getServiceId();
         if (StringUtils.hasText(serviceId)) {

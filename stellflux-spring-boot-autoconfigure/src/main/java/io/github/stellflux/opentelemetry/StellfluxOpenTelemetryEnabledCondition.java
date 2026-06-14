@@ -19,8 +19,7 @@ public class StellfluxOpenTelemetryEnabledCondition extends SpringBootCondition 
                             .because("environment is not configurable"));
         }
         StellfluxOpenTelemetryPropertyResolver resolver =
-                new StellfluxOpenTelemetryPropertyResolver(
-                        environment, context.getClassLoader());
+                new StellfluxOpenTelemetryPropertyResolver(environment, context.getClassLoader());
         if (resolver.resolveEnabled()) {
             return ConditionOutcome.match(
                     ConditionMessage.forCondition("Stellflux OpenTelemetry")

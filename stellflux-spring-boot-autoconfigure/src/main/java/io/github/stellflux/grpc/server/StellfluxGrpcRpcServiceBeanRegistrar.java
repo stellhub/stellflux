@@ -27,8 +27,8 @@ import org.springframework.util.ClassUtils;
 /**
  * 扫描并注册 {@link RpcService} Bean。
  *
- * <p>starter 负责在 Spring Boot 自动配置包下发现并注册 {@link RpcService}，从而让
- * {@code stellflux-grpc-server} 模块保持 Spring 无关。
+ * <p>starter 负责在 Spring Boot 自动配置包下发现并注册 {@link RpcService}，从而让 {@code stellflux-grpc-server} 模块保持
+ * Spring 无关。
  */
 public class StellfluxGrpcRpcServiceBeanRegistrar
         implements ImportBeanDefinitionRegistrar,

@@ -61,8 +61,7 @@ public class StellfluxJedisAutoConfiguration {
         return () -> {
             StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
             if (moduleInfoMeter != null) {
-                moduleInfoMeter.registerModule(
-                        "stellflux-jedis", StellfluxJedisClientConfigFactory.class);
+                moduleInfoMeter.registerModule("stellflux-jedis", StellfluxJedisClientConfigFactory.class);
             }
             LOGGER.info(
                     () ->

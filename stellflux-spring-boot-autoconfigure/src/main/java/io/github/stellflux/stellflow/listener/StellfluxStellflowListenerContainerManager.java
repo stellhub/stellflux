@@ -120,7 +120,8 @@ public class StellfluxStellflowListenerContainerManager implements SmartLifecycl
         for (String topic : topics) {
             String groupId = resolveGroupId(endpoint.listener(), topic);
             Duration pollTimeout = resolvePollTimeout(endpoint.listener(), topic);
-            resolvedContainers.add(createContainer(endpoint, groupId, List.of(topic), pollTimeout, topic));
+            resolvedContainers.add(
+                    createContainer(endpoint, groupId, List.of(topic), pollTimeout, topic));
         }
         return List.copyOf(resolvedContainers);
     }

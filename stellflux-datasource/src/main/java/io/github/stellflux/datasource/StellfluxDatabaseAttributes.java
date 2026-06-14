@@ -111,8 +111,7 @@ final class StellfluxDatabaseAttributes {
             }
         }
         int separator = 0;
-        while (separator < trimmed.length()
-                && Character.isLetter(trimmed.charAt(separator))) {
+        while (separator < trimmed.length() && Character.isLetter(trimmed.charAt(separator))) {
             separator++;
         }
         if (separator == 0) {
@@ -144,11 +143,9 @@ final class StellfluxDatabaseAttributes {
         builder.setAttribute(
                 io.opentelemetry.api.common.AttributeKey.stringKey("db.namespace"), this.database);
         builder.setAttribute(
-                io.opentelemetry.api.common.AttributeKey.stringKey("server.address"),
-                this.serverAddress);
+                io.opentelemetry.api.common.AttributeKey.stringKey("server.address"), this.serverAddress);
         builder.setAttribute(
-                io.opentelemetry.api.common.AttributeKey.longKey("server.port"),
-                (long) this.serverPort);
+                io.opentelemetry.api.common.AttributeKey.longKey("server.port"), (long) this.serverPort);
         builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("db.user"), this.user);
     }
 

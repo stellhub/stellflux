@@ -1,24 +1,56 @@
-server:
-  port: 18089
-
 spring:
   application:
-    name: stellflux-stellnula-example
+    name: stellhub.core.middleware.stellcloud.admin
 
-example:
-  stellnula:
-    dynamic:
-      string-value: alpha
-      byte-value: 1
-      short-value: 2
-      int-value: 3
-      long-value: 4
-      float-value: 5.5
-      double-value: 6.5
-      boolean-value: true
-      char-value: A
+server:
+  port: 18090
 
 stellflux:
   stellnula:
-    enabled: false
+    enabled: ${STELLNULA_ENABLED:true}
+    endpoint: ${STELLNULA_ENDPOINT:http://127.0.0.1:8060}
+    grpc-endpoint: ${STELLNULA_GRPC_ENDPOINT:}
+    grpc-plaintext: true
+    api-token: ${STELLNULA_API_TOKEN:}
+    api-version: v1
+    sdk-version: stellflux-stellnula-example/1.0.1
+    app-id: ${spring.application.name}
+    client-id: ${STELLNULA_CLIENT_ID:}
+    env: ${STELLNULA_ENV:dev}
+    region: ${STELLNULA_REGION:default}
+    zone: ${STELLNULA_ZONE:default}
+    cluster: ${STELLNULA_CLUSTER:default}
+    namespace: ${STELLNULA_NAMESPACE:app-config}
+    group: ${STELLNULA_GROUP:default}
+    client-ip: ${STELLNULA_CLIENT_IP:}
+    host-name: ${STELLNULA_HOST_NAME:}
+    subscriptions:
+      - group: default
+        subscription-type: ALL
+        subscription-key: "*"
+        transport: GRPC
+        status: PUBLISHED
+    snapshot-file: /data/confg
+    request-timeout: 10s
+    watch-timeout: 30s
+    retry-delay: 3s
+    server-refresh-interval: 1m
+    server-failure-cooldown: 30s
+    grpc-shutdown-timeout: 3s
+    watch-enabled: true
+    fail-fast-on-bootstrap: false
+    page-size: 100
+    max-payload-bytes: 1048576
+    accept-large-file-reference: false
     dynamic-value-refresh: true
+    property-source-name: stellnula
+  opentelemetry:
+    resource:
+      service-name: ${spring.application.name}
+      service-namespace: stellflux-examples
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

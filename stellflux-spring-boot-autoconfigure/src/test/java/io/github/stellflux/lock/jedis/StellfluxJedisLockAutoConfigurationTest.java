@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import redis.clients.jedis.JedisClientConfig;
 
 class StellfluxJedisLockAutoConfigurationTest {
 
@@ -16,8 +15,7 @@ class StellfluxJedisLockAutoConfigurationTest {
             new ApplicationContextRunner()
                     .withConfiguration(
                             AutoConfigurations.of(
-                                    StellfluxJedisAutoConfiguration.class,
-                                    StellfluxJedisLockAutoConfiguration.class))
+                                    StellfluxJedisAutoConfiguration.class, StellfluxJedisLockAutoConfiguration.class))
                     .withBean(OpenTelemetry.class, OpenTelemetry::noop);
 
     @Test
@@ -48,10 +46,7 @@ class StellfluxJedisLockAutoConfigurationTest {
         StellfluxJedisLockOptions options = new StellfluxJedisLockOptions();
         StellfluxJedisLock customLock =
                 new StellfluxJedisLock(
-                        options,
-                        new NoopExecutor(),
-                        () -> "token",
-                        java.time.Clock.systemUTC());
+                        options, new NoopExecutor(), () -> "token", java.time.Clock.systemUTC());
 
         contextRunner
                 .withBean(StellfluxJedisLock.class, () -> customLock)

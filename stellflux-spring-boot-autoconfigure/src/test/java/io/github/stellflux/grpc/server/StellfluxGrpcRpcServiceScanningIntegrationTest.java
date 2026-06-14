@@ -23,11 +23,9 @@ class StellfluxGrpcRpcServiceScanningIntegrationTest {
             assertThat(context.getBeanNamesForType(StellfluxGrpcServiceRegistry.class))
                     .containsExactly("stellfluxGrpcServiceRegistry");
             assertThat(context.getBeanNamesForType(Server.class)).containsExactly("stellfluxGrpcServer");
-            StellfluxGrpcServiceRegistry registry =
-                    context.getBean(StellfluxGrpcServiceRegistry.class);
+            StellfluxGrpcServiceRegistry registry = context.getBean(StellfluxGrpcServiceRegistry.class);
             assertThat(registry.getRegistrations()).hasSize(1);
-            assertThat(registry.getRegistrations().getFirst().serviceId())
-                    .isEqualTo("trade.scanned.rpc");
+            assertThat(registry.getRegistrations().getFirst().serviceId()).isEqualTo("trade.scanned.rpc");
         }
     }
 }

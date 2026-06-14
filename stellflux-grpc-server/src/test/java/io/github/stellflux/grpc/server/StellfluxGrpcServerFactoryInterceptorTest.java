@@ -29,8 +29,10 @@ class StellfluxGrpcServerFactoryInterceptorTest {
         List<ServerInterceptor> interceptors = factory.resolveInterceptors(options);
 
         assertEquals(2, interceptors.size());
-        assertEquals("early", assertInstanceOf(NamedServerInterceptor.class, interceptors.get(0)).name());
-        assertEquals("late", assertInstanceOf(NamedServerInterceptor.class, interceptors.get(1)).name());
+        assertEquals(
+                "early", assertInstanceOf(NamedServerInterceptor.class, interceptors.get(0)).name());
+        assertEquals(
+                "late", assertInstanceOf(NamedServerInterceptor.class, interceptors.get(1)).name());
     }
 
     @Test
@@ -72,9 +74,7 @@ class StellfluxGrpcServerFactoryInterceptorTest {
 
         @Override
         public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-                ServerCall<ReqT, RespT> call,
-                Metadata headers,
-                ServerCallHandler<ReqT, RespT> next) {
+                ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
             throw new UnsupportedOperationException("Not needed for this test");
         }
     }

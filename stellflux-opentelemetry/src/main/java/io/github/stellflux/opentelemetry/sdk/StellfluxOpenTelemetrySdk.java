@@ -1,9 +1,9 @@
 package io.github.stellflux.opentelemetry.sdk;
 
+import io.github.stellflux.opentelemetry.RetryConfig;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfig;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfigLoader;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryConfigValidator;
-import io.github.stellflux.opentelemetry.RetryConfig;
 import io.github.stellflux.opentelemetry.internal.OpenTelemetryExporterFactory;
 import io.github.stellflux.opentelemetry.internal.ResourceBuilderFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -118,12 +118,14 @@ public final class StellfluxOpenTelemetrySdk {
         }
         StellfluxOpenTelemetryRuntime runtime =
                 new StellfluxOpenTelemetryRuntime(
-                config, sdk, resource, loggerProvider, meterProvider, tracerProvider);
+                        config, sdk, resource, loggerProvider, meterProvider, tracerProvider);
         LOGGER.info(
                 () ->
                         "OpenTelemetry initialized"
-                                + ", config=" + describeConfig(config)
-                                + ", resource=" + resource.getAttributes().asMap());
+                                + ", config="
+                                + describeConfig(config)
+                                + ", resource="
+                                + resource.getAttributes().asMap());
         return runtime;
     }
 

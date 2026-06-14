@@ -24,9 +24,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /** Thread pool auto configuration. */
 @AutoConfiguration(after = StellfluxOpenTelemetryAutoConfiguration.class)
-@ConditionalOnClass({StellfluxThreadPoolTelemetry.class, ThreadPoolExecutor.class, OpenTelemetry.class})
+@ConditionalOnClass({
+    StellfluxThreadPoolTelemetry.class,
+    ThreadPoolExecutor.class,
+    OpenTelemetry.class
+})
 @ConditionalOnBean(OpenTelemetry.class)
-@ConditionalOnProperty(prefix = "stellflux.thread-pool", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "stellflux.thread-pool",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 @EnableConfigurationProperties(StellfluxThreadPoolProperties.class)
 public class StellfluxThreadPoolAutoConfiguration {
 

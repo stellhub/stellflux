@@ -1,8 +1,8 @@
 package io.github.stellflux.log;
 
-import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.github.stellflux.log.springboot.StellfluxLogBootstrapResult;
 import io.github.stellflux.log.springboot.StellfluxSpringBootLogAdapter;
+import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
 import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration;
 import io.github.stellflux.opentelemetry.sdk.StellfluxOpenTelemetryRuntime;
 import io.opentelemetry.api.OpenTelemetry;
@@ -93,23 +93,24 @@ public class StellfluxLogAutoConfiguration {
             StellfluxLogProperties properties,
             StellfluxLogBootstrapResult bootstrapResult,
             ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
-        return () ->
-                {
-                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
-                    if (moduleInfoMeter != null) {
-                        moduleInfoMeter.registerModule(
-                                "stellflux-log",
-                                io.github.stellflux.log.bridge.logback.StellfluxLogbackBridgeInstaller.class);
-                    }
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-log started successfully"
-                                            + ", enabled=" + properties.isEnabled()
-                                            + ", instrumentationScopeName="
-                                            + properties.getInstrumentationScopeName()
-                                            + ", bootstrapMode=" + bootstrapResult.getMode()
-                                            + ", installedLogbackBridge="
-                                            + bootstrapResult.isInstalledLogbackBridge());
-                };
+        return () -> {
+            StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+            if (moduleInfoMeter != null) {
+                moduleInfoMeter.registerModule(
+                        "stellflux-log",
+                        io.github.stellflux.log.bridge.logback.StellfluxLogbackBridgeInstaller.class);
+            }
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-log started successfully"
+                                    + ", enabled="
+                                    + properties.isEnabled()
+                                    + ", instrumentationScopeName="
+                                    + properties.getInstrumentationScopeName()
+                                    + ", bootstrapMode="
+                                    + bootstrapResult.getMode()
+                                    + ", installedLogbackBridge="
+                                    + bootstrapResult.isInstalledLogbackBridge());
+        };
     }
 }

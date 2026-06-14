@@ -72,7 +72,8 @@ public class StellfluxDataSourceAutoConfiguration {
             LOGGER.info(
                     () ->
                             "Starter stellflux-spring-boot-starter-datasource started successfully"
-                                    + ", configured=" + (properties.getUrl() != null && !properties.getUrl().isBlank())
+                                    + ", configured="
+                                    + (properties.getUrl() != null && !properties.getUrl().isBlank())
                                     + ", telemetry=true");
         };
     }

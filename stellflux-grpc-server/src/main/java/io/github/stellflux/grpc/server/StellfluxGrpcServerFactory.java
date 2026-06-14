@@ -93,7 +93,8 @@ public class StellfluxGrpcServerFactory {
         }
     }
 
-    StellfluxGrpcServerInterceptorContext createInterceptorContext(StellfluxGrpcServerOptions options) {
+    StellfluxGrpcServerInterceptorContext createInterceptorContext(
+            StellfluxGrpcServerOptions options) {
         return StellfluxGrpcServerInterceptorContext.from(options);
     }
 

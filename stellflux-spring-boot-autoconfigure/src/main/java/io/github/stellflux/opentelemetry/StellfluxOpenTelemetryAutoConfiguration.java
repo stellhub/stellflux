@@ -91,31 +91,35 @@ public class StellfluxOpenTelemetryAutoConfiguration {
     @Bean("stellfluxOpenTelemetryStarterStartupLogger")
     public SmartInitializingSingleton stellfluxOpenTelemetryStarterStartupLogger(
             StellfluxOpenTelemetryRuntime runtime, StellfluxModuleInfoMeter moduleInfoMeter) {
-        return () ->
-                {
-                    moduleInfoMeter.registerModule(
-                            "stellflux-opentelemetry", StellfluxOpenTelemetrySdk.class);
-                    moduleInfoMeter.registerModule(
-                            "stellflux-spring-boot-autoconfigure",
-                            StellfluxOpenTelemetryAutoConfiguration.class);
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-opentelemetry started successfully"
-                                            + ", enabled=true"
-                                            + ", serviceName=" + runtime.getConfig().getServiceName()
-                                            + ", serviceNamespace="
-                                            + runtime.getConfig().getServiceNamespace()
-                                            + ", endpoint=" + runtime.getConfig().getEndpoint()
-                                            + ", protocol=" + runtime.getConfig().getProtocol()
-                                            + ", registerGlobal=" + runtime.getConfig().isRegisterGlobal()
-                                            + ", logsEnabled=" + runtime.getConfig().isLogsEnabled()
-                                            + ", metricsEnabled=" + runtime.getConfig().isMetricsEnabled()
-                                            + ", tracesEnabled=" + runtime.getConfig().isTracesEnabled()
-                                            + ", metricExportInterval="
-                                            + runtime.getConfig().getMetricExportInterval()
-                                            + ", traceSampleRatio="
-                                            + runtime.getConfig().getTraceSampleRatio());
-                };
+        return () -> {
+            moduleInfoMeter.registerModule("stellflux-opentelemetry", StellfluxOpenTelemetrySdk.class);
+            moduleInfoMeter.registerModule(
+                    "stellflux-spring-boot-autoconfigure", StellfluxOpenTelemetryAutoConfiguration.class);
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-opentelemetry started successfully"
+                                    + ", enabled=true"
+                                    + ", serviceName="
+                                    + runtime.getConfig().getServiceName()
+                                    + ", serviceNamespace="
+                                    + runtime.getConfig().getServiceNamespace()
+                                    + ", endpoint="
+                                    + runtime.getConfig().getEndpoint()
+                                    + ", protocol="
+                                    + runtime.getConfig().getProtocol()
+                                    + ", registerGlobal="
+                                    + runtime.getConfig().isRegisterGlobal()
+                                    + ", logsEnabled="
+                                    + runtime.getConfig().isLogsEnabled()
+                                    + ", metricsEnabled="
+                                    + runtime.getConfig().isMetricsEnabled()
+                                    + ", tracesEnabled="
+                                    + runtime.getConfig().isTracesEnabled()
+                                    + ", metricExportInterval="
+                                    + runtime.getConfig().getMetricExportInterval()
+                                    + ", traceSampleRatio="
+                                    + runtime.getConfig().getTraceSampleRatio());
+        };
     }
 
     /**
@@ -133,9 +137,12 @@ public class StellfluxOpenTelemetryAutoConfiguration {
                 LOGGER.info(
                         () ->
                                 "Starter stellflux-spring-boot-starter-metrics started successfully"
-                                        + ", exportInterval=" + runtime.getConfig().getMetricExportInterval()
-                                        + ", endpoint=" + runtime.getConfig().getEndpoint()
-                                        + ", protocol=" + runtime.getConfig().getProtocol());
+                                        + ", exportInterval="
+                                        + runtime.getConfig().getMetricExportInterval()
+                                        + ", endpoint="
+                                        + runtime.getConfig().getEndpoint()
+                                        + ", protocol="
+                                        + runtime.getConfig().getProtocol());
             }
         };
     }
@@ -156,11 +163,13 @@ public class StellfluxOpenTelemetryAutoConfiguration {
                 LOGGER.info(
                         () ->
                                 "Starter stellflux-spring-boot-starter-traces started successfully"
-                                        + ", traceSampleRatio=" + runtime.getConfig().getTraceSampleRatio()
-                                        + ", endpoint=" + runtime.getConfig().getEndpoint()
-                                        + ", protocol=" + runtime.getConfig().getProtocol());
+                                        + ", traceSampleRatio="
+                                        + runtime.getConfig().getTraceSampleRatio()
+                                        + ", endpoint="
+                                        + runtime.getConfig().getEndpoint()
+                                        + ", protocol="
+                                        + runtime.getConfig().getProtocol());
             }
         };
     }
-
 }

@@ -23,8 +23,7 @@ public class GrpcClientExampleRunner implements ApplicationRunner {
     private final Environment environment;
 
     public GrpcClientExampleRunner(
-            @Qualifier("demoGrpcChannel") ManagedChannel demoGrpcChannel,
-            Environment environment) {
+            @Qualifier("demoGrpcChannel") ManagedChannel demoGrpcChannel, Environment environment) {
         this.demoGrpcChannel = demoGrpcChannel;
         this.environment = environment;
     }

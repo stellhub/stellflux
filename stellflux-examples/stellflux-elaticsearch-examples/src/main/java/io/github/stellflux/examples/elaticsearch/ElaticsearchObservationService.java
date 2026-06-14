@@ -86,9 +86,7 @@ public class ElaticsearchObservationService {
                 id,
                 () -> {
                     IndexRequest<Map<String, Object>> indexRequest =
-                            IndexRequest.of(
-                                    builder ->
-                                            builder.index(index).id(id).document(document));
+                            IndexRequest.of(builder -> builder.index(index).id(id).document(document));
                     IndexResponse response = elaticsearchClient.index(indexRequest);
                     Map<String, Object> payload = writeResponse(response);
                     payload.put("document", document);
@@ -132,8 +130,7 @@ public class ElaticsearchObservationService {
      * @param request 文档请求
      * @return 更新结果
      */
-    public Map<String, Object> update(
-            String index, String id, ElaticsearchDocumentRequest request) {
+    public Map<String, Object> update(String index, String id, ElaticsearchDocumentRequest request) {
         String effectiveIndex = normalizeIndex(index);
         String effectiveId = normalizeId(id);
         Map<String, Object> document = normalizeRequest(request).effectiveDocument();
@@ -144,10 +141,7 @@ public class ElaticsearchObservationService {
                 () -> {
                     UpdateRequest<Map, Map<String, Object>> updateRequest =
                             UpdateRequest.of(
-                                    builder ->
-                                            builder.index(effectiveIndex)
-                                                    .id(effectiveId)
-                                                    .doc(document));
+                                    builder -> builder.index(effectiveIndex).id(effectiveId).doc(document));
                     UpdateResponse<Map> response = elaticsearchClient.update(updateRequest, Map.class);
                     Map<String, Object> payload = writeResponse(response);
                     payload.put("document", document);
@@ -171,8 +165,7 @@ public class ElaticsearchObservationService {
                 effectiveId,
                 () -> {
                     DeleteRequest request =
-                            DeleteRequest.of(
-                                    builder -> builder.index(effectiveIndex).id(effectiveId));
+                            DeleteRequest.of(builder -> builder.index(effectiveIndex).id(effectiveId));
                     DeleteResponse response = elaticsearchClient.delete(request);
                     return writeResponse(response);
                 });
@@ -198,13 +191,10 @@ public class ElaticsearchObservationService {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("scenario", normalizedScenario);
-        response.put(
-                "create",
-                create(new ElaticsearchDocumentRequest(index, id, createDocument)));
+        response.put("create", create(new ElaticsearchDocumentRequest(index, id, createDocument)));
         response.put("get", get(index, id));
         response.put(
-                "update",
-                update(index, id, new ElaticsearchDocumentRequest(index, id, updateDocument)));
+                "update", update(index, id, new ElaticsearchDocumentRequest(index, id, updateDocument)));
         response.put("delete", delete(index, id));
         return response;
     }
@@ -289,8 +279,7 @@ public class ElaticsearchObservationService {
     }
 
     private String defaultIndex() {
-        return environment.getProperty(
-                "example.elaticsearch.index", "stellflux-elaticsearch-example");
+        return environment.getProperty("example.elaticsearch.index", "stellflux-elaticsearch-example");
     }
 
     private Map<String, Object> target() {

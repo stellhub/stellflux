@@ -5,7 +5,8 @@ import java.util.Map;
 import org.springframework.core.env.EnumerablePropertySource;
 
 /** Stellnula 配置中心 PropertySource。 */
-public class StellfluxStellnulaPropertySource extends EnumerablePropertySource<Map<String, Object>> {
+public class StellfluxStellnulaPropertySource
+        extends EnumerablePropertySource<Map<String, Object>> {
 
     private volatile Map<String, Object> properties;
 

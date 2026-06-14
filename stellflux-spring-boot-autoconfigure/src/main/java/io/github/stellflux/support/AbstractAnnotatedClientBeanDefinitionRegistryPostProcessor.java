@@ -28,7 +28,8 @@ import org.springframework.util.StringUtils;
  *
  * @param <A> 客户端注解类型
  */
-public abstract class AbstractAnnotatedClientBeanDefinitionRegistryPostProcessor<A extends Annotation>
+public abstract class AbstractAnnotatedClientBeanDefinitionRegistryPostProcessor<
+                A extends Annotation>
         implements BeanDefinitionRegistryPostProcessor,
                 PriorityOrdered,
                 BeanClassLoaderAware,

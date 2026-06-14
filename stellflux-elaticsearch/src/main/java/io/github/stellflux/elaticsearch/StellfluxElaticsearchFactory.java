@@ -36,7 +36,8 @@ public class StellfluxElaticsearchFactory {
     public RestClient createRestClient(StellfluxElaticsearchOptions options) {
         StellfluxElaticsearchOptions safeOptions = requireOptions(options);
         RestClientBuilder builder =
-                RestClient.builder(safeOptions.getEndpoints().stream().map(HttpHost::create).toArray(HttpHost[]::new));
+                RestClient.builder(
+                        safeOptions.getEndpoints().stream().map(HttpHost::create).toArray(HttpHost[]::new));
         if (hasText(safeOptions.getPathPrefix())) {
             builder.setPathPrefix(safeOptions.getPathPrefix());
         }
@@ -83,7 +84,8 @@ public class StellfluxElaticsearchFactory {
      */
     public ElasticsearchTransport createTransport(RestClient restClient) {
         return new RestClientTransport(
-                Objects.requireNonNull(restClient, "restClient must not be null"), new JacksonJsonpMapper());
+                Objects.requireNonNull(restClient, "restClient must not be null"),
+                new JacksonJsonpMapper());
     }
 
     /**
@@ -103,7 +105,8 @@ public class StellfluxElaticsearchFactory {
      * @return ElasticsearchAsyncClient
      */
     public ElasticsearchAsyncClient createElasticsearchAsyncClient(ElasticsearchTransport transport) {
-        return new ElasticsearchAsyncClient(Objects.requireNonNull(transport, "transport must not be null"));
+        return new ElasticsearchAsyncClient(
+                Objects.requireNonNull(transport, "transport must not be null"));
     }
 
     /**
@@ -145,16 +148,21 @@ public class StellfluxElaticsearchFactory {
         StellfluxElaticsearchOptions safeOptions =
                 Objects.requireNonNull(options, "options must not be null");
         List<String> endpoints = safeOptions.getEndpoints();
-        if (endpoints == null || endpoints.isEmpty() || endpoints.stream().noneMatch(StellfluxElaticsearchFactory::hasText)) {
+        if (endpoints == null
+                || endpoints.isEmpty()
+                || endpoints.stream().noneMatch(StellfluxElaticsearchFactory::hasText)) {
             throw new IllegalArgumentException("At least one Elaticsearch endpoint must be configured");
         }
-        safeOptions.setEndpoints(endpoints.stream().filter(StellfluxElaticsearchFactory::hasText).toList());
+        safeOptions.setEndpoints(
+                endpoints.stream().filter(StellfluxElaticsearchFactory::hasText).toList());
         return safeOptions;
     }
 
     private Header[] defaultHeaders(StellfluxElaticsearchOptions options) {
         if (hasText(options.getApiKey())) {
-            return new Header[] {new BasicHeader(HttpHeaders.AUTHORIZATION, "ApiKey " + options.getApiKey())};
+            return new Header[] {
+                new BasicHeader(HttpHeaders.AUTHORIZATION, "ApiKey " + options.getApiKey())
+            };
         }
         return new Header[0];
     }

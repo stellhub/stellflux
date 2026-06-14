@@ -1,9 +1,6 @@
 package io.github.stellflux.stellnula;
 
 import io.github.stellnula.config.StellnulaSubscription;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -12,8 +9,6 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 
 /** Stellnula 配置中心自动装配配置。 */
 @Getter
@@ -120,67 +115,23 @@ public class StellfluxStellnulaProperties {
     /** 注入 Spring Environment 的 PropertySource 名称。 */
     private String propertySourceName = "stellnula";
 
-    /**
-     * 转换为框架内部的 Stellnula 客户端配置。
-     *
-     * @param environment Spring 环境
-     * @return Stellnula 客户端配置
-     */
-    public StellfluxStellnulaClientOptions toOptions(Environment environment) {
-        String resolvedHostName = defaultText(this.hostName, resolveHostName());
-        String resolvedAppId =
-                defaultText(
-                        this.appId,
-                        environment.getProperty("spring.application.name", "default-app"));
-        String resolvedClientId =
-                defaultText(this.clientId, resolvedAppId + "-" + resolvedHostName);
-        StellfluxStellnulaClientOptions options = new StellfluxStellnulaClientOptions();
-        options.setEndpoint(URI.create(this.endpoint));
-        if (StringUtils.hasText(this.grpcEndpoint)) {
-            options.setGrpcEndpoint(URI.create(this.grpcEndpoint));
-        }
-        options.setGrpcPlaintext(this.grpcPlaintext);
-        options.setApiToken(this.apiToken);
-        options.setApiVersion(this.apiVersion);
-        options.setSdkVersion(this.sdkVersion);
-        options.setAppId(resolvedAppId);
-        options.setClientId(resolvedClientId);
-        options.setEnv(this.env);
-        options.setRegion(this.region);
-        options.setZone(this.zone);
-        options.setCluster(this.cluster);
-        options.setNamespace(this.namespace);
-        options.setGroup(this.group);
-        options.setClientIp(this.clientIp);
-        options.setHostName(resolvedHostName);
-        options.setLabels(new LinkedHashMap<>(this.labels));
-        options.setSubscriptions(this.subscriptions.stream().map(SubscriptionProperties::toSubscription).toList());
-        options.setSnapshotFile(this.snapshotFile);
-        options.setRequestTimeout(this.requestTimeout);
-        options.setWatchTimeout(this.watchTimeout);
-        options.setRetryDelay(this.retryDelay);
-        options.setServerRefreshInterval(this.serverRefreshInterval);
-        options.setServerFailureCooldown(this.serverFailureCooldown);
-        options.setGrpcShutdownTimeout(this.grpcShutdownTimeout);
-        options.setWatchEnabled(this.watchEnabled);
-        options.setFailFastOnBootstrap(this.failFastOnBootstrap);
-        options.setPageSize(this.pageSize);
-        options.setMaxPayloadBytes(this.maxPayloadBytes);
-        options.setAcceptLargeFileReference(this.acceptLargeFileReference);
-        return options;
-    }
+    /** 动态访问令牌提供器 Bean 名称。 */
+    private String tokenProviderBeanName;
 
-    private String resolveHostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException ex) {
-            return "localhost";
-        }
-    }
+    /** 服务端选择器 Bean 名称。 */
+    private String serverSelectorBeanName;
 
-    private String defaultText(String value, String defaultValue) {
-        return StringUtils.hasText(value) ? value : defaultValue;
-    }
+    /** OpenTelemetry Bean 名称。 */
+    private String openTelemetryBeanName;
+
+    /** 自定义 OkHttpClient Bean 名称。 */
+    private String httpClientBeanName;
+
+    /** watch 执行器 Bean 名称。 */
+    private String watchExecutorBeanName;
+
+    /** 配置监听执行器 Bean 名称。 */
+    private String listenerExecutorBeanName;
 
     /** Stellnula 配置订阅配置。 */
     @Getter

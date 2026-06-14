@@ -29,9 +29,12 @@ public class GreeterRpcService extends GreeterServiceGrpc.GreeterServiceImplBase
         LOGGER.info(
                 () ->
                         "Handling greeter request"
-                                + ", name=" + request.getName()
-                                + ", clientName=" + clientName
-                                + ", requestId=" + requestId);
+                                + ", name="
+                                + request.getName()
+                                + ", clientName="
+                                + clientName
+                                + ", requestId="
+                                + requestId);
         HelloReply reply =
                 HelloReply.newBuilder()
                         .setMessage(

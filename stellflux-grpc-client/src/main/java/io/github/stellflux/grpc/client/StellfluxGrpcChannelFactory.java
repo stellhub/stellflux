@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 /** Factory for building gRPC channels. */
 public class StellfluxGrpcChannelFactory {
 
-    private static final Logger LOGGER = Logger.getLogger(StellfluxGrpcChannelFactory.class.getName());
+    private static final Logger LOGGER =
+            Logger.getLogger(StellfluxGrpcChannelFactory.class.getName());
 
     private final List<StellfluxGrpcClientInterceptor> interceptors;
 
@@ -60,8 +61,7 @@ public class StellfluxGrpcChannelFactory {
      */
     List<ClientInterceptor> resolveInterceptors(
             StellfluxGrpcClientOptions options, ResolvedGrpcTarget target) {
-        StellfluxGrpcClientInterceptorContext context =
-                createInterceptorContext(options, target);
+        StellfluxGrpcClientInterceptorContext context = createInterceptorContext(options, target);
         return this.interceptors.stream()
                 .filter(interceptor -> interceptor.supports(context))
                 .map(interceptor -> interceptor.createInterceptor(context))
@@ -127,18 +127,32 @@ public class StellfluxGrpcChannelFactory {
                         : options.getLoadBalancerRequest();
         String mode = isDirectMode(options) ? "direct" : "discovery";
         return "Initialized StellfluxGrpcChannel"
-                + " mode=" + mode
-                + ", serviceId=" + safeText(options.getServiceId())
-                + ", namespace=" + safeText(options.getNamespace())
-                + ", directHost=" + safeText(options.getHost())
-                + ", directPort=" + options.getPort()
-                + ", resolvedTarget=" + target.host() + ":" + target.port()
-                + ", plaintext=" + options.isPlaintext()
-                + ", loadBalancer=" + resolveLoadBalancer(options)
-                + ", supplier=" + resolveSupplier(options)
-                + ", requestHashKey=" + safeText(defaultRequest.getHashKey())
-                + ", requestAttributes=" + formatAttributes(defaultRequest.getAttributes())
-                + ", interceptors=" + this.interceptors.size();
+                + " mode="
+                + mode
+                + ", serviceId="
+                + safeText(options.getServiceId())
+                + ", namespace="
+                + safeText(options.getNamespace())
+                + ", directHost="
+                + safeText(options.getHost())
+                + ", directPort="
+                + options.getPort()
+                + ", resolvedTarget="
+                + target.host()
+                + ":"
+                + target.port()
+                + ", plaintext="
+                + options.isPlaintext()
+                + ", loadBalancer="
+                + resolveLoadBalancer(options)
+                + ", supplier="
+                + resolveSupplier(options)
+                + ", requestHashKey="
+                + safeText(defaultRequest.getHashKey())
+                + ", requestAttributes="
+                + formatAttributes(defaultRequest.getAttributes())
+                + ", interceptors="
+                + this.interceptors.size();
     }
 
     private String resolveLoadBalancer(StellfluxGrpcClientOptions options) {

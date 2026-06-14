@@ -1,7 +1,7 @@
 package io.github.stellflux.grpc.client;
 
-import io.grpc.ClientInterceptor;
 import io.github.stellflux.metrics.StellfluxModuleInfoMeter;
+import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.ArrayList;
@@ -63,22 +63,23 @@ public class StellfluxGrpcClientAutoConfiguration {
     public SmartInitializingSingleton stellfluxGrpcClientStarterStartupLogger(
             StellfluxGrpcClientProperties properties,
             ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
-        return () ->
-                {
-                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
-                    if (moduleInfoMeter != null) {
-                        moduleInfoMeter.registerModule(
-                                "stellflux-grpc-client", StellfluxGrpcChannelFactory.class);
-                    }
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-grpc-client started successfully"
-                                            + ", configuredClients=" + properties.getClients().size()
-                                            + ", clients=" + summarizeClients(properties.getClients()));
-                };
+        return () -> {
+            StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+            if (moduleInfoMeter != null) {
+                moduleInfoMeter.registerModule("stellflux-grpc-client", StellfluxGrpcChannelFactory.class);
+            }
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-grpc-client started successfully"
+                                    + ", configuredClients="
+                                    + properties.getClients().size()
+                                    + ", clients="
+                                    + summarizeClients(properties.getClients()));
+        };
     }
 
-    private String summarizeClients(Map<String, StellfluxGrpcClientProperties.ClientProperties> clients) {
+    private String summarizeClients(
+            Map<String, StellfluxGrpcClientProperties.ClientProperties> clients) {
         if (clients == null || clients.isEmpty()) {
             return "{}";
         }
@@ -87,12 +88,18 @@ public class StellfluxGrpcClientAutoConfiguration {
                 (serviceId, client) ->
                         joiner.add(
                                 serviceId
-                                        + "={mode=" + resolveMode(client.getHost(), client.getPort())
-                                        + ", namespace=" + safeText(client.getNamespace())
-                                        + ", host=" + safeText(client.getHost())
-                                        + ", port=" + client.getPort()
-                                        + ", plaintext=" + client.isPlaintext()
-                                        + ", loadBalancer=" + client.getLoadBalancer()
+                                        + "={mode="
+                                        + resolveMode(client.getHost(), client.getPort())
+                                        + ", namespace="
+                                        + safeText(client.getNamespace())
+                                        + ", host="
+                                        + safeText(client.getHost())
+                                        + ", port="
+                                        + client.getPort()
+                                        + ", plaintext="
+                                        + client.isPlaintext()
+                                        + ", loadBalancer="
+                                        + client.getLoadBalancer()
                                         + "}"));
         return joiner.toString();
     }
@@ -110,8 +117,11 @@ public class StellfluxGrpcClientAutoConfiguration {
             ObjectProvider<ClientInterceptor> nativeInterceptors) {
         List<StellfluxGrpcClientInterceptor> merged = new ArrayList<>();
         merged.addAll(interceptors.orderedStream().toList());
-        nativeInterceptors.orderedStream()
-                .map(interceptor -> new NativeGrpcClientInterceptorAdapter(interceptor, resolveOrder(interceptor)))
+        nativeInterceptors
+                .orderedStream()
+                .map(
+                        interceptor ->
+                                new NativeGrpcClientInterceptorAdapter(interceptor, resolveOrder(interceptor)))
                 .forEach(merged::add);
         merged.sort(Comparator.comparingInt(StellfluxGrpcClientInterceptor::getOrder));
         return List.copyOf(merged);

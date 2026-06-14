@@ -14,7 +14,7 @@ public class StellfluxStellflowExampleApplication {
      */
     public static void main(String[] args) {
         // only for local mode
-//        System.setProperty("log.stdout", "true");
+        //        System.setProperty("log.stdout", "true");
         SpringApplication.run(StellfluxStellflowExampleApplication.class, args);
     }
 }

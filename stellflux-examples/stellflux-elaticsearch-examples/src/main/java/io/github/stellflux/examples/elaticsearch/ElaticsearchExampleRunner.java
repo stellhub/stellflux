@@ -11,8 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ElaticsearchExampleRunner implements ApplicationRunner {
 
-    private static final Logger LOGGER =
-            Logger.getLogger(ElaticsearchExampleRunner.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ElaticsearchExampleRunner.class.getName());
 
     private final ElaticsearchObservationService observationService;
     private final Environment environment;
@@ -33,8 +32,7 @@ public class ElaticsearchExampleRunner implements ApplicationRunner {
         LOGGER.info(() -> "Prepared Elaticsearch example status=" + observationService.status());
 
         boolean invokeOnStartup =
-                environment.getProperty(
-                        "example.elaticsearch.invoke-on-startup", Boolean.class, false);
+                environment.getProperty("example.elaticsearch.invoke-on-startup", Boolean.class, false);
         if (!invokeOnStartup) {
             return;
         }

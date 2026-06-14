@@ -83,11 +83,6 @@ public class StellfluxLoggerFactory {
             StellfluxOpenTelemetryConfig config) {
         return new StellfluxLogger(
                 instrumentationScopeName,
-                createAppender(
-                        openTelemetry,
-                        instrumentationScopeName,
-                        artifactId,
-                        anchorClass,
-                        config));
+                createAppender(openTelemetry, instrumentationScopeName, artifactId, anchorClass, config));
     }
 }

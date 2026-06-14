@@ -22,12 +22,14 @@ final class StellfluxJdbcProxyFactory {
      * @return 连接代理
      */
     static Connection wrapConnection(Connection connection, StellfluxDataSourceTelemetry telemetry) {
-        return proxy(Connection.class, connection, new ConnectionInvocationHandler(connection, telemetry));
+        return proxy(
+                Connection.class, connection, new ConnectionInvocationHandler(connection, telemetry));
     }
 
     private static Statement wrapStatement(
             Statement statement, StellfluxDataSourceTelemetry telemetry, String sql) {
-        return proxy(Statement.class, statement, new StatementInvocationHandler(statement, telemetry, sql));
+        return proxy(
+                Statement.class, statement, new StatementInvocationHandler(statement, telemetry, sql));
     }
 
     private static PreparedStatement wrapPreparedStatement(
@@ -120,11 +122,13 @@ final class StellfluxJdbcProxyFactory {
             }
             if ("prepareStatement".equals(methodName)) {
                 String sql = firstSql(args);
-                return wrapPreparedStatement((PreparedStatement) invokeDelegate(method, args), telemetry, sql);
+                return wrapPreparedStatement(
+                        (PreparedStatement) invokeDelegate(method, args), telemetry, sql);
             }
             if ("prepareCall".equals(methodName)) {
                 String sql = firstSql(args);
-                return wrapCallableStatement((CallableStatement) invokeDelegate(method, args), telemetry, sql);
+                return wrapCallableStatement(
+                        (CallableStatement) invokeDelegate(method, args), telemetry, sql);
             }
             return super.invoke(proxy, method, args);
         }

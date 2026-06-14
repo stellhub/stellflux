@@ -20,8 +20,6 @@ public class StellfluxStellflowStarterAutoConfiguration {
     @Bean("stellfluxStellflowStarterStartupLogger")
     public SmartInitializingSingleton stellfluxStellflowStarterStartupLogger() {
         return () ->
-                LOGGER.info(
-                        () ->
-                                "Starter stellflux-spring-boot-starter-stellflow started successfully");
+                LOGGER.info(() -> "Starter stellflux-spring-boot-starter-stellflow started successfully");
     }
 }

@@ -19,7 +19,11 @@ import org.springframework.context.annotation.Bean;
 
 /** Elaticsearch auto configuration. */
 @AutoConfiguration(after = StellfluxOpenTelemetryAutoConfiguration.class)
-@ConditionalOnClass({ElasticsearchClient.class, RestClient.class, StellfluxElaticsearchFactory.class})
+@ConditionalOnClass({
+    ElasticsearchClient.class,
+    RestClient.class,
+    StellfluxElaticsearchFactory.class
+})
 @ConditionalOnBean(OpenTelemetry.class)
 @EnableConfigurationProperties(StellfluxElaticsearchProperties.class)
 public class StellfluxElaticsearchAutoConfiguration {

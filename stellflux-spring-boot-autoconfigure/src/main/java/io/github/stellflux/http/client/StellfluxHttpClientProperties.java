@@ -46,7 +46,8 @@ public class StellfluxHttpClientProperties {
      * @param annotationOptions 注解生成的配置
      * @return 合并后的 HTTP 客户端配置
      */
-    public StellfluxHttpClientOptions mergeAnnotatedOptions(StellfluxHttpClientOptions annotationOptions) {
+    public StellfluxHttpClientOptions mergeAnnotatedOptions(
+            StellfluxHttpClientOptions annotationOptions) {
         StellfluxHttpClientOptions merged = new StellfluxHttpClientOptions();
         String serviceId = annotationOptions == null ? null : annotationOptions.getServiceId();
         if (StringUtils.hasText(serviceId)) {

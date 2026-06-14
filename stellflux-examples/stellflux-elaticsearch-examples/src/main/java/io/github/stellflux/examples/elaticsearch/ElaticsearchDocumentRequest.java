@@ -4,8 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Elaticsearch 文档 CRUD 请求。 */
-public record ElaticsearchDocumentRequest(
-        String index, String id, Map<String, Object> document) {
+public record ElaticsearchDocumentRequest(String index, String id, Map<String, Object> document) {
 
     /**
      * 返回有效索引名称。

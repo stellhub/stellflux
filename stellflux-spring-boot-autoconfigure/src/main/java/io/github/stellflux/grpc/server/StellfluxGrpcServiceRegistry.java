@@ -1,8 +1,8 @@
 package io.github.stellflux.grpc.server;
 
+import io.github.stellflux.grpc.server.annotation.RpcService;
 import io.grpc.BindableService;
 import io.grpc.ServerServiceDefinition;
-import io.github.stellflux.grpc.server.annotation.RpcService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,12 +54,7 @@ public class StellfluxGrpcServiceRegistry {
                     int order = annotation != null ? annotation.order() : Integer.MAX_VALUE;
                     registrations.add(
                             new StellfluxGrpcServiceRegistration(
-                                    beanName,
-                                    grpcServiceName,
-                                    serviceId,
-                                    order,
-                                    bindableService,
-                                    serviceDefinition));
+                                    beanName, grpcServiceName, serviceId, order, bindableService, serviceDefinition));
                 });
         registrations.sort(
                 Comparator.comparingInt(StellfluxGrpcServiceRegistration::order)
@@ -90,9 +85,12 @@ public class StellfluxGrpcServiceRegistry {
         this.registrations.forEach(
                 registration ->
                         joiner.add(
-                                "{beanName=" + registration.beanName()
-                                        + ", grpcService=" + registration.grpcServiceName()
-                                        + ", registrationServiceId=" + registration.serviceId()
+                                "{beanName="
+                                        + registration.beanName()
+                                        + ", grpcService="
+                                        + registration.grpcServiceName()
+                                        + ", registrationServiceId="
+                                        + registration.serviceId()
                                         + "}"));
         return joiner.toString();
     }

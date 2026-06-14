@@ -14,6 +14,7 @@ import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.BeanExpressionException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.beans.factory.config.BeanExpressionResolver;
@@ -28,6 +29,7 @@ import org.springframework.util.ReflectionUtils;
 public class StellfluxValueRefreshPostProcessor
         implements DestructionAwareBeanPostProcessor,
                 BeanFactoryAware,
+                SmartInitializingSingleton,
                 ApplicationListener<StellfluxStellnulaConfigChangeEvent> {
 
     private static final Logger LOGGER =
@@ -67,10 +69,20 @@ public class StellfluxValueRefreshPostProcessor
     }
 
     @Override
+    public void afterSingletonsInstantiated() {
+        refreshValueTargets("Stellnula initial Environment refresh");
+    }
+
+    @Override
     public void onApplicationEvent(StellfluxStellnulaConfigChangeEvent event) {
+        refreshValueTargets("Stellnula config change revision " + event.getRevision());
+    }
+
+    private void refreshValueTargets(String reason) {
         if (this.beanFactory == null || this.valueTargets.isEmpty()) {
             return;
         }
+        LOGGER.fine(() -> reason + ", valueTargetBeans=" + this.valueTargets.size());
         this.valueTargets.values().forEach(targets -> targets.forEach(ValueTarget::refresh));
     }
 
@@ -137,9 +149,7 @@ public class StellfluxValueRefreshPostProcessor
                 update(resolveValue(this.expression));
             } catch (BeanExpressionException | IllegalArgumentException | IllegalAccessException ex) {
                 LOGGER.log(
-                        Level.WARNING,
-                        ex,
-                        () -> "Failed to refresh @Value target for bean " + this.beanName);
+                        Level.WARNING, ex, () -> "Failed to refresh @Value target for bean " + this.beanName);
             }
         }
 

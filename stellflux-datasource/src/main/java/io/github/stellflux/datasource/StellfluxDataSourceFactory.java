@@ -54,7 +54,8 @@ public class StellfluxDataSourceFactory {
      * @param options DataSource 配置
      * @return 带 telemetry 的 DataSource
      */
-    public DataSource createTelemetryDataSource(DataSource delegate, StellfluxDataSourceOptions options) {
+    public DataSource createTelemetryDataSource(
+            DataSource delegate, StellfluxDataSourceOptions options) {
         return new StellfluxTelemetryDataSource(delegate, openTelemetry, options);
     }
 }

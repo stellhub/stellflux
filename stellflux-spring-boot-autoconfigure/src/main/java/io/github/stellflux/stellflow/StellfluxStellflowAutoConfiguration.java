@@ -43,8 +43,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.StringUtils;
@@ -222,9 +222,7 @@ public class StellfluxStellflowAutoConfiguration {
             ObjectProvider<StellflowAdminClient> adminClientProvider,
             ObjectProvider<StellflowProducerInterceptor> interceptors) {
         StellflowAdminClient adminClient =
-                properties.getProducer().hasTopicConfigs()
-                        ? adminClientProvider.getIfAvailable()
-                        : null;
+                properties.getProducer().hasTopicConfigs() ? adminClientProvider.getIfAvailable() : null;
         return new StellflowTemplate(
                 producer,
                 adminClient,

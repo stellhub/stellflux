@@ -14,8 +14,8 @@ import io.grpc.MethodDescriptor;
 import io.opentelemetry.api.OpenTelemetry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.FilteredClassLoader;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -64,21 +64,16 @@ class StellfluxGrpcClientAutoConfigurationTest {
                             java.util.List<ClientInterceptor> interceptors =
                                     factory.resolveInterceptors(
                                             options,
-                                            new StellfluxGrpcChannelFactory.ResolvedGrpcTarget(
-                                                    "127.0.0.1", 9000));
+                                            new StellfluxGrpcChannelFactory.ResolvedGrpcTarget("127.0.0.1", 9000));
 
                             assertEquals(3, interceptors.size());
-                            assertInstanceOf(
-                                    StellfluxGrpcClientTelemetryInterceptor.class,
-                                    interceptors.get(0));
+                            assertInstanceOf(StellfluxGrpcClientTelemetryInterceptor.class, interceptors.get(0));
                             assertEquals(
                                     "native",
-                                    assertInstanceOf(NamedClientInterceptor.class, interceptors.get(1))
-                                            .name());
+                                    assertInstanceOf(NamedClientInterceptor.class, interceptors.get(1)).name());
                             assertEquals(
                                     "custom",
-                                    assertInstanceOf(NamedClientInterceptor.class, interceptors.get(2))
-                                            .name());
+                                    assertInstanceOf(NamedClientInterceptor.class, interceptors.get(2)).name());
                         });
     }
 
@@ -94,8 +89,7 @@ class StellfluxGrpcClientAutoConfigurationTest {
                 }
 
                 @Override
-                public ClientInterceptor createInterceptor(
-                        StellfluxGrpcClientInterceptorContext context) {
+                public ClientInterceptor createInterceptor(StellfluxGrpcClientInterceptorContext context) {
                     return new NamedClientInterceptor("custom");
                 }
             };

@@ -1,7 +1,7 @@
 package io.github.stellflux.stellmap;
 
-import io.github.stellflux.grpc.server.StellfluxGrpcServiceRegistry;
 import io.github.stellflux.grpc.server.StellfluxGrpcServerProperties;
+import io.github.stellflux.grpc.server.StellfluxGrpcServiceRegistry;
 import io.github.stellflux.http.server.StellfluxHttpServerProperties;
 import io.github.stellflux.loadbalancer.StellfluxLoadBalancer;
 import io.github.stellflux.loadbalancer.StellfluxLoadBalancers;
@@ -11,12 +11,12 @@ import io.github.stellflux.opentelemetry.StellfluxOpenTelemetryAutoConfiguration
 import io.github.stellflux.stellmap.registration.StellfluxGrpcServiceStellMapRegistrationLifecycle;
 import io.github.stellflux.stellmap.registration.StellfluxHttpServerStellMapRegistrationLifecycle;
 import io.github.stellmap.StellMapClient;
-import io.opentelemetry.api.OpenTelemetry;
 import io.grpc.Server;
-import java.util.logging.Logger;
+import io.opentelemetry.api.OpenTelemetry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -36,7 +36,9 @@ import org.springframework.util.StringUtils;
 /** StellMap 自动装配。 */
 @AutoConfiguration(after = StellfluxOpenTelemetryAutoConfiguration.class)
 @ConditionalOnClass({
-    StellMapClient.class, StellfluxStellMapClientFactory.class, StellfluxStellMapClientOptions.class
+    StellMapClient.class,
+    StellfluxStellMapClientFactory.class,
+    StellfluxStellMapClientOptions.class
 })
 @Import({
     StellfluxStellMapAutoConfiguration.LoadBalancerConfiguration.class,
@@ -177,14 +179,22 @@ public class StellfluxStellMapAutoConfiguration {
                 LOGGER.info(
                         () ->
                                 "Starter stellflux-spring-boot-starter-stellmap started successfully"
-                                        + ", enabled=" + properties.isEnabled()
-                                        + ", baseUrl=" + safeText(properties.getBaseUrl())
-                                        + ", namespace=" + safeText(properties.getDiscovery().getNamespace())
-                                        + ", loadBalancer=" + properties.getDiscovery().getLoadBalancer()
-                                        + ", requestTimeout=" + properties.getRequestTimeout()
-                                        + ", followLeaderRedirect=" + properties.isFollowLeaderRedirect()
-                                        + ", maxLeaderRedirects=" + properties.getMaxLeaderRedirects()
-                                        + ", watchAutoReconnect=" + properties.isWatchAutoReconnect()
+                                        + ", enabled="
+                                        + properties.isEnabled()
+                                        + ", baseUrl="
+                                        + safeText(properties.getBaseUrl())
+                                        + ", namespace="
+                                        + safeText(properties.getDiscovery().getNamespace())
+                                        + ", loadBalancer="
+                                        + properties.getDiscovery().getLoadBalancer()
+                                        + ", requestTimeout="
+                                        + properties.getRequestTimeout()
+                                        + ", followLeaderRedirect="
+                                        + properties.isFollowLeaderRedirect()
+                                        + ", maxLeaderRedirects="
+                                        + properties.getMaxLeaderRedirects()
+                                        + ", watchAutoReconnect="
+                                        + properties.isWatchAutoReconnect()
                                         + ", watchReconnectInitialDelay="
                                         + properties.getWatchReconnectInitialDelay()
                                         + ", watchReconnectMaxDelay="
@@ -243,7 +253,9 @@ public class StellfluxStellMapAutoConfiguration {
     /** StellMap discovery 负载均衡自动装配。 */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass({
-        StellfluxLoadBalancer.class, StellfluxLoadBalancers.class, StellfluxServiceInstance.class
+        StellfluxLoadBalancer.class,
+        StellfluxLoadBalancers.class,
+        StellfluxServiceInstance.class
     })
     static class LoadBalancerConfiguration {
 

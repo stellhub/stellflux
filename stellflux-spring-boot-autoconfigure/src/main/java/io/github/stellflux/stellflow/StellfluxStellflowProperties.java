@@ -127,8 +127,7 @@ public class StellfluxStellflowProperties {
          */
         public int resolveAutoCreateTopicPartitionCount(String topic) {
             ProducerTopicProperties topicProperties = topicConfigs.get(topic);
-            if (topicProperties != null
-                    && topicProperties.getAutoCreateTopicPartitionCount() != null) {
+            if (topicProperties != null && topicProperties.getAutoCreateTopicPartitionCount() != null) {
                 return topicProperties.getAutoCreateTopicPartitionCount();
             }
             return autoCreateTopicPartitionCount;

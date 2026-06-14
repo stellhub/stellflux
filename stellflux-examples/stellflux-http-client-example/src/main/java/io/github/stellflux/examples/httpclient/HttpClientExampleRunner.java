@@ -23,8 +23,7 @@ public class HttpClientExampleRunner implements ApplicationRunner {
     private final Environment environment;
 
     public HttpClientExampleRunner(
-            @Qualifier("demoHttpClient") StellfluxHttpClient demoHttpClient,
-            Environment environment) {
+            @Qualifier("demoHttpClient") StellfluxHttpClient demoHttpClient, Environment environment) {
         this.demoHttpClient = demoHttpClient;
         this.environment = environment;
     }

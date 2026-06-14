@@ -17,8 +17,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -129,13 +129,16 @@ class StellfluxStellflowAutoConfigurationCoexistenceTest {
                                     .containsExactly("orders.created", "orders.paid", "orders.audit");
                             assertThat(properties.getProducer().resolveAutoCreateTopics("orders.created"))
                                     .isTrue();
-                            assertThat(properties.getProducer().resolveAutoCreateTopicPartitionCount("orders.created"))
+                            assertThat(
+                                            properties
+                                                    .getProducer()
+                                                    .resolveAutoCreateTopicPartitionCount("orders.created"))
                                     .isEqualTo(5);
                             assertThat(properties.getProducer().resolveAutoCreateTopics("orders.audit"))
                                     .isFalse();
-                            assertThat(properties.getProducer().resolveAutoCreateTopics("orders.paid"))
-                                    .isTrue();
-                            assertThat(properties.getProducer().resolveAutoCreateTopicPartitionCount("orders.paid"))
+                            assertThat(properties.getProducer().resolveAutoCreateTopics("orders.paid")).isTrue();
+                            assertThat(
+                                            properties.getProducer().resolveAutoCreateTopicPartitionCount("orders.paid"))
                                     .isEqualTo(3);
                             assertThat(properties.getConsumer().effectiveTopics())
                                     .containsExactly("orders.created", "orders.cancelled");
@@ -164,11 +167,11 @@ class StellfluxStellflowAutoConfigurationCoexistenceTest {
         contextRunner
                 .withInitializer(
                         context -> {
-                            Resource resource =
-                                    new ClassPathResource("stellflow-key-only-topic-config.yaml");
+                            Resource resource = new ClassPathResource("stellflow-key-only-topic-config.yaml");
                             YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
                             try {
-                                loader.load("stellflow-key-only-topic-config", resource)
+                                loader
+                                        .load("stellflow-key-only-topic-config", resource)
                                         .forEach(context.getEnvironment().getPropertySources()::addLast);
                             } catch (IOException exception) {
                                 throw new IllegalStateException("Failed to load test yaml", exception);

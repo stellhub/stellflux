@@ -76,23 +76,40 @@ public class StellfluxHttpClientFactory {
             StellfluxHttpClientOptions options, StellfluxLoadBalancerRequest defaultRequest) {
         String mode = isDirectMode(options) ? "direct" : "discovery";
         return "Initialized StellfluxHttpClient"
-                + " mode=" + mode
-                + ", serviceId=" + safeText(options.getServiceId())
-                + ", namespace=" + safeText(options.getNamespace())
-                + ", baseUrl=" + safeText(options.getBaseUrl())
-                + ", loadBalancer=" + resolveLoadBalancer(options)
-                + ", supplier=" + resolveSupplier(options)
-                + ", requestHashKey=" + safeText(defaultRequest.getHashKey())
-                + ", requestAttributes=" + formatAttributes(defaultRequest.getAttributes())
-                + ", connectTimeoutMillis=" + options.getConnectTimeoutMillis()
-                + ", readTimeoutMillis=" + options.getReadTimeoutMillis()
-                + ", writeTimeoutMillis=" + options.getWriteTimeoutMillis()
-                + ", callTimeoutMillis=" + options.getCallTimeoutMillis()
-                + ", pingIntervalMillis=" + options.getPingIntervalMillis()
-                + ", retryOnConnectionFailure=" + options.isRetryOnConnectionFailure()
-                + ", followRedirects=" + options.isFollowRedirects()
-                + ", followSslRedirects=" + options.isFollowSslRedirects()
-                + ", telemetryEnabled=" + (this.openTelemetry != null);
+                + " mode="
+                + mode
+                + ", serviceId="
+                + safeText(options.getServiceId())
+                + ", namespace="
+                + safeText(options.getNamespace())
+                + ", baseUrl="
+                + safeText(options.getBaseUrl())
+                + ", loadBalancer="
+                + resolveLoadBalancer(options)
+                + ", supplier="
+                + resolveSupplier(options)
+                + ", requestHashKey="
+                + safeText(defaultRequest.getHashKey())
+                + ", requestAttributes="
+                + formatAttributes(defaultRequest.getAttributes())
+                + ", connectTimeoutMillis="
+                + options.getConnectTimeoutMillis()
+                + ", readTimeoutMillis="
+                + options.getReadTimeoutMillis()
+                + ", writeTimeoutMillis="
+                + options.getWriteTimeoutMillis()
+                + ", callTimeoutMillis="
+                + options.getCallTimeoutMillis()
+                + ", pingIntervalMillis="
+                + options.getPingIntervalMillis()
+                + ", retryOnConnectionFailure="
+                + options.isRetryOnConnectionFailure()
+                + ", followRedirects="
+                + options.isFollowRedirects()
+                + ", followSslRedirects="
+                + options.isFollowSslRedirects()
+                + ", telemetryEnabled="
+                + (this.openTelemetry != null);
     }
 
     private boolean isDirectMode(StellfluxHttpClientOptions options) {

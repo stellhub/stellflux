@@ -72,7 +72,11 @@ public class StellfluxCaffeineTelemetry implements AutoCloseable {
         Objects.requireNonNull(openTelemetryConfig, "openTelemetryConfig must not be null");
         this.tracer =
                 new StellfluxTracerFactory()
-                        .create(openTelemetry, INSTRUMENTATION_SCOPE, ARTIFACT_ID, StellfluxCaffeineTelemetry.class);
+                        .create(
+                                openTelemetry,
+                                INSTRUMENTATION_SCOPE,
+                                ARTIFACT_ID,
+                                StellfluxCaffeineTelemetry.class);
         this.logger =
                 new StellfluxLoggerFactory()
                         .createLogger(
@@ -83,7 +87,11 @@ public class StellfluxCaffeineTelemetry implements AutoCloseable {
                                 openTelemetryConfig);
         Meter meter =
                 new StellfluxMeterFactory()
-                        .create(openTelemetry, INSTRUMENTATION_SCOPE, ARTIFACT_ID, StellfluxCaffeineTelemetry.class);
+                        .create(
+                                openTelemetry,
+                                INSTRUMENTATION_SCOPE,
+                                ARTIFACT_ID,
+                                StellfluxCaffeineTelemetry.class);
         StellfluxMeterFactory meterFactory = new StellfluxMeterFactory();
         this.operationCounter =
                 meterFactory.createCounter(
@@ -101,15 +109,15 @@ public class StellfluxCaffeineTelemetry implements AutoCloseable {
                 meterFactory.createHistogram(
                         meter, "caffeine_cache_operation_duration", "ms", "Caffeine cache operation duration.");
         this.cacheSizeGauge =
-                meter.gaugeBuilder("caffeine_cache_size")
+                meter
+                        .gaugeBuilder("caffeine_cache_size")
                         .ofLongs()
                         .setDescription("Caffeine cache estimated size.")
                         .buildWithCallback(
                                 measurement ->
                                         observedCaches.forEach(
                                                 (name, cache) ->
-                                                        measurement.record(
-                                                                cache.estimatedSize(), cacheAttributes(name))));
+                                                        measurement.record(cache.estimatedSize(), cacheAttributes(name))));
     }
 
     /**

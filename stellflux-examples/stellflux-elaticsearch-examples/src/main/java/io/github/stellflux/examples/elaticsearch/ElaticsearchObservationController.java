@@ -39,7 +39,8 @@ public class ElaticsearchObservationController {
      * @return 写入结果
      */
     @PostMapping("/documents")
-    public Map<String, Object> create(@RequestBody(required = false) ElaticsearchDocumentRequest request) {
+    public Map<String, Object> create(
+            @RequestBody(required = false) ElaticsearchDocumentRequest request) {
         return observationService.create(request);
     }
 

@@ -72,11 +72,7 @@ public class StellfluxCaffeineCache<K, V> {
      * @param value 缓存值
      */
     public void put(K key, V value) {
-        telemetry.observeVoid(
-                cacheName,
-                "put",
-                key,
-                () -> delegate.put(key, value));
+        telemetry.observeVoid(cacheName, "put", key, () -> delegate.put(key, value));
     }
 
     /**

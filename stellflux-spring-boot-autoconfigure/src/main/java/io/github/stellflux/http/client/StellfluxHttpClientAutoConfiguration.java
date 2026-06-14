@@ -5,9 +5,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.logging.Logger;
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
-import okhttp3.OkHttpClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,7 +16,11 @@ import org.springframework.context.annotation.Bean;
 
 /** HTTP client auto configuration. */
 @AutoConfiguration
-@ConditionalOnClass({OkHttpClient.class, StellfluxHttpClient.class, StellfluxHttpClientFactory.class})
+@ConditionalOnClass({
+    OkHttpClient.class,
+    StellfluxHttpClient.class,
+    StellfluxHttpClientFactory.class
+})
 @EnableConfigurationProperties(StellfluxHttpClientProperties.class)
 public class StellfluxHttpClientAutoConfiguration {
 
@@ -55,22 +59,23 @@ public class StellfluxHttpClientAutoConfiguration {
     public SmartInitializingSingleton stellfluxHttpClientStarterStartupLogger(
             StellfluxHttpClientProperties properties,
             ObjectProvider<StellfluxModuleInfoMeter> moduleInfoMeterProvider) {
-        return () ->
-                {
-                    StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
-                    if (moduleInfoMeter != null) {
-                        moduleInfoMeter.registerModule(
-                                "stellflux-http-client", StellfluxHttpClientFactory.class);
-                    }
-                    LOGGER.info(
-                            () ->
-                                    "Starter stellflux-spring-boot-starter-http-client started successfully"
-                                            + ", configuredClients=" + properties.getClients().size()
-                                            + ", clients=" + summarizeClients(properties.getClients()));
-                };
+        return () -> {
+            StellfluxModuleInfoMeter moduleInfoMeter = moduleInfoMeterProvider.getIfAvailable();
+            if (moduleInfoMeter != null) {
+                moduleInfoMeter.registerModule("stellflux-http-client", StellfluxHttpClientFactory.class);
+            }
+            LOGGER.info(
+                    () ->
+                            "Starter stellflux-spring-boot-starter-http-client started successfully"
+                                    + ", configuredClients="
+                                    + properties.getClients().size()
+                                    + ", clients="
+                                    + summarizeClients(properties.getClients()));
+        };
     }
 
-    private String summarizeClients(Map<String, StellfluxHttpClientProperties.ClientProperties> clients) {
+    private String summarizeClients(
+            Map<String, StellfluxHttpClientProperties.ClientProperties> clients) {
         if (clients == null || clients.isEmpty()) {
             return "{}";
         }
@@ -79,18 +84,30 @@ public class StellfluxHttpClientAutoConfiguration {
                 (serviceId, client) ->
                         joiner.add(
                                 serviceId
-                                        + "={mode=" + resolveMode(client.getBaseUrl())
-                                        + ", namespace=" + safeText(client.getNamespace())
-                                        + ", baseUrl=" + safeText(client.getBaseUrl())
-                                        + ", loadBalancer=" + client.getLoadBalancer()
-                                        + ", connectTimeoutMillis=" + client.getConnectTimeoutMillis()
-                                        + ", readTimeoutMillis=" + client.getReadTimeoutMillis()
-                                        + ", writeTimeoutMillis=" + client.getWriteTimeoutMillis()
-                                        + ", callTimeoutMillis=" + client.getCallTimeoutMillis()
-                                        + ", pingIntervalMillis=" + client.getPingIntervalMillis()
-                                        + ", retryOnConnectionFailure=" + client.isRetryOnConnectionFailure()
-                                        + ", followRedirects=" + client.isFollowRedirects()
-                                        + ", followSslRedirects=" + client.isFollowSslRedirects()
+                                        + "={mode="
+                                        + resolveMode(client.getBaseUrl())
+                                        + ", namespace="
+                                        + safeText(client.getNamespace())
+                                        + ", baseUrl="
+                                        + safeText(client.getBaseUrl())
+                                        + ", loadBalancer="
+                                        + client.getLoadBalancer()
+                                        + ", connectTimeoutMillis="
+                                        + client.getConnectTimeoutMillis()
+                                        + ", readTimeoutMillis="
+                                        + client.getReadTimeoutMillis()
+                                        + ", writeTimeoutMillis="
+                                        + client.getWriteTimeoutMillis()
+                                        + ", callTimeoutMillis="
+                                        + client.getCallTimeoutMillis()
+                                        + ", pingIntervalMillis="
+                                        + client.getPingIntervalMillis()
+                                        + ", retryOnConnectionFailure="
+                                        + client.isRetryOnConnectionFailure()
+                                        + ", followRedirects="
+                                        + client.isFollowRedirects()
+                                        + ", followSslRedirects="
+                                        + client.isFollowSslRedirects()
                                         + "}"));
         return joiner.toString();
     }

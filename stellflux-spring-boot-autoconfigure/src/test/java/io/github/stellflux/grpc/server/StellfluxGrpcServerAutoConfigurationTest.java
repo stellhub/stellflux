@@ -8,9 +8,9 @@ import com.google.protobuf.StringValue;
 import io.github.stellflux.grpc.server.annotation.RpcService;
 import io.github.stellflux.grpc.server.internal.StellfluxGrpcServerTelemetryInterceptor;
 import io.grpc.BindableService;
+import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
-import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
@@ -91,21 +91,16 @@ class StellfluxGrpcServerAutoConfigurationTest {
                             StellfluxGrpcServerOptions options = new StellfluxGrpcServerOptions();
                             options.setPort(9090);
 
-                            java.util.List<ServerInterceptor> interceptors =
-                                    factory.resolveInterceptors(options);
+                            java.util.List<ServerInterceptor> interceptors = factory.resolveInterceptors(options);
 
                             assertEquals(3, interceptors.size());
-                            assertInstanceOf(
-                                    StellfluxGrpcServerTelemetryInterceptor.class,
-                                    interceptors.get(0));
+                            assertInstanceOf(StellfluxGrpcServerTelemetryInterceptor.class, interceptors.get(0));
                             assertEquals(
                                     "native",
-                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(1))
-                                            .name());
+                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(1)).name());
                             assertEquals(
                                     "custom",
-                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(2))
-                                            .name());
+                                    assertInstanceOf(NamedServerInterceptor.class, interceptors.get(2)).name());
                         });
     }
 
@@ -220,8 +215,7 @@ class StellfluxGrpcServerAutoConfigurationTest {
                 }
 
                 @Override
-                public ServerInterceptor createInterceptor(
-                        StellfluxGrpcServerInterceptorContext context) {
+                public ServerInterceptor createInterceptor(StellfluxGrpcServerInterceptorContext context) {
                     return new NamedServerInterceptor("custom");
                 }
             };
@@ -256,7 +250,8 @@ class StellfluxGrpcServerAutoConfigurationTest {
         }
     }
 
-    private static ServerMethodDefinition<StringValue, StringValue> noopMethod(String fullMethodName) {
+    private static ServerMethodDefinition<StringValue, StringValue> noopMethod(
+            String fullMethodName) {
         return ServerMethodDefinition.create(
                 MethodDescriptor.<StringValue, StringValue>newBuilder()
                         .setType(MethodDescriptor.MethodType.UNARY)
@@ -347,8 +342,7 @@ class StellfluxGrpcServerAutoConfigurationTest {
 
     static class PortUnavailableAfterShutdownServer extends TestServer {
 
-        PortUnavailableAfterShutdownServer(
-                AtomicBoolean shutdownInvoked, AtomicBoolean awaitInvoked) {
+        PortUnavailableAfterShutdownServer(AtomicBoolean shutdownInvoked, AtomicBoolean awaitInvoked) {
             super(shutdownInvoked, awaitInvoked);
         }
 
@@ -366,9 +360,7 @@ class StellfluxGrpcServerAutoConfigurationTest {
         private final CountDownLatch awaitStarted;
 
         AwaitingServer(
-                AtomicBoolean shutdownInvoked,
-                AtomicBoolean awaitInvoked,
-                CountDownLatch awaitStarted) {
+                AtomicBoolean shutdownInvoked, AtomicBoolean awaitInvoked, CountDownLatch awaitStarted) {
             super(shutdownInvoked, awaitInvoked);
             this.awaitStarted = awaitStarted;
         }
@@ -400,9 +392,7 @@ class StellfluxGrpcServerAutoConfigurationTest {
 
         @Override
         public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-                ServerCall<ReqT, RespT> call,
-                Metadata headers,
-                ServerCallHandler<ReqT, RespT> next) {
+                ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
             return next.startCall(call, headers);
         }
     }

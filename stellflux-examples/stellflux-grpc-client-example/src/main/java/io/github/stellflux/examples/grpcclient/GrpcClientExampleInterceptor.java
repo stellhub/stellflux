@@ -32,9 +32,7 @@ public class GrpcClientExampleInterceptor implements StellfluxGrpcClientIntercep
         return new ClientInterceptor() {
             @Override
             public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
-                    MethodDescriptor<ReqT, RespT> method,
-                    CallOptions callOptions,
-                    Channel next) {
+                    MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
                 ClientCall<ReqT, RespT> delegate = next.newCall(method, callOptions);
                 return new ForwardingClientCall.SimpleForwardingClientCall<>(delegate) {
                     @Override
@@ -47,9 +45,12 @@ public class GrpcClientExampleInterceptor implements StellfluxGrpcClientIntercep
                         LOGGER.info(
                                 () ->
                                         "Client interceptor attached headers"
-                                                + ", serviceId=" + context.serviceId()
-                                                + ", method=" + method.getFullMethodName()
-                                                + ", requestId=" + requestId);
+                                                + ", serviceId="
+                                                + context.serviceId()
+                                                + ", method="
+                                                + method.getFullMethodName()
+                                                + ", requestId="
+                                                + requestId);
                         super.start(responseListener, headers);
                     }
                 };

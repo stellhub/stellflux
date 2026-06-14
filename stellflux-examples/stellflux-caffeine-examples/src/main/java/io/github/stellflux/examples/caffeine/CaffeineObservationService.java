@@ -33,9 +33,7 @@ public class CaffeineObservationService {
         this.cache =
                 cacheFactory.createCache(
                         CACHE_NAME,
-                        builder ->
-                                builder.maximumSize(maximumSize())
-                                        .expireAfterWrite(expireAfterWrite()));
+                        builder -> builder.maximumSize(maximumSize()).expireAfterWrite(expireAfterWrite()));
     }
 
     /**

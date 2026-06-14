@@ -46,12 +46,16 @@ final class StellfluxElaticsearchTelemetry {
 
     private final String endpoints;
 
-    StellfluxElaticsearchTelemetry(OpenTelemetry openTelemetry, StellfluxElaticsearchOptions options) {
+    StellfluxElaticsearchTelemetry(
+            OpenTelemetry openTelemetry, StellfluxElaticsearchOptions options) {
         Objects.requireNonNull(options, "options must not be null");
         this.endpoints = String.join(",", options.getEndpoints());
         this.tracer =
                 StellfluxTelemetryScopeFactory.createTracer(
-                        openTelemetry, INSTRUMENTATION_SCOPE_NAME, ARTIFACT_ID, StellfluxElaticsearchClient.class);
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxElaticsearchClient.class);
         this.accessLogEmitter =
                 new StellfluxAccessLogEmitter(
                         openTelemetry,
@@ -61,7 +65,10 @@ final class StellfluxElaticsearchTelemetry {
                         StellfluxElaticsearchClient.class);
         Meter meter =
                 METER_FACTORY.create(
-                        openTelemetry, INSTRUMENTATION_SCOPE_NAME, ARTIFACT_ID, StellfluxElaticsearchClient.class);
+                        openTelemetry,
+                        INSTRUMENTATION_SCOPE_NAME,
+                        ARTIFACT_ID,
+                        StellfluxElaticsearchClient.class);
         this.requestCounter =
                 METER_FACTORY.createCounter(
                         meter,
@@ -122,7 +129,8 @@ final class StellfluxElaticsearchTelemetry {
         long startNanos = System.nanoTime();
         Context context = Context.current().with(span);
         try (Scope ignored = context.makeCurrent()) {
-            return supplier.get()
+            return supplier
+                    .get()
                     .whenComplete(
                             (result, throwable) -> {
                                 Throwable cause = unwrapCompletionException(throwable);
@@ -168,8 +176,7 @@ final class StellfluxElaticsearchTelemetry {
                 context,
                 "Elaticsearch request completed",
                 builder -> {
-                    builder.setAttribute(
-                            AttributeKey.stringKey("db.system.name"), "elasticsearch");
+                    builder.setAttribute(AttributeKey.stringKey("db.system.name"), "elasticsearch");
                     builder.setAttribute(AttributeKey.stringKey("db.operation.name"), operation);
                     builder.setAttribute(AttributeKey.stringKey("db.namespace"), namespace(indices));
                     builder.setAttribute(AttributeKey.stringKey("server.address"), endpoints);

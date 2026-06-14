@@ -56,7 +56,9 @@ public class StellfluxAnnotatedRpcClientFactoryBean
 
     private StellfluxGrpcClientOptions resolveOptions() {
         StellfluxGrpcClientProperties properties =
-                this.applicationContext.getBeanProvider(StellfluxGrpcClientProperties.class).getIfAvailable();
+                this.applicationContext
+                        .getBeanProvider(StellfluxGrpcClientProperties.class)
+                        .getIfAvailable();
         StellfluxGrpcClientOptions resolved =
                 properties == null
                         ? copyOptions(this.options)

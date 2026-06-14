@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class StellfluxStellnulaExampleApplication {
 
     public static void main(String[] args) {
+        // only for local mode
+        System.setProperty("log.stdout", "true");
         SpringApplication.run(StellfluxStellnulaExampleApplication.class, args);
     }
 }
