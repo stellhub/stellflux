@@ -39,11 +39,6 @@ import org.springframework.util.StringUtils;
     StellfluxStellnulaClientFactory.class,
     StellfluxStellnulaClientOptions.class
 })
-@ConditionalOnProperty(
-        prefix = "stellflux.stellnula",
-        name = "enabled",
-        havingValue = "true",
-        matchIfMissing = true)
 @EnableConfigurationProperties(StellfluxStellnulaProperties.class)
 public class StellfluxStellnulaAutoConfiguration {
 
@@ -225,8 +220,6 @@ public class StellfluxStellnulaAutoConfiguration {
                 LOGGER.info(
                         () ->
                                 "Starter stellflux-spring-boot-starter-stellnula started successfully"
-                                        + ", enabled="
-                                        + properties.isEnabled()
                                         + ", endpoint="
                                         + properties.getEndpoint()
                                         + ", connectedServer="
@@ -294,7 +287,7 @@ public class StellfluxStellnulaAutoConfiguration {
         options.setGrpcPlaintext(properties.isGrpcPlaintext());
         options.setApiToken(properties.getApiToken());
         options.setApiVersion(properties.getApiVersion());
-        options.setSdkVersion(properties.getSdkVersion());
+        options.setSdkVersion(defaultText(properties.getSdkVersion(), resolveSdkVersion()));
         options.setAppId(resolvedAppId);
         options.setClientId(resolvedClientId);
         options.setEnv(properties.getEnv());
@@ -363,6 +356,13 @@ public class StellfluxStellnulaAutoConfiguration {
 
     private static String defaultText(String value, String defaultValue) {
         return StringUtils.hasText(value) ? value : defaultValue;
+    }
+
+    private static String resolveSdkVersion() {
+        Package sdkPackage = StellfluxStellnulaClientFactory.class.getPackage();
+        String implementationVersion =
+                sdkPackage == null ? null : sdkPackage.getImplementationVersion();
+        return "stellflux-stellnula/" + defaultText(implementationVersion, "dev");
     }
 
     private static Path resolveSnapshotFile(

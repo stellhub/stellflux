@@ -16,9 +16,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "stellflux.stellnula")
 public class StellfluxStellnulaProperties {
 
-    /** 是否启用 Stellnula 配置中心集成。 */
-    private boolean enabled = true;
-
     /** Stellnula HTTP 服务地址。 */
     private String endpoint;
 
@@ -34,8 +31,8 @@ public class StellfluxStellnulaProperties {
     /** API 版本。 */
     private String apiVersion = "v1";
 
-    /** SDK 版本标识。 */
-    private String sdkVersion = "stellflux-stellnula/1.0.1";
+    /** SDK 版本标识，默认从当前包版本推导。 */
+    private String sdkVersion;
 
     /** 应用 ID，默认为 spring.application.name。 */
     private String appId;
