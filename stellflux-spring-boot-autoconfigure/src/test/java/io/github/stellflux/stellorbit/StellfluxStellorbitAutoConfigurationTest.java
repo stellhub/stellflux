@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.stellflux.stellorbit.auth.StellorbitAuthorizationManager;
 import io.github.stellflux.stellorbit.circuitbreaker.StellorbitCircuitBreakerExecutor;
+import io.github.stellflux.stellorbit.ratelimit.RateLimitAcquireOptions;
 import io.github.stellflux.stellorbit.ratelimit.RateLimitDecision;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimitRequest;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimiter;
@@ -20,8 +21,13 @@ import io.github.stellorbit.client.model.RequestContext;
 import io.github.stellorbit.client.provider.AuthorizationRuleProvider;
 import io.github.stellorbit.client.provider.CircuitBreakerRuleProvider;
 import io.github.stellorbit.client.provider.RateLimitRuleProvider;
+import io.github.stellorbit.client.rule.GovernanceRule;
+import io.github.stellorbit.client.rule.GovernanceRuleStatus;
+import io.github.stellorbit.client.rule.GovernanceRuleType;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -154,16 +160,48 @@ class StellfluxStellorbitAutoConfigurationTest {
         StellorbitRateLimiter limiter = new StellpulsarStellorbitRateLimiter(client, "order-service");
         StellorbitRateLimitRequest request =
                 new StellorbitRateLimitRequest(
-                        "order-api",
-                        "tenant-a:/orders",
-                        RequestContext.empty(),
-                        Map.of("cost", "bad-cost"));
+                        "order-api", "tenant-a:/orders", RequestContext.empty(), Map.of("cost", "bad-cost"));
 
         RateLimitDecision decision = limiter.acquire(request);
 
         assertThat(decision.allowed()).isFalse();
         assertThat(decision.decision()).isEqualTo("INVALID_REQUEST");
         assertThat(decision.reason()).contains("cost must be a positive long");
+    }
+
+    @Test
+    void shouldKeepLocalRateLimitRejectingByDefaultAndSupportBlockingAcquire() {
+        GovernanceRule rule =
+                rateLimitRule(Map.of("limit", Map.of("limitForPeriod", 1, "limitRefreshPeriod", 50)));
+        StellorbitRateLimiter limiter = new Resilience4jStellorbitRateLimiter(query -> List.of(rule));
+        StellorbitRateLimitRequest request = StellorbitRateLimitRequest.of("order-api", "tenant-a");
+
+        RateLimitDecision first = limiter.acquire(request);
+        RateLimitDecision second = limiter.acquire(request);
+        RateLimitDecision third =
+                limiter.acquire(request, RateLimitAcquireOptions.blocking(Duration.ofMillis(300)));
+
+        assertThat(first.allowed()).isTrue();
+        assertThat(second.allowed()).isFalse();
+        assertThat(third.allowed()).isTrue();
+    }
+
+    @Test
+    void shouldRetryDistributedRateLimitWhenBlockingAcquireIsRequested() {
+        AtomicInteger attempts = new AtomicInteger();
+        StellpulsarClient client =
+                new SequenceStellpulsarClient(
+                        attempts,
+                        List.of(
+                                RateLimitResult.denied("rule-a", "1", "checksum-a", 0, 0, 10, "rate_limited"),
+                                RateLimitResult.allowed("rule-a", "1", "checksum-a", 10, 0, "allowed")));
+        StellorbitRateLimiter limiter = new StellpulsarStellorbitRateLimiter(client, "order-service");
+        StellorbitRateLimitRequest request = StellorbitRateLimitRequest.of("order-api", "tenant-a");
+
+        RateLimitDecision decision = limiter.acquireBlocking(request, Duration.ofMillis(300));
+
+        assertThat(decision.allowed()).isTrue();
+        assertThat(attempts.get()).isEqualTo(2);
     }
 
     @Test
@@ -192,5 +230,36 @@ class StellfluxStellorbitAutoConfigurationTest {
 
         @Override
         public void close() {}
+    }
+
+    private record SequenceStellpulsarClient(AtomicInteger attempts, List<RateLimitResult> results)
+            implements StellpulsarClient {
+
+        @Override
+        public void start() {}
+
+        @Override
+        public RateLimitResult tryAcquire(RateLimitRequest request) {
+            int index = attempts.getAndIncrement();
+            return results.get(Math.min(index, results.size() - 1));
+        }
+
+        @Override
+        public void close() {}
+    }
+
+    private GovernanceRule rateLimitRule(Map<String, Object> content) {
+        return new GovernanceRule(
+                "rule-a",
+                "Rule A",
+                "RATE_LIMIT_RULES",
+                GovernanceRuleType.RATE_LIMIT,
+                "order-api",
+                GovernanceRuleStatus.ACTIVE,
+                0,
+                1L,
+                "checksum-a",
+                "{}",
+                content);
     }
 }

@@ -72,12 +72,14 @@
   - StellOrbit 单机限流治理能力
   - 包含 `stellflux-stellorbit-rate-limit`、`stellflux-stellorbit-rate-limit-local`、Resilience4j RateLimiter 与 Stellnula 前置装配
   - 默认注册本地 `StellorbitRateLimiter`
+  - `acquire(request)` 保持否决式立即判定；`acquireBlocking(request, timeout)` 或带 `RateLimitAcquireOptions.blocking(...)` 的调用提供阻塞式限流
   - 分布式限流不复用该 starter，通过独立的 `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed` 接入 StellPulsar
   - 如同时存在本地和分布式实现，`stellflux.stellorbit.rate-limit.mode=auto` 会优先选择分布式；可显式配置为 `local`
 - `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed`
   - StellOrbit 弱一致分布式限流治理能力
   - 包含 `stellflux-stellorbit-rate-limit-distributed`、`stellpulsar-java-sdk` 与 Stellnula 前置装配
   - 默认注册基于 StellPulsar 的 `StellorbitRateLimiter`
+  - 分布式阻塞式限流只在 StellPulsar 明确返回限流拒绝时按 `retry-after` 重试；fallback 或非限流拒绝不会阻塞业务线程
   - 保留 StellPulsar 返回的 rule revision、checksum、remaining、retry-after、fallback 和 errorCode
 - `stellflux-spring-boot-starter-caffeine`
   - Caffeine 本地缓存能力

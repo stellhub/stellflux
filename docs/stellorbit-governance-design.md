@@ -321,6 +321,11 @@ stellflux:
 - 规则未显式声明 fail policy 时默认 fail-open，并记录 warn 日志和指标。
 - 客户端侧保留 StellPulsar 返回的 `remaining`、`retryAfterMs`、`fallback`、`errorCode`、`ruleRevision` 和 `ruleChecksum`，便于业务响应头、日志排障和降级审计。
 - 本地请求字段非法时返回 `INVALID_REQUEST` 判定并记录异常 span/log，不再让参数解析异常直接击穿业务调用链。
+- 单机和分布式限流都在 `StellorbitRateLimiter` 公共 SPI 上提供否决式与阻塞式两种申请语义：
+  - `acquire(request)`：默认否决式，不能立即拿到配额时直接返回拒绝。
+  - `acquire(request, RateLimitAcquireOptions.blocking(timeout))` / `acquireBlocking(request, timeout)`：阻塞式，等待配额直到成功、超时或线程被中断。
+  - 单机实现通过本地 Resilience4j limiter 的刷新窗口轮询等待，不修改共享 limiter 的 timeout 配置，避免并发调用互相污染。
+  - 分布式实现复用 StellPulsar 的 `retryAfterMs` 做等待间隔；只有明确的限流拒绝才会等待，fallback 或非限流拒绝会立即返回。
 
 ## 运行时 SPI
 
@@ -329,7 +334,11 @@ stellflux:
 ```java
 public interface StellorbitRateLimiter {
 
-    RateLimitDecision acquire(RateLimitRequest request);
+    RateLimitDecision acquire(StellorbitRateLimitRequest request);
+
+    RateLimitDecision acquire(StellorbitRateLimitRequest request, RateLimitAcquireOptions options);
+
+    RateLimitDecision acquireBlocking(StellorbitRateLimitRequest request, Duration timeout);
 }
 ```
 
