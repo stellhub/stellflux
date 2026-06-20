@@ -1,13 +1,18 @@
 package io.github.stellflux.stellorbit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.springframework.aop.Advisor;
 import io.github.stellflux.stellorbit.auth.StellorbitAuthorizationManager;
 import io.github.stellflux.stellorbit.circuitbreaker.StellorbitCircuitBreakerExecutor;
 import io.github.stellflux.stellorbit.ratelimit.RateLimitAcquireOptions;
 import io.github.stellflux.stellorbit.ratelimit.RateLimitDecision;
+import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimitRejectedException;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimitRequest;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimiter;
+import io.github.stellflux.stellorbit.ratelimit.annotation.RateLimitAcquireMode;
+import io.github.stellflux.stellorbit.ratelimit.annotation.StellorbitRateLimitResource;
 import io.github.stellflux.stellorbit.ratelimit.distributed.StellpulsarStellorbitRateLimiter;
 import io.github.stellflux.stellorbit.ratelimit.local.Resilience4jStellorbitRateLimiter;
 import io.github.stellhub.stellpulsar.client.StellpulsarClient;
@@ -30,8 +35,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 class StellfluxStellorbitAutoConfigurationTest {
 
@@ -205,6 +215,237 @@ class StellfluxStellorbitAutoConfigurationTest {
     }
 
     @Test
+    void shouldApplyRateLimitResourceAnnotation() {
+        AtomicReference<StellorbitRateLimitRequest> capturedRequest = new AtomicReference<>();
+        AtomicReference<RateLimitAcquireOptions> capturedOptions = new AtomicReference<>();
+        StellorbitRateLimiter limiter =
+                (request, options) -> {
+                    capturedRequest.set(request);
+                    capturedOptions.set(options);
+                    return RateLimitDecision.allowed("rule-a");
+                };
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedRateLimitService.class)
+                .withPropertyValues(
+                        "spring.application.name=order-service",
+                        "stellflux.stellorbit.target-service=order-api")
+                .run(
+                        context -> {
+                            assertThat(context.getBean(AnnotatedRateLimitService.class).createOrder())
+                                    .isEqualTo("created");
+                            assertThat(capturedRequest.get().serviceName()).isEqualTo("order-api");
+                            assertThat(capturedRequest.get().quotaKey()).isEqualTo("order.create");
+                            assertThat(capturedRequest.get().context().quotaKey())
+                                    .isEqualTo("order.create");
+                            assertThat(capturedRequest.get().context().tenantId()).isEqualTo("tenant-a");
+                            assertThat(capturedRequest.get().attributes())
+                                    .containsEntry("resource", "/orders")
+                                    .containsEntry("method", "POST")
+                                    .containsEntry("userId", "user-a")
+                                    .containsEntry("cost", "2");
+                            assertThat(capturedOptions.get().blocking()).isTrue();
+                            assertThat(capturedOptions.get().timeout()).isEqualTo(Duration.ofMillis(100));
+                        });
+    }
+
+    @Test
+    void shouldApplyConfiguredRateLimitResourceAdvisorOrder() {
+        StellorbitRateLimiter limiter = (request, options) -> RateLimitDecision.allowed("rule-a");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withPropertyValues("stellflux.stellorbit.rate-limit.resource.advisor-order=42")
+                .run(
+                        context -> {
+                            Advisor advisor =
+                                    context.getBean("stellorbitRateLimitResourceAdvisor", Advisor.class);
+                            assertThat(Ordered.class.cast(advisor).getOrder()).isEqualTo(42);
+                        });
+    }
+
+    @Test
+    void shouldRejectRateLimitResourceAnnotationWhenLimiterDenies() {
+        StellorbitRateLimiter limiter =
+                (request, options) ->
+                        RateLimitDecision.rejected("rule-a", "too many requests", "DENIED");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedRateLimitService.class)
+                .withPropertyValues("spring.application.name=order-service")
+                .run(
+                        context ->
+                                assertThatThrownBy(
+                                                () ->
+                                                        context.getBean(
+                                                                        AnnotatedRateLimitService.class)
+                                                                .createOrder())
+                                        .isInstanceOf(StellorbitRateLimitRejectedException.class)
+                                        .hasMessageContaining("quotaKey=order.create")
+                                        .hasMessageContaining("too many requests"));
+    }
+
+    @Test
+    void shouldRejectRateLimitResourceFallbackWhenItReferencesProtectedMethod() {
+        StellorbitRateLimiter limiter =
+                (request, options) ->
+                        RateLimitDecision.rejected("rule-a", "too many requests", "DENIED");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedSelfFallbackRateLimitService.class)
+                .run(
+                        context -> {
+                            AnnotatedSelfFallbackRateLimitService service =
+                                    context.getBean(AnnotatedSelfFallbackRateLimitService.class);
+                            assertThatThrownBy(service::createOrder)
+                                    .isInstanceOf(IllegalArgumentException.class)
+                                    .hasMessageContaining("fallback must not reference");
+                            assertThat(service.calls()).isZero();
+                        });
+    }
+
+    @Test
+    void shouldInvokeRateLimitResourceFallbackWhenLimiterDenies() {
+        StellorbitRateLimiter limiter =
+                (request, options) ->
+                        RateLimitDecision.rejected("rule-a", "too many requests", "DENIED");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedFallbackRateLimitService.class)
+                .run(
+                        context ->
+                                assertThat(
+                                                context.getBean(
+                                                                AnnotatedFallbackRateLimitService.class)
+                                                        .createOrder("order-1"))
+                                        .isEqualTo(
+                                                "fallback:order-1:STELLORBIT_RATE_LIMIT_REJECTED:too many requests"));
+    }
+
+    @Test
+    void shouldInvokeRateLimitResourceFallbackClassBeanWhenLimiterDenies() {
+        StellorbitRateLimiter limiter =
+                (request, options) ->
+                        RateLimitDecision.rejected("rule-a", "too many requests", "DENIED");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedFallbackClassRateLimitService.class)
+                .withBean(RateLimitFallbackHandler.class)
+                .run(
+                        context ->
+                                assertThat(
+                                                context.getBean(
+                                                                AnnotatedFallbackClassRateLimitService.class)
+                                                        .createOrder("order-1"))
+                                        .isEqualTo(
+                                                "handler:order-1:STELLORBIT_RATE_LIMIT_REJECTED:too many requests"));
+    }
+
+    @Test
+    void shouldThrowCustomRateLimitResourceExceptionWhenLimiterDenies() {
+        StellorbitRateLimiter limiter =
+                (request, options) ->
+                        RateLimitDecision.rejected("rule-a", "too many requests", "DENIED");
+
+        new ApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(
+                                AopAutoConfiguration.class,
+                                StellfluxStellorbitRateLimitResourceAutoConfiguration.class))
+                .withBean(StellorbitRateLimiter.class, () -> limiter)
+                .withBean(AnnotatedCustomExceptionRateLimitService.class)
+                .run(
+                        context ->
+                                assertThatThrownBy(
+                                                () ->
+                                                        context.getBean(
+                                                                        AnnotatedCustomExceptionRateLimitService
+                                                                                .class)
+                                                                .createOrder())
+                                        .isInstanceOf(CustomRateLimitRejectedException.class)
+                                        .extracting(
+                                                ex ->
+                                                        CustomRateLimitRejectedException.class
+                                                                .cast(ex)
+                                                                .decision()
+                                                                .reason())
+                                        .isEqualTo("too many requests"));
+    }
+
+    @Test
+    void shouldRegisterDefaultRateLimitWebExceptionHandler() {
+        new WebApplicationContextRunner()
+                .withConfiguration(
+                        AutoConfigurations.of(StellfluxStellorbitRateLimitWebAutoConfiguration.class))
+                .run(
+                        context -> {
+                            assertThat(context).hasSingleBean(StellorbitRateLimitWebExceptionHandler.class);
+                            StellorbitRateLimitWebExceptionHandler handler =
+                                    context.getBean(StellorbitRateLimitWebExceptionHandler.class);
+                            StellorbitRateLimitRejectedException exception =
+                                    new StellorbitRateLimitRejectedException(
+                                            StellorbitRateLimitRequest.of("order-api", "order.create"),
+                                            new RateLimitDecision(
+                                                    false,
+                                                    "rule-a",
+                                                    "too many requests",
+                                                    "DENIED",
+                                                    0L,
+                                                    1000L,
+                                                    1500L,
+                                                    false,
+                                                    null,
+                                                    "1",
+                                                    "checksum-a",
+                                                    Map.of("source", "test")));
+
+                            ResponseEntity<Map<String, Object>> response =
+                                    handler.handleRateLimitRejected(exception);
+
+                            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+                            assertThat(response.getHeaders().getFirst("X-Stellorbit-Rate-Limited"))
+                                    .isEqualTo("true");
+                            assertThat(response.getHeaders().getFirst("Retry-After")).isEqualTo("2");
+                            assertThat(response.getBody())
+                                    .containsEntry("rateLimited", true)
+                                    .containsEntry(
+                                            "errorCode",
+                                            StellorbitRateLimitRejectedException.ERROR_CODE)
+                                    .containsEntry("quotaKey", "order.create")
+                                    .containsEntry("retryAfterMillis", 1500L);
+                        });
+    }
+
+    @Test
     void shouldLeaveAuthManagerEmptyWhenJwtDecoderMissing() {
         new ApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(StellfluxStellorbitAuthAutoConfiguration.class))
@@ -261,5 +502,96 @@ class StellfluxStellorbitAutoConfigurationTest {
                 "checksum-a",
                 "{}",
                 content);
+    }
+
+    static class AnnotatedRateLimitService {
+
+        @StellorbitRateLimitResource(
+                value = "order.create",
+                mode = RateLimitAcquireMode.BLOCKING,
+                timeoutMillis = 100,
+                cost = 2,
+                resource = "/orders",
+                method = "POST",
+                tenantId = "tenant-a",
+                userId = "user-a")
+        String createOrder() {
+            return "created";
+        }
+    }
+
+    static class AnnotatedFallbackRateLimitService {
+
+        @StellorbitRateLimitResource(value = "order.create", fallback = "createOrderFallback")
+        String createOrder(String orderId) {
+            return "created:" + orderId;
+        }
+
+        String createOrderFallback(String orderId, StellorbitRateLimitRejectedException ex) {
+            return "fallback:" + orderId + ":" + ex.errorCode() + ":" + ex.decision().reason();
+        }
+    }
+
+    static class AnnotatedSelfFallbackRateLimitService {
+
+        private final AtomicInteger calls = new AtomicInteger();
+
+        @StellorbitRateLimitResource(value = "order.create", fallback = "createOrder")
+        String createOrder() {
+            calls.incrementAndGet();
+            return "created";
+        }
+
+        int calls() {
+            return calls.get();
+        }
+    }
+
+    static class AnnotatedFallbackClassRateLimitService {
+
+        @StellorbitRateLimitResource(
+                value = "order.create",
+                fallback = "createOrderFallback",
+                fallbackClass = RateLimitFallbackHandler.class)
+        String createOrder(String orderId) {
+            return "created:" + orderId;
+        }
+    }
+
+    static class RateLimitFallbackHandler {
+
+        String createOrderFallback(String orderId, StellorbitRateLimitRejectedException ex) {
+            return "handler:" + orderId + ":" + ex.errorCode() + ":" + ex.decision().reason();
+        }
+    }
+
+    static class AnnotatedCustomExceptionRateLimitService {
+
+        @StellorbitRateLimitResource(
+                value = "order.create",
+                exceptionClass = CustomRateLimitRejectedException.class)
+        String createOrder() {
+            return "created";
+        }
+    }
+
+    static class CustomRateLimitRejectedException extends RuntimeException {
+
+        private final StellorbitRateLimitRequest request;
+        private final RateLimitDecision decision;
+
+        CustomRateLimitRejectedException(StellorbitRateLimitRequest request, RateLimitDecision decision) {
+            super(decision.reason());
+            this.request = request;
+            this.decision = decision;
+        }
+
+        StellorbitRateLimitRequest request() {
+            return request;
+        }
+
+        RateLimitDecision decision() {
+            return decision;
+        }
     }
 }

@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: stellflux-rate-limit-distributed-example
+
+server:
+  port: 18091
+
+example:
+  stellorbit:
+    rate-limit:
+      tenant-id: tenant-a
+      user-id: distributed-user
+      distributed:
+        mock:
+          enabled: true
+
+stellflux:
+  stellorbit:
+    target-service: stellflux-rate-limit-distributed-example
+    rate-limit:
+      mode: distributed
+      distributed:
+        application-code: stellflux-rate-limit-distributed-example
+        namespace: default
+        service-name: stellpulsar-service
+        discovery-host: 127.0.0.1
+        discovery-port: 9090
+        grpc-plaintext: true
+  opentelemetry:
+    resource:
+      service-name: stellflux-rate-limit-distributed-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

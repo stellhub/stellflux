@@ -8,6 +8,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.Ordered;
 
 /** StellOrbit 服务治理自动装配配置。 */
 @Getter
@@ -86,6 +87,18 @@ public class StellfluxStellorbitProperties {
 
         /** 分布式限流配置。 */
         private DistributedProperties distributed = new DistributedProperties();
+
+        /** 注解式资源限流配置。 */
+        private ResourceProperties resource = new ResourceProperties();
+    }
+
+    /** 注解式限流资源配置。 */
+    @Getter
+    @Setter
+    public static class ResourceProperties {
+
+        /** 注解式限流 Advisor 执行顺序，数值越小越早执行。 */
+        private int advisorOrder = Ordered.HIGHEST_PRECEDENCE + 100;
     }
 
     /** StellPulsar 分布式限流配置。 */

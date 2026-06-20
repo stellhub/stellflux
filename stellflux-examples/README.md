@@ -1,6 +1,6 @@
 # stellflux-examples
 
-`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellnula、Stellflow、Jedis、Elaticsearch、Caffeine、ThreadPool、DataSource 等能力的最小接入方式。
+`stellflux-examples` 是 `stellflux` 的示例应用聚合模块，用于展示 HTTP、gRPC、OpenTelemetry、StellMap、Stellnula、StellOrbit 限流、Stellflow、Jedis、Elaticsearch、Caffeine、ThreadPool、DataSource 等能力的最小接入方式。
 
 ## 模块列表
 
@@ -13,6 +13,8 @@
 | `stellflux-opentelemetry-example` | `io.github.stellflux.examples.opentelemetry` | `18083` | 演示 OpenTelemetry trace、log、metrics 的 HTTP 验证方式 |
 | `stellflux-stellmap-example` | `io.github.stellflux.examples.stellmap` | `18081` | 演示最小 StellMap 集成方式 |
 | `stellflux-stellnula-example` | `io.github.stellflux.examples.stellnula` | `18089` | 演示 Stellnula 配置中心动态 @Value 刷新方式 |
+| `stellflux-stellorbit-rate-limit-local-example` | `io.github.stellflux.examples.stellorbit.ratelimit.local` | `18090` | 演示 StellOrbit 注解式单机限流 |
+| `stellflux-stellorbit-rate-limit-distributed-example` | `io.github.stellflux.examples.stellorbit.ratelimit.distributed` | `18091` | 演示 StellOrbit 注解式分布式限流 |
 | `stellflux-stellflow-example` | `io.github.stellflux.examples.stellflow` | `18082` | 演示 Stellflow 生产和消费接入方式 |
 | `stellflux-jedis-examples` | `io.github.stellflux.examples.jedis` | `18084` | 演示 Jedis CRUD 和 OpenTelemetry metrics 验证方式 |
 | `stellflux-elaticsearch-examples` | `io.github.stellflux.examples.elaticsearch` | `18088` | 演示 Elaticsearch 文档 CRUD 和 OpenTelemetry telemetry 验证方式 |
@@ -33,7 +35,7 @@
 在仓库根目录执行：
 
 ```bash
-mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellnula-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-elaticsearch-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-thread-pool-example,stellflux-examples/stellflux-datasource-example" -am compile
+mvn -pl "stellflux-examples/stellflux-http-server-example,stellflux-examples/stellflux-http-client-example,stellflux-examples/stellflux-grpc-client-example,stellflux-examples/stellflux-grpc-server-example,stellflux-examples/stellflux-opentelemetry-example,stellflux-examples/stellflux-stellmap-example,stellflux-examples/stellflux-stellnula-example,stellflux-examples/stellflux-stellorbit-rate-limit-local-example,stellflux-examples/stellflux-stellorbit-rate-limit-distributed-example,stellflux-examples/stellflux-stellflow-example,stellflux-examples/stellflux-jedis-examples,stellflux-examples/stellflux-elaticsearch-examples,stellflux-examples/stellflux-caffeine-examples,stellflux-examples/stellflux-thread-pool-example,stellflux-examples/stellflux-datasource-example" -am compile
 ```
 
 如果只想编译整个 examples 聚合模块对应的子模块，推荐仍然从根工程执行 reactor 构建，这样可以自动带上本仓库里的 starter 依赖模块。
@@ -652,6 +654,93 @@ mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframewo
 - MySQL 可用时，SQL 执行返回 `success=true`
 - MySQL 不可用时，SQL 执行返回 `success=false` 和错误信息，应用仍然可以用于观察失败 telemetry
 
+### 14. `stellflux-stellorbit-rate-limit-local-example`
+
+- 根包：`io.github.stellflux.examples.stellorbit.ratelimit.local`
+- 启动类：`io.github.stellflux.examples.stellorbit.ratelimit.local.StellfluxStellorbitLocalRateLimitExampleApplication`
+- 默认端口：`18090`
+- 用途：演示 `stellflux-spring-boot-starter-stellorbit-rate-limit` 的注解式单机限流用法
+
+启动命令：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellorbit-rate-limit-local-example -am spring-boot:run
+```
+
+默认行为：
+
+- 示例通过 `RateLimitRuleProvider` 模拟从 StellOrbit 读取到的本地限流规则
+- `orders.create` 使用 `@StellorbitRateLimitResource(fallback = "...")` 演示同 Bean fallback
+- `orders.checkout.blocking` 使用 `@StellorbitRateLimitResource(mode = RateLimitAcquireMode.BLOCKING, exceptionClass = ...)` 演示阻塞式限流和业务自定义异常
+- 未配置 fallback 的 Web 请求会由 starter 默认转换为 HTTP 429，并返回 `STELLORBIT_RATE_LIMIT_REJECTED` 错误码
+- 默认关闭 OpenTelemetry 导出，便于本地直接观察 HTTP 429 与成功响应
+
+示例接口：
+
+- `GET http://127.0.0.1:18090/api/stellorbit/rate-limit/local/status`
+- `POST http://127.0.0.1:18090/api/stellorbit/rate-limit/local/orders`
+- `POST http://127.0.0.1:18090/api/stellorbit/rate-limit/local/orders/checkout`
+
+请求体示例：
+
+```json
+{
+  "orderId": "local-order-1",
+  "userId": "alice",
+  "amount": 100
+}
+```
+
+验证方式：
+
+- 连续调用 `/orders`，第二次请求会命中 fallback，响应体里 `rateLimited=true`、`errorCode=STELLORBIT_RATE_LIMIT_REJECTED`
+- 连续调用 `/orders/checkout`，第二次请求会先等待可用令牌，超出等待时间后通过自定义异常返回 HTTP 429
+- 响应中的 `ruleKey` 与 `@StellorbitRateLimitResource` 标注的资源 key 保持一致，限流拒绝可通过 `errorCode` 和 `rateLimited` 与其它拒绝类错误区分
+
+### 15. `stellflux-stellorbit-rate-limit-distributed-example`
+
+- 根包：`io.github.stellflux.examples.stellorbit.ratelimit.distributed`
+- 启动类：`io.github.stellflux.examples.stellorbit.ratelimit.distributed.StellfluxStellorbitDistributedRateLimitExampleApplication`
+- 默认端口：`18091`
+- 用途：演示 `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed` 的注解式分布式限流用法
+
+启动命令：
+
+```bash
+mvn -pl stellflux-examples/stellflux-stellorbit-rate-limit-distributed-example -am spring-boot:run
+```
+
+默认行为：
+
+- 示例通过 `RateLimitRuleProvider` 模拟从 StellOrbit 读取到的分布式限流规则
+- 默认启用内存版 `StellpulsarClient` mock，避免本地验证时必须启动 StellPulsar 服务端
+- `orders.create.distributed` 使用 `@StellorbitRateLimitResource(fallbackClass = ...)` 演示外置 fallback 组件
+- `orders.reserve.distributed.blocking` 使用 `@StellorbitRateLimitResource(mode = RateLimitAcquireMode.BLOCKING)` 演示阻塞式分布式限流
+- 未配置 fallback 的 Web 请求会由 starter 默认转换为 HTTP 429，并返回 `STELLORBIT_RATE_LIMIT_REJECTED` 错误码
+- 如需接入真实 StellPulsar，可设置 `example.stellorbit.rate-limit.distributed.mock.enabled=false`，并配置 `stellflux.stellorbit.rate-limit.distributed.*`
+
+示例接口：
+
+- `GET http://127.0.0.1:18091/api/stellorbit/rate-limit/distributed/status`
+- `POST http://127.0.0.1:18091/api/stellorbit/rate-limit/distributed/orders`
+- `POST http://127.0.0.1:18091/api/stellorbit/rate-limit/distributed/orders/reserve`
+
+请求体示例：
+
+```json
+{
+  "orderId": "distributed-order-1",
+  "userId": "alice",
+  "amount": 100
+}
+```
+
+验证方式：
+
+- 连续调用 `/orders`，第一次返回成功，随后在 mock 窗口内命中 fallbackClass，响应体里 `rateLimited=true`
+- 连续调用 `/orders/reserve`，第二次请求会进入阻塞等待流程，超时后返回 HTTP 429
+- 关闭 mock 并接入真实 StellPulsar 后，限流判定会通过 `stellpulsar-java-sdk` 发起分布式配额申请
+
 ## 模块关系建议
 
 - 想验证 HTTP client 到 HTTP server：先启动 `stellflux-http-server-example`，再启动 `stellflux-http-client-example`
@@ -659,6 +748,8 @@ mvn -f stellflux-examples/stellflux-datasource-example/pom.xml org.springframewo
 - 想单独观察 TraceId / Log / Metrics：启动 `stellflux-opentelemetry-example`
 - 想验证服务注册或后续接入服务发现：启动 `stellflux-stellmap-example`
 - 想验证 Stellnula 配置中心动态刷新：启动 `stellflux-stellnula-example`
+- 想验证 StellOrbit 单机限流注解：启动 `stellflux-stellorbit-rate-limit-local-example`
+- 想验证 StellOrbit 分布式限流注解：启动 `stellflux-stellorbit-rate-limit-distributed-example`
 - 想验证 Stellflow 生产和消费自动装配：启动 `stellflux-stellflow-example`
 - 想验证 Jedis CRUD 与 OpenTelemetry metrics：启动 `stellflux-jedis-examples`
 - 想验证 Elaticsearch 文档 CRUD 与 OpenTelemetry telemetry：启动 `stellflux-elaticsearch-examples`

@@ -34,6 +34,8 @@
         <module>stellflux-opentelemetry-example</module>
         <module>stellflux-stellmap-example</module>
         <module>stellflux-stellnula-example</module>
+        <module>stellflux-stellorbit-rate-limit-local-example</module>
+        <module>stellflux-stellorbit-rate-limit-distributed-example</module>
         <module>stellflux-stellflow-example</module>
         <module>stellflux-jedis-examples</module>
         <module>stellflux-elaticsearch-examples</module>

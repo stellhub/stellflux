@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: stellflux-rate-limit-local-example
+
+server:
+  port: 18090
+
+example:
+  stellorbit:
+    rate-limit:
+      tenant-id: tenant-a
+      user-id: local-user
+
+stellflux:
+  stellorbit:
+    target-service: stellflux-rate-limit-local-example
+    rate-limit:
+      mode: local
+  opentelemetry:
+    resource:
+      service-name: stellflux-rate-limit-local-example
+    logs:
+      enabled: false
+    metrics:
+      enabled: false
+    traces:
+      enabled: false

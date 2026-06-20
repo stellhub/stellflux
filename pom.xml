@@ -599,6 +599,8 @@
                                 <excludeArtifact>stellflux-opentelemetry-example</excludeArtifact>
                                 <excludeArtifact>stellflux-stellmap-example</excludeArtifact>
                                 <excludeArtifact>stellflux-stellnula-example</excludeArtifact>
+                                <excludeArtifact>stellflux-stellorbit-rate-limit-local-example</excludeArtifact>
+                                <excludeArtifact>stellflux-stellorbit-rate-limit-distributed-example</excludeArtifact>
                                 <excludeArtifact>stellflux-stellflow-example</excludeArtifact>
                                 <excludeArtifact>stellflux-jedis-examples</excludeArtifact>
                                 <excludeArtifact>stellflux-elaticsearch-examples</excludeArtifact>
