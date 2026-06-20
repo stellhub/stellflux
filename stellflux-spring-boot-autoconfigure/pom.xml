@@ -52,6 +52,41 @@
         </dependency>
         <dependency>
             <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-route</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-circuit-breaker</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-auth</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-rate-limit</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-rate-limit-local</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
+            <artifactId>stellflux-stellorbit-rate-limit-distributed</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.github.stellhub</groupId>
             <artifactId>stellflux-log</artifactId>
             <optional>true</optional>
         </dependency>

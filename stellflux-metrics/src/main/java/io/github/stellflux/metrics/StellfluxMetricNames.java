@@ -34,5 +34,9 @@ public final class StellfluxMetricNames {
 
     public static final String ELATICSEARCH_DURATION = "stellflux_elaticsearch_duration";
 
+    public static final String STELLORBIT_DECISIONS = "stellflux_stellorbit_decisions";
+
+    public static final String STELLORBIT_DURATION = "stellflux_stellorbit_duration";
+
     private StellfluxMetricNames() {}
 }

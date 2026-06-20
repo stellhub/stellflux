@@ -29,6 +29,11 @@
         <module>stellflux-spring-boot-starter-stellmap</module>
         <module>stellflux-spring-boot-starter-scheduler-stellmap</module>
         <module>stellflux-spring-boot-starter-stellnula</module>
+        <module>stellflux-spring-boot-starter-stellorbit-route</module>
+        <module>stellflux-spring-boot-starter-stellorbit-circuit-breaker</module>
+        <module>stellflux-spring-boot-starter-stellorbit-auth</module>
+        <module>stellflux-spring-boot-starter-stellorbit-rate-limit</module>
+        <module>stellflux-spring-boot-starter-stellorbit-rate-limit-distributed</module>
         <module>stellflux-spring-boot-starter-http-client</module>
         <module>stellflux-spring-boot-starter-jedis</module>
         <module>stellflux-spring-boot-starter-lock-jedis</module>

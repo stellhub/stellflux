@@ -54,6 +54,31 @@
   - 包含 `stellflux-stellnula` 与统一自动装配
   - 配置 `stellflux.stellnula.endpoint` 后会启动配置中心客户端，并把远端快照注入 Spring Environment
   - 支持 Spring 标准 `@Value` 在配置变更后动态重新解析
+- `stellflux-spring-boot-starter-stellorbit-route`
+  - StellOrbit 路由治理能力
+  - 包含 `stellflux-stellorbit-route`、`stellflux-spring-boot-starter-stellnula` 与 `stellflux-spring-boot-starter-stellmap`
+  - 在 Stellnula 治理规则和 StellMap 注册中心都完成装配后注册本地路由解析器
+  - 路由判定会发射 StellOrbit OpenTelemetry metrics、trace span 和结构化 decision log
+- `stellflux-spring-boot-starter-stellorbit-circuit-breaker`
+  - StellOrbit 熔断治理能力
+  - 包含 `stellflux-stellorbit-circuit-breaker`、Resilience4j CircuitBreaker 与 Stellnula 前置装配
+  - 默认注册 `StellorbitCircuitBreakerExecutor`
+  - 熔断调用和 Resilience4j 状态迁移会发射 StellOrbit OpenTelemetry metrics、trace span 和结构化 decision log
+- `stellflux-spring-boot-starter-stellorbit-auth`
+  - StellOrbit JWT 鉴权治理能力
+  - 包含 `stellflux-stellorbit-auth` 与 Stellnula 前置装配
+  - 配置 `stellflux.stellorbit.auth.jwt.jwk-set-uri` 或 `issuer-uri` 后注册 JWT 鉴权管理器
+- `stellflux-spring-boot-starter-stellorbit-rate-limit`
+  - StellOrbit 单机限流治理能力
+  - 包含 `stellflux-stellorbit-rate-limit`、`stellflux-stellorbit-rate-limit-local`、Resilience4j RateLimiter 与 Stellnula 前置装配
+  - 默认注册本地 `StellorbitRateLimiter`
+  - 分布式限流不复用该 starter，通过独立的 `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed` 接入 StellPulsar
+  - 如同时存在本地和分布式实现，`stellflux.stellorbit.rate-limit.mode=auto` 会优先选择分布式；可显式配置为 `local`
+- `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed`
+  - StellOrbit 弱一致分布式限流治理能力
+  - 包含 `stellflux-stellorbit-rate-limit-distributed`、`stellpulsar-java-sdk` 与 Stellnula 前置装配
+  - 默认注册基于 StellPulsar 的 `StellorbitRateLimiter`
+  - 保留 StellPulsar 返回的 rule revision、checksum、remaining、retry-after、fallback 和 errorCode
 - `stellflux-spring-boot-starter-caffeine`
   - Caffeine 本地缓存能力
   - 包含 `stellflux-caffeine` 与统一自动装配
@@ -85,6 +110,11 @@
 - 同时做 gRPC client + server：引入 `stellflux-spring-boot-starter-grpc`
 - 使用 StellMap 分布式定时任务执行权判断：引入 `stellflux-spring-boot-starter-scheduler-stellmap`
 - 接入 Stellnula 配置中心：引入 `stellflux-spring-boot-starter-stellnula`，并配置 `stellflux.stellnula.endpoint`
+- 接入 StellOrbit 路由治理：引入 `stellflux-spring-boot-starter-stellorbit-route`
+- 接入 StellOrbit 熔断治理：引入 `stellflux-spring-boot-starter-stellorbit-circuit-breaker`
+- 接入 StellOrbit JWT 鉴权治理：引入 `stellflux-spring-boot-starter-stellorbit-auth`
+- 接入 StellOrbit 单机限流治理：引入 `stellflux-spring-boot-starter-stellorbit-rate-limit`
+- 接入 StellOrbit 弱一致分布式限流治理：引入 `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed`
 - 接入 Caffeine 本地缓存 telemetry：引入 `stellflux-spring-boot-starter-caffeine`
 - 接入 MySQL DataSource telemetry：引入 `stellflux-spring-boot-starter-datasource`，并配置 `stellflux.datasource.url`
 - 接入 Elaticsearch 8.x 客户端 telemetry：引入 `stellflux-spring-boot-starter-elaticsearch`，并配置 `stellflux.elaticsearch.endpoints`
