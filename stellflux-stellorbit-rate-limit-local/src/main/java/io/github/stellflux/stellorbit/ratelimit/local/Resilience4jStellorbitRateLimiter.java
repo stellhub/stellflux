@@ -240,7 +240,7 @@ public class Resilience4jStellorbitRateLimiter implements StellorbitRateLimiter 
             RateLimiter rateLimiter, RateLimitAcquireOptions options, long startNanos) {
         Duration refreshPeriod = rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod();
         Duration interval = DEFAULT_BLOCKING_POLL_INTERVAL;
-        if (refreshPeriod != null && !refreshPeriod.isZero() && !refreshPeriod.isNegative()) {
+        if (!refreshPeriod.isZero() && !refreshPeriod.isNegative()) {
             interval =
                     min(
                             max(refreshPeriod.dividedBy(10), DEFAULT_BLOCKING_POLL_INTERVAL),

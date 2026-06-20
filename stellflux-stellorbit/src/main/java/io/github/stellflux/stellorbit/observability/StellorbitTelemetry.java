@@ -160,8 +160,8 @@ public class StellorbitTelemetry {
                     builder.setAttribute(CAPABILITY_KEY, normalize(capability, "unknown"));
                     builder.setAttribute(EVENT_KEY, normalize(eventName, "unknown"));
                     safeAttributes.forEach(
-                            (key, value) ->
-                                    builder.setAttribute(AttributeKey.stringKey(key), normalize(value, "")));
+                            (key, val) ->
+                                    builder.setAttribute(AttributeKey.stringKey(key), normalize(val, "")));
                 });
     }
 
@@ -269,7 +269,7 @@ public class StellorbitTelemetry {
             decisionCounter.add(1, metricAttributes);
             durationHistogram.record(elapsedNanos / 1_000_000.0d, metricAttributes);
             span.setAttribute(OUTCOME_KEY, normalizedOutcome);
-            safeAttributes.forEach((key, value) -> span.setAttribute(key, normalize(value, "")));
+            safeAttributes.forEach((key, val) -> span.setAttribute(key, normalize(val, "")));
             if (throwable != null) {
                 span.recordException(throwable);
                 span.setStatus(StatusCode.ERROR);
@@ -302,8 +302,8 @@ public class StellorbitTelemetry {
                         builder.setAttribute(OUTCOME_KEY, outcome);
                         builder.setAttribute(SERVICE_KEY, serviceName);
                         attributes.forEach(
-                                (key, value) ->
-                                        builder.setAttribute(AttributeKey.stringKey(key), normalize(value, "")));
+                                (key, val) ->
+                                        builder.setAttribute(AttributeKey.stringKey(key), normalize(val, "")));
                         if (throwable != null) {
                             builder.setAttribute(ERROR_TYPE_KEY, throwable.getClass().getName());
                         }

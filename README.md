@@ -1,61 +1,99 @@
 # StellFlux
 
-`stellflux` 是 StellHub 体系中基于 Spring Boot 3 的 Java 基础框架与 Starter 集合，提供 HTTP、gRPC、负载均衡、注册发现、调度、缓存、数据源、搜索、锁和自动装配能力。
+[简体中文](./README_CN.md)
 
-## 项目概述
+StellFlux is the Spring Boot foundation layer for the StellHub Java ecosystem. It provides a curated set of Maven modules, Spring Boot starters, auto-configuration components, and infrastructure integrations for building production-oriented Java services with consistent defaults.
 
-本仓库定位为 Java 微服务基础框架，不直接承载具体业务逻辑，而是为业务服务和平台服务提供统一依赖、统一配置、统一自动装配和统一中间件接入方式。
+The project is designed to reduce repeated middleware wiring across services while keeping each capability independently adoptable. Applications can opt into only the starters they need, such as HTTP, gRPC, service discovery, configuration, observability, caching, data access, distributed locking, messaging, and service governance.
 
-## 当前状态
+## Project Scope
 
-| 项目 | 说明 |
+StellFlux is not a business framework and does not implement domain-specific application logic. It focuses on the infrastructure layer:
+
+- Dependency and version alignment for StellHub Java services.
+- Spring Boot auto-configuration for common middleware capabilities.
+- First-class integrations with StellHub infrastructure projects such as StellMap, StellNula, StellOrbit, StellPulsar, and StellFlow.
+- Consistent observability wiring for logs, metrics, and traces.
+- Fine-grained starter modules so services can adopt capabilities incrementally.
+
+## Status
+
+| Item | Value |
 | --- | --- |
-| 稳定性 | 开发中 |
-| 项目类型 | Java 框架 / Spring Boot Starter 集合 |
-| 核心框架 | Spring Boot 3 |
-| 适用对象 | Java 微服务、平台服务、基础设施组件 |
-| 维护方 | StellHub |
+| Project type | Java framework and Spring Boot starter collection |
+| Primary runtime | Spring Boot 3 |
+| Java baseline | Java 25 |
+| Target users | Java microservices, platform services, infrastructure components |
+| Maintainer | StellHub |
+| Stability | Active development |
 
-## 解决什么问题
+## Core Capabilities
 
-- 统一 Java 服务依赖版本和 Starter 接入方式。
-- 封装 HTTP、gRPC、缓存、数据源、搜索和分布式锁能力。
-- 对接 StellMap、StellFlow、StellNula 等 StellHub 基础设施。
-- 降低业务服务重复接入中间件的成本。
-- 为平台服务提供一致的工程骨架。
-
-## 不解决什么问题
-
-- 不承载业务领域逻辑。
-- 不替代具体中间件服务端。
-- 不强制所有服务使用同一业务架构。
-
-## 核心模块
-
-| 模块 | 说明 |
+| Area | Capability |
 | --- | --- |
-| stellflux-bom | 依赖版本管理 |
-| stellflux-http-client | HTTP 客户端能力 |
-| stellflux-grpc-client/server | gRPC 客户端和服务端能力 |
-| stellflux-stellmap | 注册发现集成 |
-| stellflux-stellflow | 消息队列集成 |
-| stellflux-stellnula | 配置中心集成 |
-| stellflux-caffeine | 本地缓存集成 |
-| stellflux-datasource | 数据源集成 |
-| stellflux-lock-jedis | Redis 分布式锁集成 |
-| stellflux-spring-boot-autoconfigure | 自动装配入口 |
+| Dependency management | `stellflux-bom` aligns framework, middleware, and starter versions |
+| HTTP | HTTP client and server starter modules |
+| gRPC | gRPC client and server starter modules |
+| Observability | OpenTelemetry, logs, metrics, and traces integrations |
+| Service discovery | StellMap registration, discovery, and load-balancer integration |
+| Configuration | StellNula configuration center integration with Spring `Environment` and dynamic `@Value` refresh |
+| Service governance | StellOrbit routing, circuit breaker, JWT authorization, local rate limiting, and weakly consistent distributed rate limiting |
+| Rate limiting | Resilience4j local limiter and StellPulsar-backed distributed limiter, both supporting rejecting and blocking acquisition modes |
+| Messaging | StellFlow producer and consumer integration |
+| Caching | Caffeine local cache integration |
+| Data access | DataSource auto-configuration and telemetry |
+| Search | Elasticsearch 8.x client integration |
+| Distributed lock | Jedis-based Redis lock with token validation and TTL renewal |
+| Scheduling | StellMap-based distributed scheduler ownership checks |
 
-## 架构说明
+## Module Layout
+
+| Module | Purpose |
+| --- | --- |
+| `stellflux-bom` | Dependency management BOM |
+| `stellflux-context` | Shared context primitives |
+| `stellflux-opentelemetry` | OpenTelemetry helper APIs |
+| `stellflux-log` | Logging integration |
+| `stellflux-metrics` | Metrics integration |
+| `stellflux-traces` | Tracing integration |
+| `stellflux-http-client` | HTTP client capability |
+| `stellflux-grpc-client` / `stellflux-grpc-server` | gRPC client and server capabilities |
+| `stellflux-loadbalancer` | Load-balancer abstraction |
+| `stellflux-loadbalancer-stellmap` | StellMap-backed service instance supplier |
+| `stellflux-stellmap` | StellMap registry integration |
+| `stellflux-stellnula` | StellNula configuration center integration |
+| `stellflux-stellorbit` | StellOrbit governance rule source and common wiring |
+| `stellflux-stellorbit-route` | Local route resolution |
+| `stellflux-stellorbit-circuit-breaker` | Resilience4j circuit breaker integration |
+| `stellflux-stellorbit-auth` | JWT authorization integration |
+| `stellflux-stellorbit-rate-limit` | Shared rate-limit SPI |
+| `stellflux-stellorbit-rate-limit-local` | Resilience4j local rate limiting |
+| `stellflux-stellorbit-rate-limit-distributed` | StellPulsar-backed distributed rate limiting |
+| `stellflux-stellflow` | StellFlow producer and consumer integration |
+| `stellflux-caffeine` | Caffeine cache integration |
+| `stellflux-datasource` | DataSource integration |
+| `stellflux-elaticsearch` | Elasticsearch client integration |
+| `stellflux-jedis` | Jedis client integration |
+| `stellflux-lock-jedis` | Redis distributed lock integration |
+| `stellflux-scheduler-stellmap` | StellMap scheduler ownership integration |
+| `stellflux-spring-boot-autoconfigure` | Spring Boot auto-configuration entry points |
+| `stellflux-spring-boot-starter-parent` | Spring Boot starter modules |
+| `stellflux-examples` | Runnable example applications |
+
+## Architecture
 
 ```mermaid
 flowchart LR
-    App[Java Service] --> Starter[StellFlux Starters]
-    Starter --> AutoConfig[Auto Configuration]
-    AutoConfig --> Middleware[StellHub Middleware]
-    AutoConfig --> Spring[Spring Boot 3]
+    App[Spring Boot Service] --> Starter[StellFlux Starter]
+    Starter --> AutoConfig[Spring Boot Auto Configuration]
+    AutoConfig --> Core[StellFlux Capability Module]
+    Core --> Middleware[StellHub Infrastructure]
+    Core --> OTel[OpenTelemetry Signals]
 ```
 
-## 快速开始
+## Quick Start
+
+Import the StellFlux BOM:
 
 ```xml
 <dependencyManagement>
@@ -71,75 +109,133 @@ flowchart LR
 </dependencyManagement>
 ```
 
+Add the starter that matches the capability your service needs:
+
 ```xml
 <dependency>
     <groupId>io.github.stellhub</groupId>
-    <artifactId>stellflux-spring-boot-starter-http</artifactId>
+    <artifactId>stellflux-spring-boot-starter-http-client</artifactId>
 </dependency>
 ```
 
-## 配置说明
+Configuration is intentionally capability-specific. For example, a service that uses StellNula should depend on the StellNula starter and configure the StellNula endpoint; a service that uses StellOrbit distributed rate limiting should depend on the distributed rate-limit starter and provide the required StellPulsar connectivity settings.
 
-| 配置项 | 是否必填 | 说明 |
-| --- | --- | --- |
-| stellflux.enabled | 否 | 是否启用框架能力 |
-| stellflux.app.name | 是 | 应用名 |
-| stellflux.env | 是 | 运行环境 |
-| stellflux.zone | 否 | 可用区 |
+## Starter Selection
 
-具体配置以各 Starter 模块文档为准。
+Common starter choices:
 
-## 本地开发
+| Use case | Starter |
+| --- | --- |
+| HTTP client | `stellflux-spring-boot-starter-http-client` |
+| HTTP server | `stellflux-spring-boot-starter-http-server` |
+| gRPC client | `stellflux-spring-boot-starter-grpc-client` |
+| gRPC server | `stellflux-spring-boot-starter-grpc-server` |
+| OpenTelemetry | `stellflux-spring-boot-starter-opentelemetry` |
+| StellMap registry | `stellflux-spring-boot-starter-stellmap` |
+| StellNula configuration center | `stellflux-spring-boot-starter-stellnula` |
+| StellOrbit routing | `stellflux-spring-boot-starter-stellorbit-route` |
+| StellOrbit circuit breaker | `stellflux-spring-boot-starter-stellorbit-circuit-breaker` |
+| StellOrbit JWT authorization | `stellflux-spring-boot-starter-stellorbit-auth` |
+| StellOrbit local rate limiting | `stellflux-spring-boot-starter-stellorbit-rate-limit` |
+| StellOrbit distributed rate limiting | `stellflux-spring-boot-starter-stellorbit-rate-limit-distributed` |
+| StellFlow messaging | `stellflux-spring-boot-starter-stellflow` |
+| Caffeine cache | `stellflux-spring-boot-starter-caffeine` |
+| DataSource | `stellflux-spring-boot-starter-datasource` |
+| Elasticsearch | `stellflux-spring-boot-starter-elaticsearch` |
+| Redis distributed lock | `stellflux-spring-boot-starter-lock-jedis` |
+
+For the full starter matrix, see [docs/starter-modules.md](./docs/starter-modules.md).
+
+## Service Governance
+
+StellFlux integrates with StellOrbit for local governance enforcement while using StellNula as the governance rule delivery channel.
+
+Current governance capabilities include:
+
+- Route resolution based on StellOrbit rules and StellMap service instances.
+- Circuit breaking backed by Resilience4j.
+- JWT authorization based on StellOrbit authorization rules.
+- Local rate limiting backed by Resilience4j.
+- Weakly consistent distributed rate limiting backed by StellPulsar.
+
+The rate-limit SPI supports both rejecting and blocking acquisition modes. The default `acquire(request)` behavior is rejecting and returns immediately. Blocking acquisition is available through `acquireBlocking(request, timeout)` or `RateLimitAcquireOptions.blocking(timeout)`.
+
+## Configuration Center
+
+The StellNula integration loads remote configuration snapshots into Spring `Environment` and supports dynamic refresh for Spring standard `@Value` fields. This allows Spring Boot applications to consume configuration center updates without adopting a custom configuration API.
+
+Typical responsibilities of the StellNula starter:
+
+- Bootstrap the StellNula client from Spring Boot configuration.
+- Load remote configuration entries into a dedicated `PropertySource`.
+- Refresh the property source when the server pushes changes.
+- Re-resolve managed `@Value` targets after configuration changes.
+
+## Observability
+
+StellFlux is designed to make infrastructure behavior observable by default. Capability modules emit OpenTelemetry signals where applicable:
+
+- HTTP and gRPC traffic.
+- Cache operations.
+- DataSource activity.
+- StellOrbit route, circuit-breaker, and rate-limit decisions.
+- Middleware client interactions.
+
+The exact metric names, span attributes, and log fields are owned by the capability modules so they can remain aligned with their runtime behavior.
+
+## Examples
+
+Runnable examples are provided under `stellflux-examples`. They are intended to demonstrate minimal, focused integration patterns for individual starters and middleware capabilities.
+
+## Build
+
+Build the full project:
 
 ```bash
 mvn clean verify
 ```
 
-## 版本与升级
+Build a specific module with its dependencies:
 
-- `MAJOR`：不兼容 API、Starter 行为或依赖版本变更。
-- `MINOR`：向后兼容的新模块或新能力。
-- `PATCH`：向后兼容的问题修复。
-
-## 可观测性
-
-StellFlux 本身应统一暴露 HTTP、gRPC、客户端调用、中间件接入和自动装配相关指标。具体指标由各 Starter 模块提供。
-
-## 故障排查
-
-### Starter 没有生效
-
-1. 检查依赖是否引入正确。
-2. 检查 Spring Boot 版本是否匹配。
-3. 检查自动装配条件是否满足。
-4. 查看启动日志中的 auto-configuration 信息。
-
-## 安全说明
-
-生产环境配置不应直接提交到仓库，框架默认行为必须遵守平台安全规范。
-
-## 目录结构
-
-```text
-.
-├── stellflux-bom/                         # 依赖版本管理
-├── stellflux-*/                           # 基础模块
-├── stellflux-spring-boot-starter-*/       # Spring Boot Starter
-├── stellflux-spring-boot-autoconfigure/   # 自动装配
-├── pom.xml                                # Maven 聚合工程
-└── README.md                              # 项目说明
+```bash
+mvn -pl <module-name> -am test
 ```
 
-## 贡献规范
+PowerShell users should quote Maven `-D` arguments when needed:
 
-- 新增 Starter 必须提供配置说明和最小示例。
-- 公共 API 和默认行为变更必须说明兼容性影响。
-- 依赖版本升级必须评估对下游服务的影响。
+```powershell
+mvn -pl stellflux-spring-boot-autoconfigure -am "-Dtest=StellfluxStellorbitAutoConfigurationTest" test
+```
 
-## 支持
+## Documentation
 
-由 StellHub 维护。建议通过 GitHub Issues 记录问题、需求和设计讨论。
+| Document | Description |
+| --- | --- |
+| [docs/starter-modules.md](./docs/starter-modules.md) | Starter module matrix and recommended usage |
+| [docs/stellorbit-governance-design.md](./docs/stellorbit-governance-design.md) | StellOrbit governance integration design |
+| [docs/http-server-telemetry-guide.md](./docs/http-server-telemetry-guide.md) | HTTP server telemetry configuration guide |
 
-## 许可证
+## Compatibility and Versioning
 
-以仓库内 `LICENSE` 文件为准。
+StellFlux follows semantic versioning principles:
+
+- `MAJOR`: incompatible API, starter behavior, or dependency baseline changes.
+- `MINOR`: backward-compatible new capabilities or modules.
+- `PATCH`: backward-compatible fixes.
+
+Starter defaults are treated as part of the public behavior contract. Changes that may affect downstream services should be documented and covered by examples or tests.
+
+## Contributing
+
+When adding or changing a capability:
+
+- Keep the module boundary narrow and explicit.
+- Prefer constructor injection and Spring Boot auto-configuration conventions.
+- Add a focused starter when the capability is meant to be adopted independently.
+- Provide configuration documentation and a minimal runnable example where practical.
+- Evaluate compatibility impact before changing public APIs or starter defaults.
+- Keep observability behavior aligned with runtime decisions.
+
+## License
+
+See [LICENSE](./LICENSE).

@@ -53,7 +53,7 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
         try {
             RateLimitRequest pulsarRequest = toPulsarRequest(request);
             RateLimitDecision decision =
-                    acquireFromPulsar(request, pulsarRequest, safeOptions, startNanos);
+                    acquireFromPulsar(pulsarRequest, safeOptions, startNanos);
             observation.success(
                     outcome(decision), observationAttributes(request, decision, safeOptions, startNanos));
             return decision;
@@ -81,7 +81,6 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
     }
 
     private RateLimitDecision acquireFromPulsar(
-            StellorbitRateLimitRequest request,
             RateLimitRequest pulsarRequest,
             RateLimitAcquireOptions options,
             long startNanos) {

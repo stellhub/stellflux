@@ -24,10 +24,6 @@ public class Resilience4jStellorbitCircuitBreakerExecutor
     private final ConcurrentMap<String, CircuitBreaker> circuitBreakers = new ConcurrentHashMap<>();
     private final StellorbitTelemetry telemetry;
 
-    public Resilience4jStellorbitCircuitBreakerExecutor(CircuitBreakerRuleProvider ruleProvider) {
-        this(ruleProvider, StellorbitTelemetry.noop());
-    }
-
     public Resilience4jStellorbitCircuitBreakerExecutor(
             CircuitBreakerRuleProvider ruleProvider, StellorbitTelemetry telemetry) {
         this.ruleProvider = Objects.requireNonNull(ruleProvider, "ruleProvider must not be null");
@@ -75,7 +71,7 @@ public class Resilience4jStellorbitCircuitBreakerExecutor
     }
 
     private CircuitBreaker createCircuitBreaker(GovernanceRule rule) {
-        Map<String, Object> breaker = ruleContent(rule, "breaker");
+        Map<String, Object> breaker = ruleContent(rule);
         CircuitBreakerConfig config =
                 CircuitBreakerConfig.custom()
                         .failureRateThreshold(floatValue(breaker, "failureRateThreshold", 50.0F))
@@ -124,8 +120,8 @@ public class Resilience4jStellorbitCircuitBreakerExecutor
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> ruleContent(GovernanceRule rule, String fieldName) {
-        Object value = rule.content().get(fieldName);
+    private Map<String, Object> ruleContent(GovernanceRule rule) {
+        Object value = rule.content().get("breaker");
         return value instanceof Map<?, ?> map ? (Map<String, Object>) map : Map.of();
     }
 

@@ -28,13 +28,6 @@ public class LocalStellorbitRouteResolver implements StellorbitRouteResolver {
     public LocalStellorbitRouteResolver(
             RouteRuleProvider ruleProvider,
             StellMapWatchingServiceInstanceSupplierFactory supplierFactory,
-            StellfluxLoadBalancer<StellfluxServiceInstance> loadBalancer) {
-        this(ruleProvider, supplierFactory, loadBalancer, StellorbitTelemetry.noop());
-    }
-
-    public LocalStellorbitRouteResolver(
-            RouteRuleProvider ruleProvider,
-            StellMapWatchingServiceInstanceSupplierFactory supplierFactory,
             StellfluxLoadBalancer<StellfluxServiceInstance> loadBalancer,
             StellorbitTelemetry telemetry) {
         this.ruleProvider = Objects.requireNonNull(ruleProvider, "ruleProvider must not be null");

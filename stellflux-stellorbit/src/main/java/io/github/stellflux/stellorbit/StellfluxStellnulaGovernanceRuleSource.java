@@ -102,7 +102,6 @@ public class StellfluxStellnulaGovernanceRuleSource implements GovernanceRuleSou
         List<GovernanceRule> parsed = new ArrayList<>();
         boolean hasDeletedEntry = false;
         boolean hasInvalidEntry = false;
-        boolean hasNonDeletedEntry = false;
 
         for (StellnulaConfigEntry entry : snapshot.entries()) {
             if (entry.deleted()) {
@@ -110,7 +109,6 @@ public class StellfluxStellnulaGovernanceRuleSource implements GovernanceRuleSou
                 removePreviousRules(previousRules, entry);
                 continue;
             }
-            hasNonDeletedEntry = true;
             try {
                 List<GovernanceRule> rules = parser.parseAll(entry, snapshot.checksum());
                 parsed.addAll(rules);
@@ -131,7 +129,6 @@ public class StellfluxStellnulaGovernanceRuleSource implements GovernanceRuleSou
 
         if (parsed.isEmpty()
                 && hasInvalidEntry
-                && hasNonDeletedEntry
                 && !hasDeletedEntry
                 && !previousRegistry.rules().isEmpty()) {
             LOGGER.warning("All governance rules failed to parse, keep last-known-good registry");
