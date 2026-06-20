@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.stellhub</groupId>
         <artifactId>stellflux-examples</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
