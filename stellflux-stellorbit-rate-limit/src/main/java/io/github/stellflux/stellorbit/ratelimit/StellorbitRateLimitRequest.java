@@ -97,10 +97,10 @@ public record StellorbitRateLimitRequest(
         }
         LinkedHashMap<String, String> normalized = new LinkedHashMap<>();
         values.forEach(
-                (key, value) -> {
+                (key, val) -> {
                     String normalizedKey = key == null ? null : key.trim().toLowerCase(Locale.ROOT);
-                    if (normalizedKey != null && !normalizedKey.isBlank() && value != null) {
-                        normalized.put(normalizedKey, value);
+                    if (normalizedKey != null && !normalizedKey.isBlank() && val != null) {
+                        normalized.put(normalizedKey, val);
                     }
                 });
         return Map.copyOf(normalized);
