@@ -25,13 +25,41 @@ public class LocalRateLimitGovernanceRules {
                             "local-orders-create",
                             "Local orders create",
                             CREATE_ORDER_KEY,
-                            Map.of("limit", Map.of("limitForPeriod", 1, "limitRefreshPeriod", "PT10S"))),
+                            Map.of(
+                                    "limitMode",
+                                    "QPS",
+                                    "limitType",
+                                    "REQUEST",
+                                    "limitAlgorithm",
+                                    "TOKEN_BUCKET",
+                                    "trafficProtocol",
+                                    "HTTP",
+                                    "executionLocation",
+                                    "APPLICATION",
+                                    "coordinationMode",
+                                    "LOCAL_ONLY",
+                                    "limit",
+                                    Map.of("limitForPeriod", 1, "limitRefreshPeriod", "PT10S"))),
                     CHECKOUT_ORDER_KEY,
                     rule(
                             "local-orders-checkout",
                             "Local orders checkout",
                             CHECKOUT_ORDER_KEY,
-                            Map.of("limit", Map.of("limitForPeriod", 1, "limitRefreshPeriod", "PT0.2S"))));
+                            Map.of(
+                                    "limitMode",
+                                    "QPS",
+                                    "limitType",
+                                    "REQUEST",
+                                    "limitAlgorithm",
+                                    "TOKEN_BUCKET",
+                                    "trafficProtocol",
+                                    "HTTP",
+                                    "executionLocation",
+                                    "APPLICATION",
+                                    "coordinationMode",
+                                    "LOCAL_ONLY",
+                                    "limit",
+                                    Map.of("limitForPeriod", 1, "limitRefreshPeriod", "PT0.2S"))));
 
     /** 注册内存治理规则提供器，真实接入时该 Bean 由 StellOrbit 自动装配提供。 */
     @Bean

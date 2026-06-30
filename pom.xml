@@ -83,8 +83,8 @@
         <elasticsearch.version>8.19.14</elasticsearch.version>
         <stellmap-java-sdk.version>0.0.3</stellmap-java-sdk.version>
         <stellnula-java-sdk.version>0.0.3</stellnula-java-sdk.version>
-        <stellorbit-java-sdk.version>0.0.2</stellorbit-java-sdk.version>
-        <stellpulsar-java-sdk.version>0.0.1</stellpulsar-java-sdk.version>
+        <stellorbit-java-sdk.version>0.0.3</stellorbit-java-sdk.version>
+        <stellpulsar-java-sdk.version>0.0.2</stellpulsar-java-sdk.version>
         <stellflow-java-sdk.version>0.0.4</stellflow-java-sdk.version>
         <resilience4j.version>2.3.0</resilience4j.version>
         <lombok.version>1.18.46</lombok.version>

@@ -6,8 +6,8 @@ import io.github.stellflux.stellorbit.observability.StellorbitTelemetry;
 import io.github.stellflux.stellorbit.ratelimit.RateLimitAcquireOptions;
 import io.github.stellflux.stellorbit.ratelimit.RateLimitDecision;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimitRequest;
+import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimitRuleSupport;
 import io.github.stellflux.stellorbit.ratelimit.StellorbitRateLimiter;
-import io.github.stellorbit.client.model.RateLimitRuleQuery;
 import io.github.stellorbit.client.provider.RateLimitRuleProvider;
 import io.github.stellorbit.client.rule.GovernanceRule;
 import java.time.Duration;
@@ -59,7 +59,16 @@ public class Resilience4jStellorbitRateLimiter implements StellorbitRateLimiter 
                         "allowed", observationAttributes(request, null, decision, safeOptions, startNanos));
                 return decision;
             }
-            String currentCacheKey = cacheKey(rule, request);
+            if (!StellorbitRateLimitRuleSupport.supportsLocalRuntime(rule)) {
+                RateLimitDecision decision =
+                        StellorbitRateLimitRuleSupport.unsupportedLocalRuntimeDecision(rule);
+                observation.success(
+                        outcome(decision),
+                        observationAttributes(request, rule, decision, safeOptions, startNanos));
+                return decision;
+            }
+            String quotaKey = StellorbitRateLimitRuleSupport.resolveQuotaKey(rule, request);
+            String currentCacheKey = cacheKey(rule, quotaKey);
             evictStaleLimiters(rule, currentCacheKey);
             RateLimiter rateLimiter =
                     rateLimiters.computeIfAbsent(currentCacheKey, key -> createRateLimiter(rule, key));
@@ -88,8 +97,7 @@ public class Resilience4jStellorbitRateLimiter implements StellorbitRateLimiter 
 
     private GovernanceRule firstRule(StellorbitRateLimitRequest request) {
         List<GovernanceRule> rules =
-                ruleProvider.find(
-                        new RateLimitRuleQuery(request.serviceName(), request.quotaKey(), request.context()));
+                ruleProvider.find(StellorbitRateLimitRuleSupport.localRuleQuery(request));
         return rules.isEmpty() ? null : rules.getFirst();
     }
 
@@ -131,9 +139,9 @@ public class Resilience4jStellorbitRateLimiter implements StellorbitRateLimiter 
         }
     }
 
-    private String cacheKey(GovernanceRule rule, StellorbitRateLimitRequest request) {
-        String quotaKey = request.quotaKey() == null ? "<default>" : request.quotaKey();
-        return rule.ruleId() + "@" + rule.revision() + ":" + quotaKey;
+    private String cacheKey(GovernanceRule rule, String quotaKey) {
+        String resolvedQuotaKey = quotaKey == null ? "<default>" : quotaKey;
+        return rule.ruleId() + "@" + rule.revision() + ":" + resolvedQuotaKey;
     }
 
     private void evictStaleLimiters(GovernanceRule rule, String currentCacheKey) {
@@ -151,10 +159,8 @@ public class Resilience4jStellorbitRateLimiter implements StellorbitRateLimiter 
         rateLimiters.keySet().stream().limit(overflow).toList().forEach(rateLimiters::remove);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> ruleContent(GovernanceRule rule, String fieldName) {
-        Object value = rule.content().get(fieldName);
-        return value instanceof Map<?, ?> map ? (Map<String, Object>) map : Map.of();
+        return StellorbitRateLimitRuleSupport.object(rule, fieldName);
     }
 
     private int intValue(Map<String, Object> values, String key, int defaultValue) {

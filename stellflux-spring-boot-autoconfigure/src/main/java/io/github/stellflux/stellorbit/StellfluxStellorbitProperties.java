@@ -2,7 +2,9 @@ package io.github.stellflux.stellorbit;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.Getter;
@@ -90,6 +92,12 @@ public class StellfluxStellorbitProperties {
 
         /** 注解式资源限流配置。 */
         private ResourceProperties resource = new ResourceProperties();
+
+        /** HTTP 入口限流配置。 */
+        private HttpProperties http = new HttpProperties();
+
+        /** gRPC 入口限流配置。 */
+        private GrpcProperties grpc = new GrpcProperties();
     }
 
     /** 注解式限流资源配置。 */
@@ -99,6 +107,48 @@ public class StellfluxStellorbitProperties {
 
         /** 注解式限流 Advisor 执行顺序，数值越小越早执行。 */
         private int advisorOrder = Ordered.HIGHEST_PRECEDENCE + 100;
+    }
+
+    /** HTTP 入口限流配置。 */
+    @Getter
+    @Setter
+    public static class HttpProperties {
+
+        /** 是否自动注册 HTTP HandlerInterceptor。 */
+        private boolean enabled = true;
+
+        /** HTTP HandlerInterceptor 执行顺序。 */
+        private int interceptorOrder = Ordered.HIGHEST_PRECEDENCE + 120;
+
+        /** 需要拦截的路径模式。 */
+        private List<String> pathPatterns = new ArrayList<>(List.of("/**"));
+
+        /** 不需要拦截的路径模式。 */
+        private List<String> excludePathPatterns = new ArrayList<>(List.of("/actuator/**"));
+
+        /** 是否使用阻塞式限流。 */
+        private boolean blocking;
+
+        /** 阻塞式限流最大等待时间。 */
+        private Duration timeout;
+    }
+
+    /** gRPC 入口限流配置。 */
+    @Getter
+    @Setter
+    public static class GrpcProperties {
+
+        /** 是否自动注册 gRPC ServerInterceptor。 */
+        private boolean enabled = true;
+
+        /** gRPC ServerInterceptor 执行顺序。 */
+        private int interceptorOrder = Ordered.HIGHEST_PRECEDENCE + 120;
+
+        /** 是否使用阻塞式限流。 */
+        private boolean blocking;
+
+        /** 阻塞式限流最大等待时间。 */
+        private Duration timeout;
     }
 
     /** StellPulsar 分布式限流配置。 */

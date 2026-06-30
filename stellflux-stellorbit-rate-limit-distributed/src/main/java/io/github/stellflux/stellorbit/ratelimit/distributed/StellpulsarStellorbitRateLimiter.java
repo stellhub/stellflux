@@ -52,8 +52,7 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
                 telemetry.start("rate_limit", operation(safeOptions), request.serviceName());
         try {
             RateLimitRequest pulsarRequest = toPulsarRequest(request);
-            RateLimitDecision decision =
-                    acquireFromPulsar(pulsarRequest, safeOptions, startNanos);
+            RateLimitDecision decision = acquireFromPulsar(pulsarRequest, safeOptions, startNanos);
             observation.success(
                     outcome(decision), observationAttributes(request, decision, safeOptions, startNanos));
             return decision;
@@ -81,9 +80,7 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
     }
 
     private RateLimitDecision acquireFromPulsar(
-            RateLimitRequest pulsarRequest,
-            RateLimitAcquireOptions options,
-            long startNanos) {
+            RateLimitRequest pulsarRequest, RateLimitAcquireOptions options, long startNanos) {
         while (true) {
             RateLimitResult result = stellpulsarClient.tryAcquire(pulsarRequest);
             RateLimitDecision decision = toDecision(result);
@@ -116,10 +113,20 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
                 .targetService(request.serviceName())
                 .resource(value(attributes, "resource", DEFAULT_RESOURCE))
                 .method(value(attributes, "method", DEFAULT_METHOD))
+                .endpoint(defaultText(request.endpoint(), value(attributes, "endpoint", "")))
                 .tenantId(defaultText(context.tenantId(), value(attributes, "tenantId", "")))
                 .userId(value(attributes, "userId", ""))
+                .caller(defaultText(request.caller(), value(attributes, "caller", "")))
+                .apiKey(defaultText(request.apiKey(), value(attributes, "apiKey", "")))
+                .remoteIp(defaultText(request.remoteIp(), value(attributes, "remoteIp", "")))
+                .modelRequest(defaultText(request.modelRequest(), value(attributes, "modelRequest", "")))
+                .modelTokens(request.modelTokens())
+                .modelCost(request.modelCost())
                 .quotaKey(quotaKey(request, context))
                 .cost(cost(attributes))
+                .unit(defaultText(request.unit(), value(attributes, "unit", "")))
+                .headers(request.headers())
+                .grpcMetadata(request.grpcMetadata())
                 .attributes(attributes)
                 .build();
     }
@@ -132,9 +139,7 @@ public class StellpulsarStellorbitRateLimiter implements StellorbitRateLimiter {
     }
 
     private String quotaKey(StellorbitRateLimitRequest request, RequestContext context) {
-        return defaultText(
-                request.quotaKey(),
-                defaultText(context.quotaKey(), defaultText(context.tenantId(), request.serviceName())));
+        return defaultText(request.quotaKey(), defaultText(context.quotaKey(), ""));
     }
 
     private long cost(Map<String, String> attributes) {

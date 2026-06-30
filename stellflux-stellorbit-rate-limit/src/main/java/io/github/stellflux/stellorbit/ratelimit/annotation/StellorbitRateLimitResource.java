@@ -59,5 +59,6 @@ public @interface StellorbitRateLimitResource {
     Class<?> fallbackClass() default Void.class;
 
     /** 未配置 fallback 时抛出的异常类型，默认携带限流请求和限流判定结果。 */
-    Class<? extends RuntimeException> exceptionClass() default StellorbitRateLimitRejectedException.class;
+    Class<? extends RuntimeException> exceptionClass() default
+            StellorbitRateLimitRejectedException.class;
 }
